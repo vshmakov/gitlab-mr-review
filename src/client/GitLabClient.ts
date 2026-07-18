@@ -1,12 +1,20 @@
 import { GitLabGraphQLClient } from './GitLabGraphQLClient';
 import { GitLabRestClient } from './GitLabRestClient';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import {
+	GitLabMergeRequestDiffResponse,
+	GitLabMergeRequestFile,
+} from '../model/GitLabMergeRequestFile';
 import { GitLabUser } from '../model/GitLabUser';
 import { PendingReviewService } from '../review/PendingReviewService';
 
 export {
 	GitLabMergeRequest,
 } from '../model/GitLabMergeRequest';
+
+export {
+	GitLabMergeRequestFile,
+} from '../model/GitLabMergeRequestFile';
 
 export {
 	GitLabUser,
@@ -73,6 +81,23 @@ export class GitLabClient {
 			);
 	}
 
+	public async getMergeRequestFiles(
+		mergeRequest: GitLabMergeRequest,
+	): Promise<GitLabMergeRequestFile[]> {
+		const path = this.createMergeRequestDiffsPath(
+			mergeRequest,
+		);
+
+		const diffs =
+			await this.restClient.get<
+				GitLabMergeRequestDiffResponse[]
+			>(path);
+
+		return diffs.map(
+			diff => this.mapMergeRequestFile(diff),
+		);
+	}
+
 	private createReviewerQuery(
 		reviewerId: number,
 	): string {
@@ -85,4 +110,29 @@ export class GitLabClient {
 			per_page: '100',
 		}).toString();
 	}
+
+	private createMergeRequestDiffsPath(
+		mergeRequest: GitLabMergeRequest,
+	): string {
+		return (
+			`/api/v4/projects/` +
+			`${mergeRequest.project_id}/` +
+			`merge_requests/${mergeRequest.iid}/diffs`
+		);
+	}
+
+	private mapMergeRequestFile(
+	diff: GitLabMergeRequestDiffResponse,
+): GitLabMergeRequestFile {
+	return {
+		path: diff.deleted_file
+			? diff.old_path
+			: diff.new_path,
+		oldPath: diff.old_path,
+		newPath: diff.new_path,
+		added: diff.new_file,
+		deleted: diff.deleted_file,
+		renamed: diff.renamed_file,
+	};
+}
 }

@@ -1,99 +1,144 @@
 import * as vscode from 'vscode';
+import {
+	GitLabMergeRequest,
+	GitLabMergeRequestFile,
+} from '../client/GitLabClient';
 
-export interface GitLabMergeRequest {
-	id: number;
-	iid: number;
-	title: string;
-	web_url: string;
-	project_id: number;
-	updated_at: string;
-	draft: boolean;
-	work_in_progress: boolean;
-	references?: {
-		short?: string;
-		relative?: string;
-		full?: string;
-	};
-	author?: {
-		name: string;
-		username: string;
-	};
-}
+export type ReviewItemType =
+	| 'mergeRequest'
+	| 'file';
 
 export class ReviewItem extends vscode.TreeItem {
-	public constructor(
-		public readonly mergeRequest: GitLabMergeRequest,
+	private constructor(
+		public readonly type: ReviewItemType,
+		label: string,
+		collapsibleState:
+			vscode.TreeItemCollapsibleState,
+		public readonly mergeRequest?:
+			GitLabMergeRequest,
+		public readonly file?:
+			GitLabMergeRequestFile,
 	) {
-		super(
-			mergeRequest.title,
-			vscode.TreeItemCollapsibleState.None,
+		super(label, collapsibleState);
+	}
+
+	public static createMergeRequest(
+		mergeRequest: GitLabMergeRequest,
+	): ReviewItem {
+		const item = new ReviewItem(
+			'mergeRequest',
+			`!${mergeRequest.iid} ${mergeRequest.title}`,
+			vscode.TreeItemCollapsibleState.Collapsed,
+			mergeRequest,
 		);
 
-		const projectName =
-			ReviewItem.getProjectName(mergeRequest);
+		item.description =
+			mergeRequest.references?.full ??
+			mergeRequest.author?.name;
 
-		this.description = [
-			mergeRequest.author?.name,
-			`!${mergeRequest.iid}`,
-			projectName,
-		]
-			.filter(
-				(value): value is string =>
-					Boolean(value),
-			)
-			.join(' ');
-
-		this.tooltip = new vscode.MarkdownString(
+		item.tooltip = new vscode.MarkdownString(
 			[
 				`**${mergeRequest.title}**`,
 				'',
 				`Автор: ${
 					mergeRequest.author?.name ??
-					'неизвестен'
+					'не указан'
 				}`,
 				'',
-				`Merge request: !${mergeRequest.iid}`,
-				'',
-				`Проект: ${projectName ?? 'неизвестен'}`,
-				'',
-				`Обновлён: ${new Date(
-					mergeRequest.updated_at,
-				).toLocaleString()}`,
+				`Обновлён: ${
+					mergeRequest.updated_at
+				}`,
 			].join('\n'),
 		);
 
-		this.iconPath = new vscode.ThemeIcon(
-			mergeRequest.draft
-				? 'git-pull-request-draft'
-				: 'git-pull-request',
+		item.contextValue = 'mergeRequest';
+
+		item.iconPath = new vscode.ThemeIcon(
+			'git-pull-request',
 		);
 
-		this.command = {
+		item.command = {
 			command:
 				'gitlabMrReview.openMergeRequest',
-			title: 'Open Merge Request',
+			title: 'Открыть Merge Request',
 			arguments: [mergeRequest],
 		};
 
-		this.contextValue = 'gitlabMergeRequest';
+		return item;
 	}
 
-	private static getProjectName(
-		mergeRequest: GitLabMergeRequest,
-	): string | undefined {
-		const fullReference =
-			mergeRequest.references?.full;
+	public static createFile(
+		file: GitLabMergeRequestFile,
+	): ReviewItem {
+		const item = new ReviewItem(
+			'file',
+			file.path,
+			vscode.TreeItemCollapsibleState.None,
+			undefined,
+			file,
+		);
 
-		if (!fullReference) {
-			return undefined;
+		item.description =
+			ReviewItem.getFileStatus(file);
+
+		item.tooltip =
+			ReviewItem.getFileTooltip(file);
+
+		item.contextValue = 'mergeRequestFile';
+
+		item.iconPath = new vscode.ThemeIcon(
+			ReviewItem.getFileIcon(file),
+		);
+
+		return item;
+	}
+
+	private static getFileStatus(
+		file: GitLabMergeRequestFile,
+	): string | undefined {
+		if (file.added) {
+			return 'added';
 		}
 
-		const projectPath =
-			fullReference.split('!')[0];
+		if (file.deleted) {
+			return 'deleted';
+		}
 
-		return projectPath
-			.split('/')
-			.filter(Boolean)
-			.pop();
+		if (file.renamed) {
+			return 'renamed';
+		}
+
+		return undefined;
+	}
+
+	private static getFileIcon(
+		file: GitLabMergeRequestFile,
+	): string {
+		if (file.added) {
+			return 'diff-added';
+		}
+
+		if (file.deleted) {
+			return 'diff-removed';
+		}
+
+		if (file.renamed) {
+			return 'diff-renamed';
+		}
+
+		return 'file';
+	}
+
+	private static getFileTooltip(
+		file: GitLabMergeRequestFile,
+	): string {
+		if (file.renamed) {
+			return (
+				`${file.oldPath} → ` +
+				`${file.newPath}`
+			);
+		}
+
+		return file.path;
 	}
 }

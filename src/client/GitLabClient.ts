@@ -1,16 +1,16 @@
-import { GitLabGraphQLClient } from './client/GitLabGraphQLClient';
-import { GitLabRestClient } from './client/GitLabRestClient';
-import { GitLabMergeRequest } from './model/GitLabMergeRequest';
-import { GitLabUser } from './model/GitLabUser';
-import { PendingReviewService } from './review/PendingReviewService';
+import { GitLabGraphQLClient } from './GitLabGraphQLClient';
+import { GitLabRestClient } from './GitLabRestClient';
+import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { GitLabUser } from '../model/GitLabUser';
+import { PendingReviewService } from '../review/PendingReviewService';
 
 export {
 	GitLabMergeRequest,
-} from './model/GitLabMergeRequest';
+} from '../model/GitLabMergeRequest';
 
 export {
 	GitLabUser,
-} from './model/GitLabUser';
+} from '../model/GitLabUser';
 
 export class GitLabClient {
 	private readonly restClient: GitLabRestClient;

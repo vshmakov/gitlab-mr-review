@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { GitLabMrReviewExtension } from './GitLabMrReviewExtension';
+import { GitLabMrReviewExtension } from './extension/GitLabMrReviewExtension';
 
 export function activate(
 	context: vscode.ExtensionContext,

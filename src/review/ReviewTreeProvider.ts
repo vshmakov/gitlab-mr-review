@@ -3,7 +3,7 @@ import { ReviewItem } from './ReviewItem';
 import {
 	GitLabClient,
 	GitLabMergeRequest,
-} from './GitLabClient';
+} from '../client/GitLabClient';
 
 export const TOKEN_SECRET_KEY =
 	'gitlabMrReview.privateToken';

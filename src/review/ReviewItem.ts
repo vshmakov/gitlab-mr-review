@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import {
 	GitLabMergeRequest,
@@ -68,65 +69,60 @@ export class ReviewItem extends vscode.TreeItem {
 	}
 
 	public static createFile(
-		file: GitLabMergeRequestFile,
-	): ReviewItem {
-		const item = new ReviewItem(
-			'file',
-			file.path,
-			vscode.TreeItemCollapsibleState.None,
-			undefined,
-			file,
-		);
+	file: GitLabMergeRequestFile,
+): ReviewItem {
+	const fileName = path.basename(file.path);
+	const directory = path.dirname(file.path);
+	const prefix =
+		ReviewItem.getFilePrefix(file);
 
-		item.description =
-			ReviewItem.getFileStatus(file);
+	const label = `${prefix} ${fileName}`;
 
-		item.tooltip =
-			ReviewItem.getFileTooltip(file);
+	const item = new ReviewItem(
+		'file',
+		label,
+		vscode.TreeItemCollapsibleState.None,
+		undefined,
+		file,
+	);
 
-		item.contextValue = 'mergeRequestFile';
+	item.description =
+		directory === '.'
+			? undefined
+			: directory;
 
-		item.iconPath = new vscode.ThemeIcon(
-			ReviewItem.getFileIcon(file),
-		);
+	item.accessibilityInformation = {
+		label:
+			directory === '.'
+				? label
+				: `${label}, ${directory}`,
+		role: 'treeitem',
+	};
 
-		return item;
-	}
+	item.tooltip =
+		ReviewItem.getFileTooltip(file);
 
-	private static getFileStatus(
-		file: GitLabMergeRequestFile,
-	): string | undefined {
-		if (file.added) {
-			return 'added';
-		}
+	item.contextValue = 'mergeRequestFile';
 
-		if (file.deleted) {
-			return 'deleted';
-		}
+	return item;
+}
 
-		if (file.renamed) {
-			return 'renamed';
-		}
-
-		return undefined;
-	}
-
-	private static getFileIcon(
+	private static getFilePrefix(
 		file: GitLabMergeRequestFile,
 	): string {
 		if (file.added) {
-			return 'diff-added';
+			return 'A';
 		}
 
 		if (file.deleted) {
-			return 'diff-removed';
+			return 'D';
 		}
 
 		if (file.renamed) {
-			return 'diff-renamed';
+			return 'R';
 		}
 
-		return 'file';
+		return 'M';
 	}
 
 	private static getFileTooltip(

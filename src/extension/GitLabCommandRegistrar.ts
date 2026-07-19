@@ -1,16 +1,26 @@
 import * as vscode from 'vscode';
-import {
-	GitLabMergeRequest,
-	GitLabMergeRequestFile,
-} from '../client/GitLabClient';
-import { GitLabAuthenticationService } from './GitLabAuthenticationService';
+
+import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
+import { UnifiedDiffParser } from '../review/diff/unified-diff-parser';
 import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
+import { GitLabAuthenticationService } from './GitLabAuthenticationService';
+import { OpenedDiffStore } from '../review/opened-diff-store';
+
+export interface OpenFilePatchCommandArguments {
+	mergeRequest: GitLabMergeRequest;
+	file: GitLabMergeRequestFile;
+}
 
 export class GitLabCommandRegistrar {
 	public constructor(
 		private readonly treeProvider: ReviewTreeProvider,
 		private readonly authenticationService:
 			GitLabAuthenticationService,
+		private readonly unifiedDiffParser:
+			UnifiedDiffParser,
+		private readonly openedDiffStore:
+			OpenedDiffStore,
 	) {}
 
 	public register(): vscode.Disposable[] {
@@ -59,8 +69,9 @@ export class GitLabCommandRegistrar {
 		vscode.Disposable {
 		return vscode.commands.registerCommand(
 			'gitlabMrReview.openFilePatch',
-			(file: GitLabMergeRequestFile) =>
-				this.openFilePatch(file),
+			(
+				arguments_: OpenFilePatchCommandArguments,
+			) => this.openFilePatch(arguments_),
 		);
 	}
 
@@ -73,8 +84,13 @@ export class GitLabCommandRegistrar {
 	}
 
 	private async openFilePatch(
-		file: GitLabMergeRequestFile,
+		arguments_: OpenFilePatchCommandArguments,
 	): Promise<void> {
+		const {
+			mergeRequest,
+			file,
+		} = arguments_;
+
 		if (!file.diff.trim()) {
 			void vscode.window.showInformationMessage(
 				`Для файла ${file.path} патч отсутствует.`,
@@ -83,16 +99,33 @@ export class GitLabCommandRegistrar {
 			return;
 		}
 
+		const patchContent =
+			this.createPatchContent(file);
+
+		const parsedDiff =
+			this.unifiedDiffParser.parse(
+				patchContent,
+			);
+
 		const document =
 			await vscode.workspace.openTextDocument({
-				content: this.createPatchContent(file),
+				content: parsedDiff.text,
 				language: 'diff',
 			});
+
+		this.openedDiffStore.set(
+			document,
+			{
+				mergeRequest,
+				file,
+				parsedDiff,
+			},
+		);
 
 		await vscode.window.showTextDocument(
 			document,
 			{
-				preview: true,
+				preview: false,
 			},
 		);
 	}

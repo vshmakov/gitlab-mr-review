@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import { GitLabCommandRegistrar } from './GitLabCommandRegistrar';
-import { ReviewTreeProvider } from '../review/ReviewTreeProvider';
+import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
 
 export class GitLabMrReviewExtension {
 	private readonly treeProvider: ReviewTreeProvider;

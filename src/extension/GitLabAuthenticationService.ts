@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { GitLabClient } from '../client/GitLabClient';
-import { ReviewTreeProvider } from '../review/ReviewTreeProvider';
+
 import { TOKEN_SECRET_KEY } from './constants';
+import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
 
 
 export class GitLabAuthenticationService {

@@ -1,151 +1,131 @@
+import * as vscode from 'vscode';
 import {
-	GitLabClient,
 	GitLabMergeRequest,
-	GitLabMergeRequestFile,
 } from '../client/GitLabClient';
 import { GitLabClientFactory } from './GitLabClientFactory';
+import { ReviewDataSource } from './ReviewDataSource';
+import { ReviewItem } from '../review/ReviewItem';
 
-export class ReviewDataSource {
-	private client?: GitLabClient;
+export class ReviewTreeProvider
+	implements vscode.TreeDataProvider<ReviewItem>
+{
+	private readonly changeEmitter =
+		new vscode.EventEmitter<
+			ReviewItem | undefined | void
+		>();
 
-	private mergeRequests?: GitLabMergeRequest[];
+	public readonly onDidChangeTreeData =
+		this.changeEmitter.event;
 
-	private mergeRequestsLoading?:
-		Promise<GitLabMergeRequest[]>;
-
-	private readonly filesCache = new Map<
-		string,
-		GitLabMergeRequestFile[]
-	>();
-
-	private readonly filesLoading = new Map<
-		string,
-		Promise<GitLabMergeRequestFile[]>
-	>();
+	private readonly dataSource:
+		ReviewDataSource;
 
 	public constructor(
-		private readonly clientFactory:
-			GitLabClientFactory,
-	) {}
+		context: vscode.ExtensionContext,
+	) {
+		this.dataSource = new ReviewDataSource(
+			new GitLabClientFactory(context),
+		);
+	}
 
 	public refresh(): void {
-		this.client = undefined;
-		this.mergeRequests = undefined;
-		this.mergeRequestsLoading = undefined;
-
-		this.filesCache.clear();
-		this.filesLoading.clear();
+		this.dataSource.refresh();
+		this.changeEmitter.fire();
 	}
 
-	public async getMergeRequests():
-		Promise<GitLabMergeRequest[]> {
-		if (this.mergeRequests) {
-			return this.mergeRequests;
-		}
-
-		if (this.mergeRequestsLoading) {
-			return this.mergeRequestsLoading;
-		}
-
-		const request = this.loadMergeRequests()
-			.then(mergeRequests => {
-				this.mergeRequests =
-					mergeRequests;
-
-				return mergeRequests;
-			})
-			.finally(() => {
-				this.mergeRequestsLoading =
-					undefined;
-			});
-
-		this.mergeRequestsLoading = request;
-
-		return request;
+	public getTreeItem(
+		element: ReviewItem,
+	): vscode.TreeItem {
+		return element;
 	}
 
-	public async getMergeRequestFiles(
-		mergeRequest: GitLabMergeRequest,
-	): Promise<GitLabMergeRequestFile[]> {
-		const cacheKey =
-			this.getMergeRequestCacheKey(
-				mergeRequest,
-			);
-
-		const cachedFiles =
-			this.filesCache.get(cacheKey);
-
-		if (cachedFiles) {
-			return cachedFiles;
+	public async getChildren(
+		element?: ReviewItem,
+	): Promise<ReviewItem[]> {
+		if (!element) {
+			return this.getMergeRequestItems();
 		}
 
-		const loadingFiles =
-			this.filesLoading.get(cacheKey);
-
-		if (loadingFiles) {
-			return loadingFiles;
-		}
-
-		const client = this.client;
-
-		if (!client) {
-			throw new Error(
-				'GitLab client is not initialized',
+		if (
+			element.type === 'mergeRequest' &&
+			element.mergeRequest
+		) {
+			return this.getFileItems(
+				element.mergeRequest,
 			);
 		}
 
-		const request = client
-			.getMergeRequestFiles(mergeRequest)
-			.then(files => {
-				this.filesCache.set(
-					cacheKey,
-					files,
-				);
-
-				return files;
-			})
-			.finally(() => {
-				this.filesLoading.delete(cacheKey);
-			});
-
-		this.filesLoading.set(cacheKey, request);
-
-		return request;
+		return [];
 	}
 
-	private async loadMergeRequests():
-		Promise<GitLabMergeRequest[]> {
-		const client =
-			await this.clientFactory.create();
+	private async getMergeRequestItems():
+		Promise<ReviewItem[]> {
+		try {
+			const mergeRequests =
+				await this.dataSource
+					.getMergeRequests();
 
-		if (!client) {
-			this.client = undefined;
+			void vscode.window.setStatusBarMessage(
+				`GitLab MR Review: найдено ` +
+					`${mergeRequests.length} MR`,
+				5000,
+			);
+
+			return mergeRequests.map(
+				mergeRequest =>
+					ReviewItem
+						.createMergeRequest(
+							mergeRequest,
+						),
+			);
+		} catch (error: unknown) {
+			this.showLoadError(
+				'Не удалось загрузить GitLab MR',
+				error,
+			);
 
 			return [];
 		}
+	}
 
-		this.client = client;
-
+	private async getFileItems(
+		mergeRequest: GitLabMergeRequest,
+	): Promise<ReviewItem[]> {
 		try {
-			const user =
-				await client.getCurrentUser();
+			const files =
+				await this.dataSource
+					.getMergeRequestFiles(
+						mergeRequest,
+					);
 
-			return await client.getPendingReviews(
-				user,
+			return files.map(
+				file =>
+					ReviewItem.createFile(file),
 			);
 		} catch (error: unknown) {
-			this.client = undefined;
+			this.showLoadError(
+				`Не удалось загрузить файлы MR ` +
+					`!${mergeRequest.iid}`,
+				error,
+			);
 
-			throw error;
+			return [];
 		}
 	}
 
-	private getMergeRequestCacheKey(
-		mergeRequest: GitLabMergeRequest,
-	): string {
-		return (
-			`${mergeRequest.project_id}:` +
-			`${mergeRequest.iid}`
+	private showLoadError(
+		prefix: string,
+		error: unknown,
+	): void {
+		const message =
+			error instanceof Error
+				? error.message
+				: String(error);
+
+		console.error(prefix, error);
+
+		void vscode.window.showErrorMessage(
+			`${prefix}: ${message}`,
 		);
 	}
 }

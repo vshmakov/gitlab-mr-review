@@ -130,6 +130,7 @@ export class GitLabClient {
 			: diff.new_path,
 		oldPath: diff.old_path,
 		newPath: diff.new_path,
+		diff: diff.diff,
 		added: diff.new_file,
 		deleted: diff.deleted_file,
 		renamed: diff.renamed_file,

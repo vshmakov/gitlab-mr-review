@@ -92,10 +92,7 @@ export class ReviewItem extends vscode.TreeItem {
 			: directory;
 
 	item.accessibilityInformation = {
-		label:
-			directory === '.'
-				? label
-				: `${label}, ${directory}`,
+		label,
 		role: 'treeitem',
 	};
 
@@ -103,6 +100,13 @@ export class ReviewItem extends vscode.TreeItem {
 		ReviewItem.getFileTooltip(file);
 
 	item.contextValue = 'mergeRequestFile';
+
+	item.command = {
+		command:
+			'gitlabMrReview.openFilePatch',
+		title: 'Открыть патч файла',
+		arguments: [file],
+	};
 
 	return item;
 }

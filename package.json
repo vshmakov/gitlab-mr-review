@@ -26,6 +26,10 @@
         "title": "GitLab MR Review: Log Out"
       },
       {
+	"command": "gitlabMrReview.openFilePatch",
+	"title": "GitLab MR Review: Open File Patch"
+},
+      {
         "command": "gitlabMrReview.openMergeRequest",
         "title": "GitLab MR Review: Open Merge Request"
       }
@@ -34,7 +38,7 @@
       "activitybar": [
         {
           "id": "gitlabMrReview",
-          "title": "GitLab",
+          "title": "GitLab Merge Requests",
           "icon": "resources/gitlab.svg"
         }
       ]

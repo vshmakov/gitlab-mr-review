@@ -69,6 +69,7 @@ export class ReviewItem extends vscode.TreeItem {
 	}
 
 	public static createFile(
+	mergeRequest: GitLabMergeRequest,
 	file: GitLabMergeRequestFile,
 ): ReviewItem {
 	const fileName = path.basename(file.path);
@@ -102,11 +103,16 @@ export class ReviewItem extends vscode.TreeItem {
 	item.contextValue = 'mergeRequestFile';
 
 	item.command = {
-		command:
-			'gitlabMrReview.openFilePatch',
-		title: 'Открыть патч файла',
-		arguments: [file],
-	};
+	command:
+		'gitlabMrReview.openFilePatch',
+	title: 'Открыть патч файла',
+	arguments: [
+		{
+			mergeRequest,
+			file,
+		},
+	],
+};
 
 	return item;
 }

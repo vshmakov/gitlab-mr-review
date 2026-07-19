@@ -100,7 +100,8 @@ export class ReviewTreeProvider
 
 			return files.map(
 				file =>
-					ReviewItem.createFile(file),
+					ReviewItem.
+				createFile(mergeRequest, file),
 			);
 		} catch (error: unknown) {
 			this.showLoadError(

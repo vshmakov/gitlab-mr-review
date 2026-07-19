@@ -28,12 +28,8 @@
       {
 	"command": "gitlabMrReview.openFilePatch",
 	"title": "GitLab MR Review: Open File Patch"
-},
-      {
-        "command": "gitlabMrReview.openMergeRequest",
-        "title": "GitLab MR Review: Open Merge Request"
-      }
-    ],
+}
+          ],
     "viewsContainers": {
       "activitybar": [
         {

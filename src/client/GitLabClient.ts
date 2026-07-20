@@ -112,14 +112,18 @@ export class GitLabClient {
 	}
 
 	private createMergeRequestDiffsPath(
-		mergeRequest: GitLabMergeRequest,
-	): string {
-		return (
-			`/api/v4/projects/` +
-			`${mergeRequest.project_id}/` +
-			`merge_requests/${mergeRequest.iid}/diffs`
-		);
-	}
+	mergeRequest: GitLabMergeRequest,
+): string {
+	const query = new URLSearchParams({
+		per_page: '100',
+	}).toString();
+
+	return (
+		`/api/v4/projects/` +
+		`${mergeRequest.project_id}/` +
+		`merge_requests/${mergeRequest.iid}/diffs?${query}`
+	);
+}
 
 	private mapMergeRequestFile(
 	diff: GitLabMergeRequestDiffResponse,

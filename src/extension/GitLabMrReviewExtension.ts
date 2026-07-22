@@ -4,6 +4,7 @@ import { UnifiedDiffParser } from '../review/diff/unified-diff-parser';
 import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import { GitLabCommandRegistrar } from './GitLabCommandRegistrar';
+import { GitLabFileOpener } from './GitLabFileOpener';
 import { OpenedDiffStore } from '../review/opened-diff-store';
 
 export class GitLabMrReviewExtension {
@@ -17,6 +18,8 @@ export class GitLabMrReviewExtension {
 
 	private readonly openedDiffStore:
 		OpenedDiffStore;
+
+	private readonly fileOpener: GitLabFileOpener;
 
 	private readonly commandRegistrar:
 		GitLabCommandRegistrar;
@@ -39,12 +42,17 @@ export class GitLabMrReviewExtension {
 		this.openedDiffStore =
 			new OpenedDiffStore();
 
+		this.fileOpener =
+			new GitLabFileOpener(
+				this.unifiedDiffParser,
+				this.openedDiffStore,
+			);
+
 		this.commandRegistrar =
 			new GitLabCommandRegistrar(
 				this.treeProvider,
 				this.authenticationService,
-				this.unifiedDiffParser,
-				this.openedDiffStore,
+				this.fileOpener,
 			);
 	}
 

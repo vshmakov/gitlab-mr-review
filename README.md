@@ -1,71 +1,48 @@
-# gitlab-mr-review README
+# GitLab MR Review
 
-This is the README for your extension "gitlab-mr-review". After writing up a brief description, we recommend including the following sections.
+Расширение для VS Code, которое показывает Merge Requests, ожидающие твоего ревью.
 
-## Features
+## Что умеет
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Показывает список MR-ов из GitLab в боковой панели VS Code
+- Позволяет смотреть дифф каждого файла прямо в редакторе
+- Открывает MR в браузере по клику
+- Парсит unified diff с подсветкой синтаксиса
 
-For example if there is an image subfolder under your extension project workspace:
+## Установка
 
-\!\[feature X\]\(images/feature-x.png\)
+1. Скопируй папку в расширения VS Code или установи из `.vsix`:
+```bash
+vsce package
+code --install-extension gitlab-mr-review-0.0.1.vsix
+```
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Настройка
 
-## Requirements
+1. Укажи адрес GitLab-сервера в настройках:
+```json
+{
+  "gitlabMrReview.url": "https://gitlab.example.com"
+}
+```
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+2. Нажми **GitLab MR Review: Authenticate** в Command Palette для авторизации.
 
-## Extension Settings
+## Команды
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+| Команда | Описание |
+|---------|----------|
+| `GitLab MR Review: Refresh` | Обновить список MR-ов |
+| `GitLab MR Review: Authenticate` | Авторизоваться в GitLab |
+| `GitLab MR Review: Log Out` | Выйти из аккаунта |
+| `GitLab MR Review: Open File Patch` | Открыть дифф файла в редакторе |
 
-For example:
+## Разработка
 
-This extension contributes the following settings:
+```bash
+npm install
+npm run compile    # компиляция
+npm run watch      # режим наблюдения
+```
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Запусти debug в VS Code (F5) — откроется новое окно с расширением.

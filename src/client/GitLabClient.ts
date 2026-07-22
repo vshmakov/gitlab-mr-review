@@ -1,4 +1,3 @@
-import { GitLabGraphQLClient } from './GitLabGraphQLClient';
 import { GitLabRestClient } from './GitLabRestClient';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import {
@@ -8,17 +7,11 @@ import {
 import { GitLabUser } from '../model/GitLabUser';
 import { PendingReviewService } from '../review/PendingReviewService';
 
-export {
-	GitLabMergeRequest,
-} from '../model/GitLabMergeRequest';
+export { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 
-export {
-	GitLabMergeRequestFile,
-} from '../model/GitLabMergeRequestFile';
+export { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
-export {
-	GitLabUser,
-} from '../model/GitLabUser';
+export { GitLabUser } from '../model/GitLabUser';
 
 export class GitLabClient {
 	private readonly restClient: GitLabRestClient;
@@ -27,35 +20,21 @@ export class GitLabClient {
 		PendingReviewService;
 
 	public constructor(
-		baseUrl: string,
-		token: string,
+		restClient: GitLabRestClient,
+		pendingReviewService: PendingReviewService,
 	) {
-		this.restClient = new GitLabRestClient(
-			baseUrl,
-			token,
-		);
-
-		const graphQLClient = new GitLabGraphQLClient(
-			baseUrl,
-			token,
-		);
-
-		this.pendingReviewService =
-			new PendingReviewService(graphQLClient);
+		this.restClient = restClient;
+		this.pendingReviewService = pendingReviewService;
 	}
 
 	public async getCurrentUser(): Promise<GitLabUser> {
-		return this.restClient.get<GitLabUser>(
-			'/api/v4/user',
-		);
+		return this.restClient.get<GitLabUser>('/api/v4/user');
 	}
 
 	public async getMergeRequestsForReviewer(
 		reviewerId: number,
 	): Promise<GitLabMergeRequest[]> {
-		const query = this.createReviewerQuery(
-			reviewerId,
-		);
+		const query = this.createReviewerQuery(reviewerId);
 
 		return this.restClient.get<GitLabMergeRequest[]>(
 			`/api/v4/merge_requests?${query}`,
@@ -66,19 +45,16 @@ export class GitLabClient {
 		user: GitLabUser,
 	): Promise<GitLabMergeRequest[]> {
 		const mergeRequests =
-			await this.getMergeRequestsForReviewer(
-				user.id,
-			);
+			await this.getMergeRequestsForReviewer(user.id);
 
 		if (mergeRequests.length === 0) {
 			return [];
 		}
 
-		return this.pendingReviewService
-			.filterPendingReviews(
-				mergeRequests,
-				user,
-			);
+		return this.pendingReviewService.filterPendingReviews(
+			mergeRequests,
+			user,
+		);
 	}
 
 	public async getMergeRequestFiles(
@@ -93,8 +69,8 @@ export class GitLabClient {
 				GitLabMergeRequestDiffResponse[]
 			>(path);
 
-		return diffs.map(
-			diff => this.mapMergeRequestFile(diff),
+		return diffs.map(diff =>
+			this.mapMergeRequestFile(diff),
 		);
 	}
 
@@ -112,32 +88,32 @@ export class GitLabClient {
 	}
 
 	private createMergeRequestDiffsPath(
-	mergeRequest: GitLabMergeRequest,
-): string {
-	const query = new URLSearchParams({
-		per_page: '100',
-	}).toString();
+		mergeRequest: GitLabMergeRequest,
+	): string {
+		const query = new URLSearchParams({
+			per_page: '100',
+		}).toString();
 
-	return (
-		`/api/v4/projects/` +
-		`${mergeRequest.project_id}/` +
-		`merge_requests/${mergeRequest.iid}/diffs?${query}`
-	);
-}
+		return (
+			`/api/v4/projects/` +
+			`${mergeRequest.project_id}/` +
+			`merge_requests/${mergeRequest.iid}/diffs?${query}`
+		);
+	}
 
 	private mapMergeRequestFile(
-	diff: GitLabMergeRequestDiffResponse,
-): GitLabMergeRequestFile {
-	return {
-		path: diff.deleted_file
-			? diff.old_path
-			: diff.new_path,
-		oldPath: diff.old_path,
-		newPath: diff.new_path,
-		diff: diff.diff,
-		added: diff.new_file,
-		deleted: diff.deleted_file,
-		renamed: diff.renamed_file,
-	};
-}
+		diff: GitLabMergeRequestDiffResponse,
+	): GitLabMergeRequestFile {
+		return {
+			path: diff.deleted_file
+				? diff.old_path
+				: diff.new_path,
+			oldPath: diff.old_path,
+			newPath: diff.new_path,
+			diff: diff.diff,
+			added: diff.new_file,
+			deleted: diff.deleted_file,
+			renamed: diff.renamed_file,
+		};
+	}
 }

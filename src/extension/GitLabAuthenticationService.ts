@@ -110,12 +110,12 @@ export class GitLabAuthenticationService {
 
 		await this.saveCredentials(baseUrl, token);
 
-		const user = await this.clientFactory.create();
-		if (user) {
-			const current = await user.getCurrentUser();
+		const client = await this.clientFactory.create();
+		if (client) {
+			const user = await client.getCurrentUser();
 			void vscode.window.showInformationMessage(
 				`GitLab: выполнен вход как ` +
-					`${current.name} (@${current.username}).`,
+					`${user.name} (@${user.username}).`,
 			);
 		}
 

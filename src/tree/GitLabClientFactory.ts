@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 import { GitLabClient } from '../client/GitLabClient';
+import { GitLabRestClient } from '../client/GitLabRestClient';
+import { GitLabGraphQLClient } from '../client/GitLabGraphQLClient';
+import { PendingReviewService } from '../review/PendingReviewService';
 import { TOKEN_SECRET_KEY } from '../extension/constants';
 
 export class GitLabClientFactory {
@@ -24,7 +27,7 @@ export class GitLabClientFactory {
 		}
 
 		try {
-			this.client = new GitLabClient(
+			this.client = this.buildClient(
 				credentials.baseUrl,
 				credentials.token,
 			);
@@ -40,7 +43,7 @@ export class GitLabClientFactory {
 		token: string,
 	): Promise<boolean> {
 		try {
-			const client = new GitLabClient(baseUrl, token);
+			const client = this.buildClient(baseUrl, token);
 			await client.getCurrentUser();
 			this.client = client;
 			return true;
@@ -52,6 +55,29 @@ export class GitLabClientFactory {
 
 	public clear(): void {
 		this.client = undefined;
+	}
+
+	private buildClient(
+		baseUrl: string,
+		token: string,
+	): GitLabClient {
+		const restClient = new GitLabRestClient(
+			baseUrl,
+			token,
+		);
+
+		const graphQLClient = new GitLabGraphQLClient(
+			baseUrl,
+			token,
+		);
+
+		const pendingReviewService =
+			new PendingReviewService(graphQLClient);
+
+		return new GitLabClient(
+			restClient,
+			pendingReviewService,
+		);
 	}
 
 	private async loadCredentials(): Promise<

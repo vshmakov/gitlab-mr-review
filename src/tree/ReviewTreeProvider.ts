@@ -21,10 +21,10 @@ export class ReviewTreeProvider
 		ReviewDataSource;
 
 	public constructor(
-		context: vscode.ExtensionContext,
+		clientFactory: GitLabClientFactory,
 	) {
 		this.dataSource = new ReviewDataSource(
-			new GitLabClientFactory(context),
+			clientFactory,
 		);
 	}
 

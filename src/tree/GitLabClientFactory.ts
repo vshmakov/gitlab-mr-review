@@ -3,41 +3,73 @@ import { GitLabClient } from '../client/GitLabClient';
 import { TOKEN_SECRET_KEY } from '../extension/constants';
 
 export class GitLabClientFactory {
+	private client?: GitLabClient;
+
 	public constructor(
-		private readonly context:
-			vscode.ExtensionContext,
+		private readonly context: vscode.ExtensionContext,
 	) {}
 
-	public async create():
-		Promise<GitLabClient | undefined> {
-		const baseUrl = this.getBaseUrl();
-
-		if (!baseUrl) {
-			await this.requestAuthentication(
-				'GitLab не настроен.',
-			);
-
-			return undefined;
+	public async create(): Promise<GitLabClient | undefined> {
+		if (this.client) {
+			return this.client;
 		}
 
-		const token =
-			await this.context.secrets.get(
-				TOKEN_SECRET_KEY,
-			);
-
-		if (!token) {
+		const credentials = await this.loadCredentials();
+		if (!credentials) {
 			await this.requestAuthentication(
 				'Для загрузки merge requests ' +
 					'требуется аутентификация GitLab.',
 			);
-
 			return undefined;
 		}
 
-		return new GitLabClient(
-			baseUrl,
-			token,
-		);
+		try {
+			this.client = new GitLabClient(
+				credentials.baseUrl,
+				credentials.token,
+			);
+			return this.client;
+		} catch {
+			this.client = undefined;
+			return undefined;
+		}
+	}
+
+	public async setCredentials(
+		baseUrl: string,
+		token: string,
+	): Promise<boolean> {
+		try {
+			const client = new GitLabClient(baseUrl, token);
+			await client.getCurrentUser();
+			this.client = client;
+			return true;
+		} catch {
+			this.client = undefined;
+			return false;
+		}
+	}
+
+	public clear(): void {
+		this.client = undefined;
+	}
+
+	private async loadCredentials(): Promise<
+		| { baseUrl: string; token: string }
+		| undefined
+	> {
+		const baseUrl = this.getBaseUrl();
+		if (!baseUrl) {
+			return undefined;
+		}
+
+		const token =
+			await this.context.secrets.get(TOKEN_SECRET_KEY);
+		if (!token) {
+			return undefined;
+		}
+
+		return { baseUrl, token };
 	}
 
 	private getBaseUrl(): string {

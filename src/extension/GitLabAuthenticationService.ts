@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
-import { GitLabClient } from '../client/GitLabClient';
 
 import { TOKEN_SECRET_KEY } from './constants';
 import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
-
+import { GitLabClientFactory } from '../tree/GitLabClientFactory';
 
 export class GitLabAuthenticationService {
 	private static readonly CONFIGURATION_SECTION =
@@ -14,6 +13,7 @@ export class GitLabAuthenticationService {
 	public constructor(
 		private readonly context: vscode.ExtensionContext,
 		private readonly treeProvider: ReviewTreeProvider,
+		private readonly clientFactory: GitLabClientFactory,
 	) {}
 
 	public async authenticate(): Promise<void> {
@@ -31,7 +31,7 @@ export class GitLabAuthenticationService {
 					'GitLab: выполняется аутентификация...',
 				cancellable: false,
 			},
-			() =>
+			async () =>
 				this.performAuthentication(
 					credentials.baseUrl,
 					credentials.token,
@@ -41,12 +41,12 @@ export class GitLabAuthenticationService {
 
 	public async logout(): Promise<void> {
 		await this.context.secrets.delete(TOKEN_SECRET_KEY);
+		this.clientFactory.clear();
+		this.treeProvider.refresh();
 
 		void vscode.window.showInformationMessage(
 			'Выход из GitLab выполнен.',
 		);
-
-		this.treeProvider.refresh();
 	}
 
 	private async requestCredentials(): Promise<
@@ -96,21 +96,30 @@ export class GitLabAuthenticationService {
 		baseUrl: string,
 		token: string,
 	): Promise<void> {
-		try {
-			const client = new GitLabClient(baseUrl, token);
-			const user = await client.getCurrentUser();
+		const success = await this.clientFactory.setCredentials(
+			baseUrl,
+			token,
+		);
 
-			await this.saveCredentials(baseUrl, token);
+		if (!success) {
+			this.showAuthenticationError(
+				'Неверный URL или токен.',
+			);
+			return;
+		}
 
+		await this.saveCredentials(baseUrl, token);
+
+		const user = await this.clientFactory.create();
+		if (user) {
+			const current = await user.getCurrentUser();
 			void vscode.window.showInformationMessage(
 				`GitLab: выполнен вход как ` +
-					`${user.name} (@${user.username}).`,
+					`${current.name} (@${current.username}).`,
 			);
-
-			this.treeProvider.refresh();
-		} catch (error: unknown) {
-			this.showAuthenticationError(error);
 		}
+
+		this.treeProvider.refresh();
 	}
 
 	private async saveCredentials(
@@ -149,12 +158,7 @@ export class GitLabAuthenticationService {
 		return trimmedValue.replace(/\/+$/, '');
 	}
 
-	private showAuthenticationError(error: unknown): void {
-		const message =
-			error instanceof Error
-				? error.message
-				: String(error);
-
+	private showAuthenticationError(message: string): void {
 		void vscode.window.showErrorMessage(
 			`Ошибка аутентификации GitLab: ${message}`,
 		);

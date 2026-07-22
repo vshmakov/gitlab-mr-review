@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import { UnifiedDiffParser } from '../review/diff/unified-diff-parser';
+import { GitLabClientFactory } from '../tree/GitLabClientFactory';
 import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import { GitLabCommandRegistrar } from './GitLabCommandRegistrar';
@@ -27,13 +28,17 @@ export class GitLabMrReviewExtension {
 	public constructor(
 		private readonly context: vscode.ExtensionContext,
 	) {
+		const clientFactory =
+			new GitLabClientFactory(context);
+
 		this.treeProvider =
-			new ReviewTreeProvider(context);
+			new ReviewTreeProvider(clientFactory);
 
 		this.authenticationService =
 			new GitLabAuthenticationService(
 				context,
 				this.treeProvider,
+				clientFactory,
 			);
 
 		this.unifiedDiffParser =

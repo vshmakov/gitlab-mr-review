@@ -32,8 +32,8 @@ export class ReviewItem extends vscode.TreeItem {
 		);
 
 		item.description =
-			mergeRequest.references?.full ??
-			mergeRequest.author?.name;
+			`${mergeRequest.author?.name ?? 'не указан'} ` +
+			`${mergeRequest.references?.full ?? ''}`.trim();
 
 		item.tooltip = new vscode.MarkdownString(
 			[

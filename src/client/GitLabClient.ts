@@ -7,12 +7,6 @@ import {
 import { GitLabUser } from '../model/GitLabUser';
 import { PendingReviewService } from '../review/PendingReviewService';
 
-export { GitLabMergeRequest } from '../model/GitLabMergeRequest';
-
-export { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
-
-export { GitLabUser } from '../model/GitLabUser';
-
 export class GitLabClient {
 	private readonly restClient: GitLabRestClient;
 

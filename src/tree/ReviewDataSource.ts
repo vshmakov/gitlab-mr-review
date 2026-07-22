@@ -1,8 +1,6 @@
-import {
-	GitLabMergeRequest,
-	GitLabMergeRequestFile,
-} from '../client/GitLabClient';
-import { GitLabClientFactory } from './GitLabClientFactory';
+import { GitLabClientFactory } from '../client/GitLabClientFactory';
+import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
 export class ReviewDataSource {
 	private mergeRequests?: GitLabMergeRequest[];
@@ -112,7 +110,9 @@ export class ReviewDataSource {
 	): Promise<GitLabMergeRequestFile[]> {
 		const client = await this.clientFactory.create();
 		if (!client) {
-			throw new Error('GitLab client is not initialized');
+			throw new Error(
+				'GitLab client is not initialized',
+			);
 		}
 
 		return client.getMergeRequestFiles(mergeRequest);

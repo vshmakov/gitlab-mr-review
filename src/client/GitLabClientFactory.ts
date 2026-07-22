@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { GitLabClient } from '../client/GitLabClient';
-import { GitLabRestClient } from '../client/GitLabRestClient';
-import { GitLabGraphQLClient } from '../client/GitLabGraphQLClient';
+import { GitLabClient } from './GitLabClient';
+import { GitLabRestClient } from './GitLabRestClient';
+import { GitLabGraphQLClient } from './GitLabGraphQLClient';
 import { PendingReviewService } from '../review/PendingReviewService';
-import { TOKEN_SECRET_KEY } from '../extension/constants';
+import { TOKEN_SECRET_KEY } from '../infra/constants';
 
 export class GitLabClientFactory {
 	private client?: GitLabClient;

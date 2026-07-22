@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 
-
 import { ParsedDiff } from './diff/parsed-diff';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';

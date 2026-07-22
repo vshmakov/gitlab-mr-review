@@ -1,9 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import {
-	GitLabMergeRequest,
-	GitLabMergeRequestFile,
-} from '../client/GitLabClient';
+import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
 export type ReviewItemType =
 	| 'mergeRequest'
@@ -69,53 +67,53 @@ export class ReviewItem extends vscode.TreeItem {
 	}
 
 	public static createFile(
-	mergeRequest: GitLabMergeRequest,
-	file: GitLabMergeRequestFile,
-): ReviewItem {
-	const fileName = path.basename(file.path);
-	const directory = path.dirname(file.path);
-	const prefix =
-		ReviewItem.getFilePrefix(file);
+		mergeRequest: GitLabMergeRequest,
+		file: GitLabMergeRequestFile,
+	): ReviewItem {
+		const fileName = path.basename(file.path);
+		const directory = path.dirname(file.path);
+		const prefix =
+			ReviewItem.getFilePrefix(file);
 
-	const label = `${prefix} ${fileName}`;
+		const label = `${prefix} ${fileName}`;
 
-	const item = new ReviewItem(
-		'file',
-		label,
-		vscode.TreeItemCollapsibleState.None,
-		undefined,
-		file,
-	);
+		const item = new ReviewItem(
+			'file',
+			label,
+			vscode.TreeItemCollapsibleState.None,
+			undefined,
+			file,
+		);
 
-	item.description =
-		directory === '.'
-			? undefined
-			: directory;
+		item.description =
+			directory === '.'
+				? undefined
+				: directory;
 
-	item.accessibilityInformation = {
-		label,
-		role: 'treeitem',
+		item.accessibilityInformation = {
+			label,
+			role: 'treeitem',
+		};
+
+		item.tooltip =
+			ReviewItem.getFileTooltip(file);
+
+		item.contextValue = 'mergeRequestFile';
+
+		item.command = {
+		command:
+			'gitlabMrReview.openFilePatch',
+		title: 'Открыть патч файла',
+		arguments: [
+			{
+				mergeRequest,
+				file,
+			},
+		],
 	};
 
-	item.tooltip =
-		ReviewItem.getFileTooltip(file);
-
-	item.contextValue = 'mergeRequestFile';
-
-	item.command = {
-	command:
-		'gitlabMrReview.openFilePatch',
-	title: 'Открыть патч файла',
-	arguments: [
-		{
-			mergeRequest,
-			file,
-		},
-	],
-};
-
-	return item;
-}
+		return item;
+	}
 
 	private static getFilePrefix(
 		file: GitLabMergeRequestFile,

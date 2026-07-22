@@ -2,9 +2,8 @@ import * as vscode from 'vscode';
 
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
-import { ParsedDiff } from '../review/diff/parsed-diff';
 import { UnifiedDiffParser } from '../review/diff/unified-diff-parser';
-import { OpenedDiffStore } from '../review/opened-diff-store';
+import { OpenedDiffStore } from '../review/OpenedDiffStore';
 
 export interface OpenFilePatchCommandArguments {
 	mergeRequest: GitLabMergeRequest;

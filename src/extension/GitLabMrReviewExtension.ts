@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 
+import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { UnifiedDiffParser } from '../review/diff/unified-diff-parser';
-import { GitLabClientFactory } from '../tree/GitLabClientFactory';
+import { OpenedDiffStore } from '../review/OpenedDiffStore';
 import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import { GitLabCommandRegistrar } from './GitLabCommandRegistrar';
 import { GitLabFileOpener } from './GitLabFileOpener';
-import { OpenedDiffStore } from '../review/opened-diff-store';
 
 export class GitLabMrReviewExtension {
 	private readonly treeProvider: ReviewTreeProvider;

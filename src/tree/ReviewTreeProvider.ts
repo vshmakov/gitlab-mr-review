@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
-import {
-	GitLabMergeRequest,
-} from '../client/GitLabClient';
-import { GitLabClientFactory } from './GitLabClientFactory';
+import { GitLabClientFactory } from '../client/GitLabClientFactory';
+import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { ReviewDataSource } from './ReviewDataSource';
-import { ReviewItem } from '../review/ReviewItem';
+import { ReviewItem } from './ReviewItem';
 
 export class ReviewTreeProvider
 	implements vscode.TreeDataProvider<ReviewItem>

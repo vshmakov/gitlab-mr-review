@@ -67,7 +67,7 @@ export class GitLabClientFactory {
 			token,
 		);
 
-		const noteClient = new GitLabNoteClient(restClient);
+		const noteClient = new GitLabNoteClient(baseUrl, token);
 
 		const graphQLClient = new GitLabGraphQLClient(
 			baseUrl,

@@ -44,6 +44,25 @@ export class GitLabClient {
 		);
 	}
 
+	public async getMergeRequestDetails(
+		mergeRequest: GitLabMergeRequest,
+	): Promise<GitLabMergeRequest> {
+		const path =
+			`/api/v4/projects/${mergeRequest.project_id}/` +
+			`merge_requests/${mergeRequest.iid}`;
+
+		const details =
+			await this.restClient.get<GitLabMergeRequest>(path);
+
+		return {
+			...mergeRequest,
+			...details,
+			baseSha: details.diff_refs?.base_sha,
+			startSha: details.diff_refs?.start_sha,
+			headSha: details.diff_refs?.head_sha,
+		};
+	}
+
 	public async getPendingReviews(
 		user: GitLabUser,
 	): Promise<GitLabMergeRequest[]> {

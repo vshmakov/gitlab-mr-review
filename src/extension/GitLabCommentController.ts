@@ -65,10 +65,22 @@ export class GitLabCommentController {
 		line: number,
 		text: string,
 	): Promise<void> {
+		console.log(
+			'[CommentController] addComment:',
+			document.uri.toString(),
+			'line:', line,
+		);
+
 		const context = this.openedDiffStore.get(document);
 		if (!context) {
+			console.log(
+				'[CommentController] context not found for:',
+				document.uri.toString(),
+			);
 			return;
 		}
+
+		console.log('[CommentController] context found');
 
 		const parsedLine = context.parsedDiff.lines[line];
 

@@ -1,4 +1,3 @@
-import { GitLabRestClient } from './GitLabRestClient';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
@@ -7,7 +6,13 @@ export interface GitLabNote {
 }
 
 export class GitLabNoteClient {
-	public constructor(private readonly restClient: GitLabRestClient) {}
+	private readonly baseUrl: string;
+	private readonly token: string;
+
+	public constructor(baseUrl: string, token: string) {
+		this.baseUrl = baseUrl.replace(/\/+$/, '');
+		this.token = token;
+	}
 
 	public async createDraftNote(
 		mergeRequest: GitLabMergeRequest,
@@ -18,22 +23,42 @@ export class GitLabNoteClient {
 	): Promise<GitLabNote> {
 		const path =
 			`/api/v4/projects/${mergeRequest.project_id}/` +
-			`merge_requests/${mergeRequest.iid}/notes`;
+			`merge_requests/${mergeRequest.iid}/draft_notes`;
 
-		return this.restClient.post<GitLabNote>(path, {
-			body,
-			draft: true,
-			position: {
-				base_sha: mergeRequest.baseSha,
-				start_sha: mergeRequest.startSha,
-				head_sha: mergeRequest.headSha,
-				position_type: 'text',
-				old_path: file.oldPath,
-				new_path: file.newPath,
-				old_line: oldLine,
-				new_line: newLine,
+		const formData = new FormData();
+
+		formData.append('note', body);
+		formData.append('position[position_type]', 'text');
+		formData.append('position[base_sha]', mergeRequest.baseSha ?? '');
+		formData.append('position[start_sha]', mergeRequest.startSha ?? '');
+		formData.append('position[head_sha]', mergeRequest.headSha ?? '');
+		formData.append('position[old_path]', file.oldPath);
+		formData.append('position[new_path]', file.newPath);
+
+		if (oldLine != null) {
+			formData.append('position[old_line]', String(oldLine));
+		}
+
+		if (newLine != null) {
+			formData.append('position[new_line]', String(newLine));
+		}
+
+		const response = await fetch(`${this.baseUrl}${path}`, {
+			method: 'POST',
+			headers: {
+				'PRIVATE-TOKEN': this.token,
 			},
+			body: formData,
 		});
+
+		if (!response.ok) {
+			const text = await response.text();
+			throw new Error(
+				`GitLab API ${response.status}: ${text}`,
+			);
+		}
+
+		return response.json() as Promise<GitLabNote>;
 	}
 
 	public async submitNote(
@@ -44,8 +69,22 @@ export class GitLabNoteClient {
 			`/api/v4/projects/${mergeRequest.project_id}/` +
 			`merge_requests/${mergeRequest.iid}/notes/${noteId}`;
 
-		return this.restClient.patch<GitLabNote>(path, {
-			draft: false,
+		const response = await fetch(`${this.baseUrl}${path}`, {
+			method: 'PATCH',
+			headers: {
+				'PRIVATE-TOKEN': this.token,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ draft: false }),
 		});
+
+		if (!response.ok) {
+			const text = await response.text();
+			throw new Error(
+				`GitLab API ${response.status}: ${text}`,
+			);
+		}
+
+		return response.json() as Promise<GitLabNote>;
 	}
 }

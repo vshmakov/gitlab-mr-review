@@ -29,6 +29,15 @@ export class GitLabCommentService {
 			return;
 		}
 
+		console.log('[CommentService] handleComment:', {
+			text: data.text,
+			baseSha: data.mergeRequest.baseSha,
+			startSha: data.mergeRequest.startSha,
+			headSha: data.mergeRequest.headSha,
+			oldLine: data.oldLine,
+			newLine: data.newLine,
+		});
+
 		try {
 			const noteClient = client.getNoteClient();
 
@@ -48,6 +57,8 @@ export class GitLabCommentService {
 				error instanceof Error
 					? error.message
 					: String(error);
+
+			console.error('[CommentService] error:', message);
 
 			void vscode.window.showErrorMessage(
 				`Не удалось создать черновик: ${message}`,

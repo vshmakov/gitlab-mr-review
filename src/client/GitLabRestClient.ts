@@ -20,39 +20,10 @@ export class GitLabRestClient {
 		return response.json() as Promise<T>;
 	}
 
-	public async post<T>(path: string, body: unknown): Promise<T> {
-		const response = await fetch(`${this.baseUrl}${path}`, {
-			method: 'POST',
-			headers: this.createHeaders(),
-			body: JSON.stringify(body),
-		});
-
-		if (!response.ok) {
-			throw await this.createRequestError(response);
-		}
-
-		return response.json() as Promise<T>;
-	}
-
-	public async patch<T>(path: string, body: unknown): Promise<T> {
-		const response = await fetch(`${this.baseUrl}${path}`, {
-			method: 'PATCH',
-			headers: this.createHeaders(),
-			body: JSON.stringify(body),
-		});
-
-		if (!response.ok) {
-			throw await this.createRequestError(response);
-		}
-
-		return response.json() as Promise<T>;
-	}
-
 	private createHeaders(): Record<string, string> {
 		return {
 			'PRIVATE-TOKEN': this.token,
 			Accept: 'application/json',
-			'Content-Type': 'application/json',
 		};
 	}
 

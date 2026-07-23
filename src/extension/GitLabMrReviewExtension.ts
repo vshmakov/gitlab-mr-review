@@ -66,6 +66,7 @@ export class GitLabMrReviewExtension {
 				this.unifiedDiffParser,
 				this.openedDiffStore,
 				this.commentController,
+				clientFactory,
 			);
 
 		this.commandRegistrar =

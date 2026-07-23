@@ -7,6 +7,9 @@ export interface GitLabMergeRequest {
 	updated_at: string;
 	draft: boolean;
 	work_in_progress: boolean;
+	baseSha?: string;
+	startSha?: string;
+	headSha?: string;
 	references?: GitLabMergeRequestReferences;
 	author?: GitLabMergeRequestAuthor;
 }

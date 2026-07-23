@@ -53,7 +53,7 @@ export class GitLabMrReviewExtension {
 			new OpenedDiffStore();
 
 		const commentService =
-			new GitLabCommentService();
+			new GitLabCommentService(clientFactory);
 
 		this.commentController =
 			new GitLabCommentController(

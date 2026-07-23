@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { GitLabClient } from './GitLabClient';
 import { GitLabRestClient } from './GitLabRestClient';
+import { GitLabNoteClient } from './GitLabNoteClient';
 import { GitLabGraphQLClient } from './GitLabGraphQLClient';
 import { PendingReviewService } from '../review/PendingReviewService';
 import { TOKEN_SECRET_KEY } from '../infra/constants';
@@ -66,6 +67,8 @@ export class GitLabClientFactory {
 			token,
 		);
 
+		const noteClient = new GitLabNoteClient(restClient);
+
 		const graphQLClient = new GitLabGraphQLClient(
 			baseUrl,
 			token,
@@ -76,6 +79,7 @@ export class GitLabClientFactory {
 
 		return new GitLabClient(
 			restClient,
+			noteClient,
 			pendingReviewService,
 		);
 	}

@@ -1,4 +1,5 @@
 import { GitLabRestClient } from './GitLabRestClient';
+import { GitLabNoteClient } from './GitLabNoteClient';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import {
 	GitLabMergeRequestDiffResponse,
@@ -10,15 +11,23 @@ import { PendingReviewService } from '../review/PendingReviewService';
 export class GitLabClient {
 	private readonly restClient: GitLabRestClient;
 
+	private readonly noteClient: GitLabNoteClient;
+
 	private readonly pendingReviewService:
 		PendingReviewService;
 
 	public constructor(
 		restClient: GitLabRestClient,
+		noteClient: GitLabNoteClient,
 		pendingReviewService: PendingReviewService,
 	) {
 		this.restClient = restClient;
+		this.noteClient = noteClient;
 		this.pendingReviewService = pendingReviewService;
+	}
+
+	public getNoteClient(): GitLabNoteClient {
+		return this.noteClient;
 	}
 
 	public async getCurrentUser(): Promise<GitLabUser> {

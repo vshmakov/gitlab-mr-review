@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 
+import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
@@ -29,20 +30,16 @@ export class GitLabCommentService {
 			return;
 		}
 
-		console.log('[CommentService] handleComment:', {
-			text: data.text,
-			baseSha: data.mergeRequest.baseSha,
-			startSha: data.mergeRequest.startSha,
-			headSha: data.mergeRequest.headSha,
-			oldLine: data.oldLine,
-			newLine: data.newLine,
-		});
+		const mergeRequest = await this.ensureSha(
+			data.mergeRequest,
+			client,
+		);
 
 		try {
 			const noteClient = client.getNoteClient();
 
 			const note = await noteClient.createDraftNote(
-				data.mergeRequest,
+				mergeRequest,
 				data.file,
 				data.text,
 				data.oldLine,
@@ -64,5 +61,16 @@ export class GitLabCommentService {
 				`Не удалось создать черновик: ${message}`,
 			);
 		}
+	}
+
+	private async ensureSha(
+		mergeRequest: GitLabMergeRequest,
+		client: GitLabClient,
+	): Promise<GitLabMergeRequest> {
+		if (mergeRequest.baseSha) {
+			return mergeRequest;
+		}
+
+		return client.getMergeRequestDetails(mergeRequest);
 	}
 }

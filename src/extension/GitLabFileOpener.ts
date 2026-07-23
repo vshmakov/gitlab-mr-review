@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 
-import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 import { UnifiedDiffParser } from '../review/diff/unified-diff-parser';
@@ -23,7 +22,6 @@ export class GitLabFileOpener {
 		unifiedDiffParser: UnifiedDiffParser,
 		openedDiffStore: OpenedDiffStore,
 		commentController: GitLabCommentController,
-		private readonly clientFactory: GitLabClientFactory,
 	) {
 		this.unifiedDiffParser = unifiedDiffParser;
 		this.openedDiffStore = openedDiffStore;
@@ -50,9 +48,6 @@ export class GitLabFileOpener {
 			return;
 		}
 
-		const enrichedRequest =
-			await this.enrichMergeRequest(mergeRequest);
-
 		const patchContent = this.createPatchContent(file);
 
 		const parsedDiff = this.unifiedDiffParser.parse(
@@ -66,7 +61,7 @@ export class GitLabFileOpener {
 			});
 
 		this.openedDiffStore.set(document, {
-			mergeRequest: enrichedRequest,
+			mergeRequest,
 			file,
 			parsedDiff,
 		});
@@ -76,27 +71,6 @@ export class GitLabFileOpener {
 		await vscode.window.showTextDocument(document, {
 			preview: false,
 		});
-	}
-
-	private async enrichMergeRequest(
-		mergeRequest: GitLabMergeRequest,
-	): Promise<GitLabMergeRequest> {
-		if (mergeRequest.baseSha) {
-			return mergeRequest;
-		}
-
-		const client = await this.clientFactory.create();
-		if (!client) {
-			return mergeRequest;
-		}
-
-		try {
-			return await client.getMergeRequestDetails(
-				mergeRequest,
-			);
-		} catch {
-			return mergeRequest;
-		}
 	}
 
 	private createPatchContent(

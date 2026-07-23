@@ -4,6 +4,7 @@ import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 import { UnifiedDiffParser } from '../review/diff/unified-diff-parser';
 import { OpenedDiffStore } from '../review/OpenedDiffStore';
+import { GitLabCommentController } from './GitLabCommentController';
 
 export interface OpenFilePatchCommandArguments {
 	mergeRequest: GitLabMergeRequest;
@@ -15,12 +16,16 @@ export class GitLabFileOpener {
 
 	private readonly openedDiffStore: OpenedDiffStore;
 
+	private readonly commentController: GitLabCommentController;
+
 	public constructor(
 		unifiedDiffParser: UnifiedDiffParser,
 		openedDiffStore: OpenedDiffStore,
+		commentController: GitLabCommentController,
 	) {
 		this.unifiedDiffParser = unifiedDiffParser;
 		this.openedDiffStore = openedDiffStore;
+		this.commentController = commentController;
 	}
 
 	public async openMergeRequest(
@@ -60,6 +65,8 @@ export class GitLabFileOpener {
 			file,
 			parsedDiff,
 		});
+
+		this.commentController.onDocumentOpened(document);
 
 		await vscode.window.showTextDocument(document, {
 			preview: false,

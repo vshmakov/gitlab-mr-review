@@ -6,6 +6,8 @@ import { OpenedDiffStore } from '../review/OpenedDiffStore';
 import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import { GitLabCommandRegistrar } from './GitLabCommandRegistrar';
+import { GitLabCommentController } from './GitLabCommentController';
+import { GitLabCommentService } from './GitLabCommentService';
 import { GitLabFileOpener } from './GitLabFileOpener';
 
 export class GitLabMrReviewExtension {
@@ -19,6 +21,9 @@ export class GitLabMrReviewExtension {
 
 	private readonly openedDiffStore:
 		OpenedDiffStore;
+
+	private readonly commentController:
+		GitLabCommentController;
 
 	private readonly fileOpener: GitLabFileOpener;
 
@@ -47,10 +52,20 @@ export class GitLabMrReviewExtension {
 		this.openedDiffStore =
 			new OpenedDiffStore();
 
+		const commentService =
+			new GitLabCommentService();
+
+		this.commentController =
+			new GitLabCommentController(
+				this.openedDiffStore,
+				commentService,
+			);
+
 		this.fileOpener =
 			new GitLabFileOpener(
 				this.unifiedDiffParser,
 				this.openedDiffStore,
+				this.commentController,
 			);
 
 		this.commandRegistrar =
@@ -58,6 +73,7 @@ export class GitLabMrReviewExtension {
 				this.treeProvider,
 				this.authenticationService,
 				this.fileOpener,
+				this.commentController,
 			);
 	}
 
@@ -84,6 +100,7 @@ export class GitLabMrReviewExtension {
 		this.context.subscriptions.push(
 			treeView,
 			closeDocumentSubscription,
+			this.commentController,
 			...this.commandRegistrar.register(),
 		);
 	}

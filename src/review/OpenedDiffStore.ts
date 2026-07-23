@@ -8,6 +8,7 @@ export interface OpenedDiffContext {
 	mergeRequest: GitLabMergeRequest;
 	file: GitLabMergeRequestFile;
 	parsedDiff: ParsedDiff;
+	threads: vscode.CommentThread[];
 }
 
 export class OpenedDiffStore {
@@ -16,27 +17,33 @@ export class OpenedDiffStore {
 
 	public set(
 		document: vscode.TextDocument,
-		context: OpenedDiffContext,
-	): void {
-		this.contexts.set(
-			document.uri.toString(),
-			context,
-		);
+		context: Omit<OpenedDiffContext, 'threads'>,
+	): OpenedDiffContext {
+		const entry: OpenedDiffContext = {
+			...context,
+			threads: [],
+		};
+		this.contexts.set(document.uri.toString(), entry);
+		return entry;
 	}
 
 	public get(
 		document: vscode.TextDocument,
 	): OpenedDiffContext | undefined {
-		return this.contexts.get(
-			document.uri.toString(),
-		);
+		return this.contexts.get(document.uri.toString());
 	}
 
 	public delete(
 		document: vscode.TextDocument,
 	): void {
-		this.contexts.delete(
+		const context = this.contexts.get(
 			document.uri.toString(),
 		);
+		if (context) {
+			for (const thread of context.threads) {
+				thread.dispose();
+			}
+		}
+		this.contexts.delete(document.uri.toString());
 	}
 }

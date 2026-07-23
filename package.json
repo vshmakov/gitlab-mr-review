@@ -28,6 +28,10 @@
       {
 	"command": "gitlabMrReview.openFilePatch",
 	"title": "GitLab MR Review: Open File Patch"
+      },
+      {
+	"command": "gitlabMrReview.addComment",
+	"title": "GitLab MR Review: Add Comment"
 }
           ],
     "viewsContainers": {

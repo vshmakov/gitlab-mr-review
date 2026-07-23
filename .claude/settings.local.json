@@ -1,5 +1,8 @@
 {
   "permissions": {
-    "defaultMode": "plan"
+    "defaultMode": "plan",
+    "allow": [
+      "Bash(npm run *)"
+    ]
   }
 }

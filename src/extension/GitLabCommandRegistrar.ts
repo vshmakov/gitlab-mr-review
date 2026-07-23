@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
+import { GitLabCommentController } from './GitLabCommentController';
 import {
 	GitLabFileOpener,
 	OpenFilePatchCommandArguments,
@@ -14,6 +15,8 @@ export class GitLabCommandRegistrar {
 		private readonly authenticationService:
 			GitLabAuthenticationService,
 		private readonly fileOpener: GitLabFileOpener,
+		private readonly commentController:
+			GitLabCommentController,
 	) {}
 
 	public register(): vscode.Disposable[] {
@@ -23,6 +26,7 @@ export class GitLabCommandRegistrar {
 			this.registerLogoutCommand(),
 			this.registerOpenMergeRequestCommand(),
 			this.registerOpenFilePatchCommand(),
+			this.registerAddCommentCommand(),
 		];
 	}
 
@@ -67,6 +71,39 @@ export class GitLabCommandRegistrar {
 			(
 				arguments_: OpenFilePatchCommandArguments,
 			) => this.fileOpener.openFilePatch(arguments_),
+		);
+	}
+
+	private registerAddCommentCommand(): vscode.Disposable {
+		return vscode.commands.registerCommand(
+			'gitlabMrReview.addComment',
+			async () => {
+				const editor =
+					vscode.window.activeTextEditor;
+				if (!editor) {
+					return;
+				}
+
+				const line =
+					editor.selection.start.line;
+
+				const text =
+					await vscode.window.showInputBox({
+						title: 'Комментарий к диффу',
+						prompt: 'Введите комментарий',
+						ignoreFocusOut: true,
+					});
+
+				if (!text) {
+					return;
+				}
+
+				await this.commentController.addComment(
+					editor.document,
+					line,
+					text,
+				);
+			},
 		);
 	}
 }

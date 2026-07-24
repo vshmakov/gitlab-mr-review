@@ -98,7 +98,8 @@ export class ReviewTreeProvider
 	private async getFilesForMR(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<ReviewItem[]> {
-		const files = this.store.getFiles(mergeRequest);
+		const files =
+			this.store.files.getFiles(mergeRequest);
 
 		if (files) {
 			return files.map(file =>
@@ -112,7 +113,7 @@ export class ReviewTreeProvider
 		await this.store.loadFiles(mergeRequest);
 
 		const updatedFiles =
-			this.store.getFiles(mergeRequest);
+			this.store.files.getFiles(mergeRequest);
 
 		if (!updatedFiles) {
 			return [];

@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
-import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 import { CategoryKey } from '../tree/ReviewItem';
+import { MrFilesStore } from './MrFilesStore';
 
 const CATEGORY_LOADER: Record<
 	CategoryKey,
@@ -27,11 +27,6 @@ export class ReviewStore {
 
 	private readonly _loadedCategories = new Set<CategoryKey>();
 
-	private readonly _filesCache = new Map<
-		string,
-		GitLabMergeRequestFile[]
-	>();
-
 	private _loading: LoadingState = 'idle';
 
 	private _error: string | undefined;
@@ -42,10 +37,14 @@ export class ReviewStore {
 	public readonly onDidChange =
 		this.changeEmitter.event;
 
+	public readonly files: MrFilesStore;
+
 	public constructor(
 		private readonly clientFactory:
 			GitLabClientFactory,
-	) {}
+	) {
+		this.files = new MrFilesStore(clientFactory);
+	}
 
 	// -- State accessors --
 
@@ -67,14 +66,6 @@ export class ReviewStore {
 
 	public get error(): string | undefined {
 		return this._error;
-	}
-
-	public getFiles(
-		mergeRequest: GitLabMergeRequest,
-	): GitLabMergeRequestFile[] | undefined {
-		const key =
-			`${mergeRequest.project_id}:${mergeRequest.iid}`;
-		return this._filesCache.get(key);
 	}
 
 	// -- Actions --
@@ -119,25 +110,12 @@ export class ReviewStore {
 	public async loadFiles(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<void> {
-		if (this.getFiles(mergeRequest)) {
-			return;
-		}
-
 		this._loading = 'files';
 		this._error = undefined;
 		this.notify();
 
 		try {
-			const client = await this.clientFactory.create();
-			if (!client) {
-				return;
-			}
-
-			const files =
-				await client.getMergeRequestFiles(mergeRequest);
-			const key =
-				`${mergeRequest.project_id}:${mergeRequest.iid}`;
-			this._filesCache.set(key, files);
+			await this.files.loadFiles(mergeRequest);
 		} catch (e: unknown) {
 			this._error = e instanceof Error
 				? e.message
@@ -151,7 +129,7 @@ export class ReviewStore {
 	public refresh(): void {
 		this._mrCache.clear();
 		this._loadedCategories.clear();
-		this._filesCache.clear();
+		this.files.refresh();
 		this._error = undefined;
 		this.notify();
 	}

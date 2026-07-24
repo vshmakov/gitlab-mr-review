@@ -6,7 +6,8 @@ import { MergeRequestFileItem } from './MergeRequestFileItem';
 export type MergeRequestCategory =
 	| 'needsReview'
 	| 'approved'
-	| 'requestedChanges';
+	| 'requestedChanges'
+	| 'missed';
 
 export class MergeRequestItem
 	extends vscode.TreeItem

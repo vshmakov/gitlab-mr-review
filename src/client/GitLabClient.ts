@@ -52,6 +52,17 @@ export class GitLabClient {
 		);
 	}
 
+	private async getMergedRequestsForReviewer(
+		reviewerId: number,
+	): Promise<GitLabMergeRequest[]> {
+		const query =
+			this.createReviewerQuery(reviewerId, 'merged', 20);
+
+		return this.restClient.get<GitLabMergeRequest[]>(
+			`/api/v4/merge_requests?${query}`,
+		);
+	}
+
 	public async getMergeRequestDetails(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<GitLabMergeRequest> {
@@ -108,6 +119,24 @@ export class GitLabClient {
 		);
 	}
 
+	public async getMissedReviews():
+		Promise<GitLabMergeRequest[]> {
+		const user = await this.getCurrentUser();
+		const mergeRequests =
+			await this.getMergedRequestsForReviewer(
+				user.id,
+			);
+
+		if (mergeRequests.length === 0) {
+			return [];
+		}
+
+		return this.pendingReviewService.filterPendingReviews(
+			mergeRequests,
+			user,
+		);
+	}
+
 	private async filterReviewsByState(
 		user: GitLabUser,
 		filterFn: (
@@ -144,14 +173,16 @@ export class GitLabClient {
 
 	private createReviewerQuery(
 		reviewerId: number,
+		state: string = 'opened',
+		perPage: number = 100,
 	): string {
 		return new URLSearchParams({
 			scope: 'all',
-			state: 'opened',
+			state,
 			reviewer_id: reviewerId.toString(),
 			order_by: 'updated_at',
 			sort: 'desc',
-			per_page: '100',
+			per_page: perPage.toString(),
 		}).toString();
 	}
 

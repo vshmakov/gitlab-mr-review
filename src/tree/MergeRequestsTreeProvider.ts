@@ -14,6 +14,7 @@ const CATEGORIES: MergeRequestCategory[] = [
 	'needsReview',
 	'requestedChanges',
 	'approved',
+	'missed',
 ];
 
 export class MergeRequestsTreeProvider

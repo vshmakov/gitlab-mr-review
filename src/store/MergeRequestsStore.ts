@@ -12,6 +12,7 @@ const CATEGORY_LOADER: Record<
 	needsReview: (c) => c.getPendingReviews(),
 	approved: (c) => c.getApprovedReviews(),
 	requestedChanges: (c) => c.getRequestedChangesReviews(),
+	missed: (c) => c.getMissedReviews(),
 };
 
 export type LoadingState =
@@ -66,6 +67,11 @@ export class MergeRequestsStore {
 		return this._cache.get('requestedChanges') ?? [];
 	}
 
+	public get missedMergeRequests():
+		GitLabMergeRequest[] {
+		return this._cache.get('missed') ?? [];
+	}
+
 	public get loading(): LoadingState {
 		return this._loading;
 	}
@@ -87,6 +93,10 @@ export class MergeRequestsStore {
 	public async loadRequestedChanges():
 		Promise<void> {
 		await this.loadCategory('requestedChanges');
+	}
+
+	public async loadMissedReview(): Promise<void> {
+		await this.loadCategory('missed');
 	}
 
 	private async loadCategory(

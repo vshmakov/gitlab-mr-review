@@ -70,6 +70,13 @@
           "command": "gitlabMrReview.approve",
           "when": "view == gitlabMrReview.pendingReviews && viewItem == mergeRequest"
         }
+      ],
+      "editor/context": [
+        {
+          "command": "gitlabMrReview.addComment",
+          "when": "editorLangId == diff",
+          "group": "9_gitlab@1"
+        }
       ]
     },
     "configuration": {

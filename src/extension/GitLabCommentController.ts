@@ -84,6 +84,13 @@ export class GitLabCommentController {
 
 		const parsedLine = context.parsedDiff.lines[line];
 
+		if (!parsedLine || !parsedLine.commentable) {
+			vscode.window.showWarningMessage(
+				'Эта строка не поддерживает комментарии',
+			);
+			return;
+		}
+
 		const range = new vscode.Range(
 			new vscode.Position(line, 0),
 			new vscode.Position(line, 0),

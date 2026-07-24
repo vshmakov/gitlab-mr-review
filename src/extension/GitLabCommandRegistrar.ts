@@ -86,6 +86,16 @@ export class GitLabCommandRegistrar {
 				const editor =
 					vscode.window.activeTextEditor;
 				if (!editor) {
+					vscode.window.showWarningMessage(
+						'Нет активного редактора',
+					);
+					return;
+				}
+
+				if (editor.document.languageId !== 'diff') {
+					vscode.window.showWarningMessage(
+						'Комментирование доступно только в дифф-файлах',
+					);
 					return;
 				}
 

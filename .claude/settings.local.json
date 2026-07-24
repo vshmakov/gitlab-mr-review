@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm run *)",
-      "Bash(curl -s -X POST -H \"PRIVATE-TOKEN: glpat-dtmbBbSWfNf4KKx-5TcLuG86MQp1OjI2ZAk.01.0z1aira15\" \"https://gitlab.xbet.lan/api/v4/projects/2452/merge_requests/3122/approve\" -v)"
+      "Bash(curl -s -X POST -H \"PRIVATE-TOKEN: glpat-dtmbBbSWfNf4KKx-5TcLuG86MQp1OjI2ZAk.01.0z1aira15\" \"https://gitlab.xbet.lan/api/v4/projects/2452/merge_requests/3122/approve\" -v)",
+      "Bash(npx tsc *)"
     ],
     "defaultMode": "plan"
   }

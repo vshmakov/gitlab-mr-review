@@ -115,7 +115,17 @@ export class GitLabCommandRegistrar {
 	private registerApproveCommand(): vscode.Disposable {
 		return vscode.commands.registerCommand(
 			'gitlabMrReview.approve',
-			async (mergeRequest: GitLabMergeRequest) => {
+			async (item: any) => {
+				if (!item || !item.mergeRequest) {
+					vscode.window.showErrorMessage(
+						'No MR selected',
+					);
+					return;
+				}
+
+				const mergeRequest =
+					item.mergeRequest;
+
 				try {
 					const client =
 						await this.clientFactory.create();

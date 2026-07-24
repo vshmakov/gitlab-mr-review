@@ -182,14 +182,8 @@ export class GitLabClient {
 	public async approveMergeRequest(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<void> {
-		const projectPath = mergeRequest.project_path;
-
-		if (!projectPath) {
-			throw new Error('Project path not available');
-		}
-
 		const path =
-			`/api/v4/projects/${encodeURIComponent(projectPath)}/` +
+			`/api/v4/projects/${mergeRequest.project_id}/` +
 			`merge_requests/${mergeRequest.iid}/approve`;
 
 		await this.restClient.post(path);

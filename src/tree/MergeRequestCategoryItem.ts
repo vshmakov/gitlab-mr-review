@@ -28,6 +28,11 @@ const CATEGORY_CONFIG: Record<MergeRequestCategory, {
 		icon: 'warning',
 		contextValue: 'categoryMissed',
 	},
+	my: {
+		label: 'My',
+		icon: 'person',
+		contextValue: 'categoryMy',
+	},
 };
 
 const CATEGORY_LOADER: Record<
@@ -38,6 +43,7 @@ const CATEGORY_LOADER: Record<
 	requestedChanges: (s) => s.loadRequestedChanges(),
 	approved: (s) => s.loadApproved(),
 	missed: (s) => s.loadMissedReview(),
+	my: (s) => s.loadMyMergeRequests(),
 };
 
 const CATEGORY_DATA: Record<
@@ -49,6 +55,7 @@ const CATEGORY_DATA: Record<
 		s.requestedChangesMergeRequests,
 	approved: (s) => s.approvedMergeRequests,
 	missed: (s) => s.missedMergeRequests,
+	my: (s) => s.myMergeRequests,
 };
 
 export class MergeRequestCategoryItem

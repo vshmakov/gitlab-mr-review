@@ -11,6 +11,7 @@ export type MergeRequestTreeItem =
 	| MergeRequestFileItem;
 
 const CATEGORIES: MergeRequestCategory[] = [
+	'my',
 	'needsReview',
 	'requestedChanges',
 	'approved',

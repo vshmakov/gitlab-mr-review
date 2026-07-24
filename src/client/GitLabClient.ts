@@ -137,6 +137,14 @@ export class GitLabClient {
 		);
 	}
 
+	public async getMyMergeRequests():
+		Promise<GitLabMergeRequest[]> {
+		const user = await this.getCurrentUser();
+		return this.restClient.get<GitLabMergeRequest[]>(
+			`/api/v4/merge_requests?${this.createAuthorQuery(user.id)}`,
+		);
+	}
+
 	private async filterReviewsByState(
 		user: GitLabUser,
 		filterFn: (
@@ -199,6 +207,19 @@ export class GitLabClient {
 			order_by: 'updated_at',
 			sort: 'desc',
 			per_page: perPage.toString(),
+		}).toString();
+	}
+
+	private createAuthorQuery(
+		authorId: number,
+	): string {
+		return new URLSearchParams({
+			scope: 'all',
+			state: 'opened',
+			author_id: authorId.toString(),
+			order_by: 'updated_at',
+			sort: 'desc',
+			per_page: '100',
 		}).toString();
 	}
 

@@ -3,7 +3,7 @@ import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
-export class MrFilesStore {
+export class MergeRequestFilesStore {
 	private readonly _cache = new Map<
 		string,
 		GitLabMergeRequestFile[]

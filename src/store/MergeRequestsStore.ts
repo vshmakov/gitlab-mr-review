@@ -2,11 +2,11 @@ import * as vscode from 'vscode';
 import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
-import { CategoryKey } from '../tree/ReviewItem';
-import { MrFilesStore } from './MrFilesStore';
+import { MergeRequestCategory } from '../tree/MergeRequestItem';
+import { MergeRequestFilesStore } from './MergeRequestFilesStore';
 
 const CATEGORY_LOADER: Record<
-	CategoryKey,
+	MergeRequestCategory,
 	(client: GitLabClient) => Promise<GitLabMergeRequest[]>
 > = {
 	needsReview: (c) => c.getPendingReviews(),
@@ -16,16 +16,17 @@ const CATEGORY_LOADER: Record<
 
 export type LoadingState =
 	| 'idle'
-	| CategoryKey
+	| MergeRequestCategory
 	| 'files';
 
-export class ReviewStore {
-	private readonly _mrCache = new Map<
-		CategoryKey,
+export class MergeRequestsStore {
+	private readonly _cache = new Map<
+		MergeRequestCategory,
 		GitLabMergeRequest[]
 	>();
 
-	private readonly _loadedCategories = new Set<CategoryKey>();
+	private readonly _loadedCategories =
+		new Set<MergeRequestCategory>();
 
 	private _loading: LoadingState = 'idle';
 
@@ -37,27 +38,32 @@ export class ReviewStore {
 	public readonly onDidChange =
 		this.changeEmitter.event;
 
-	public readonly files: MrFilesStore;
+	public readonly files: MergeRequestFilesStore;
 
 	public constructor(
 		private readonly clientFactory:
 			GitLabClientFactory,
 	) {
-		this.files = new MrFilesStore(clientFactory);
+		this.files = new MergeRequestFilesStore(
+			clientFactory,
+		);
 	}
 
 	// -- State accessors --
 
-	public get pendingMRs(): GitLabMergeRequest[] {
-		return this._mrCache.get('needsReview') ?? [];
+	public get pendingMergeRequests():
+		GitLabMergeRequest[] {
+		return this._cache.get('needsReview') ?? [];
 	}
 
-	public get approvedMRs(): GitLabMergeRequest[] {
-		return this._mrCache.get('approved') ?? [];
+	public get approvedMergeRequests():
+		GitLabMergeRequest[] {
+		return this._cache.get('approved') ?? [];
 	}
 
-	public get requestedChangesMRs(): GitLabMergeRequest[] {
-		return this._mrCache.get('requestedChanges') ?? [];
+	public get requestedChangesMergeRequests():
+		GitLabMergeRequest[] {
+		return this._cache.get('requestedChanges') ?? [];
 	}
 
 	public get loading(): LoadingState {
@@ -78,25 +84,26 @@ export class ReviewStore {
 		await this.loadCategory('approved');
 	}
 
-	public async loadRequestedChanges(): Promise<void> {
+	public async loadRequestedChanges():
+		Promise<void> {
 		await this.loadCategory('requestedChanges');
 	}
 
 	private async loadCategory(
-		categoryKey: CategoryKey,
+		category: MergeRequestCategory,
 	): Promise<void> {
-		if (this._loadedCategories.has(categoryKey)) {
+		if (this._loadedCategories.has(category)) {
 			return;
 		}
 
-		this._loading = categoryKey;
+		this._loading = category;
 		this._error = undefined;
 		this.notify();
 
 		try {
-			const mr = await this.fetchByCategory(categoryKey);
-			this._mrCache.set(categoryKey, mr);
-			this._loadedCategories.add(categoryKey);
+			const mr = await this.fetchByCategory(category);
+			this._cache.set(category, mr);
+			this._loadedCategories.add(category);
 		} catch (e: unknown) {
 			this._error = e instanceof Error
 				? e.message
@@ -127,7 +134,7 @@ export class ReviewStore {
 	}
 
 	public refresh(): void {
-		this._mrCache.clear();
+		this._cache.clear();
 		this._loadedCategories.clear();
 		this.files.refresh();
 		this._error = undefined;
@@ -135,15 +142,16 @@ export class ReviewStore {
 	}
 
 	private async fetchByCategory(
-		categoryKey: CategoryKey,
+		category: MergeRequestCategory,
 	): Promise<GitLabMergeRequest[]> {
-		const client = await this.clientFactory.create();
+		const client =
+			await this.clientFactory.create();
 		if (!client) {
 			return [];
 		}
 
 		try {
-			return await CATEGORY_LOADER[categoryKey](client);
+			return await CATEGORY_LOADER[category](client);
 		} catch {
 			this.clientFactory.clear();
 			throw new Error(

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
-import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
+import { MergeRequestsTreeProvider } from '../tree/MergeRequestsTreeProvider';
 import { TOKEN_SECRET_KEY } from '../infra/constants';
 
 export class GitLabAuthenticationService {
@@ -12,7 +12,8 @@ export class GitLabAuthenticationService {
 
 	public constructor(
 		private readonly context: vscode.ExtensionContext,
-		private readonly treeProvider: ReviewTreeProvider,
+		private readonly treeProvider:
+			MergeRequestsTreeProvider,
 		private readonly clientFactory: GitLabClientFactory,
 	) {}
 

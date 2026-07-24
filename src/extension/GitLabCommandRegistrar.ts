@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
-import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
+import { MergeRequestsTreeProvider } from '../tree/MergeRequestsTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import { GitLabCommentController } from './GitLabCommentController';
 import {
@@ -11,7 +11,8 @@ import {
 
 export class GitLabCommandRegistrar {
 	public constructor(
-		private readonly treeProvider: ReviewTreeProvider,
+		private readonly treeProvider:
+			MergeRequestsTreeProvider,
 		private readonly authenticationService:
 			GitLabAuthenticationService,
 		private readonly fileOpener: GitLabFileOpener,

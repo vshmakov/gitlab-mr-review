@@ -1,17 +1,17 @@
 import * as vscode from 'vscode';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
-import { ReviewStore } from '../store/ReviewStore';
-import { CategoryKey, ReviewItem } from './ReviewItem';
+import { MergeRequestsStore } from '../store/MergeRequestsStore';
+import { MergeRequestCategory, MergeRequestItem } from './MergeRequestItem';
 
-const CATEGORIES: CategoryKey[] = [
+const CATEGORIES: MergeRequestCategory[] = [
 	'needsReview',
 	'requestedChanges',
 	'approved',
 ];
 
 const CATEGORY_LOADER: Record<
-	CategoryKey,
-	(store: ReviewStore) => Promise<void>
+	MergeRequestCategory,
+	(store: MergeRequestsStore) => Promise<void>
 > = {
 	needsReview: (s) => s.loadPending(),
 	requestedChanges: (s) => s.loadRequestedChanges(),
@@ -19,27 +19,29 @@ const CATEGORY_LOADER: Record<
 };
 
 const CATEGORY_DATA: Record<
-	CategoryKey,
-	(store: ReviewStore) => GitLabMergeRequest[]
+	MergeRequestCategory,
+	(store: MergeRequestsStore) => GitLabMergeRequest[]
 > = {
-	needsReview: (s) => s.pendingMRs,
-	requestedChanges: (s) => s.requestedChangesMRs,
-	approved: (s) => s.approvedMRs,
+	needsReview: (s) => s.pendingMergeRequests,
+	requestedChanges: (s) =>
+		s.requestedChangesMergeRequests,
+	approved: (s) => s.approvedMergeRequests,
 };
 
-export class ReviewTreeProvider
-	implements vscode.TreeDataProvider<ReviewItem>
+export class MergeRequestsTreeProvider
+	implements vscode.TreeDataProvider<MergeRequestItem>
 {
 	private readonly changeEmitter =
 		new vscode.EventEmitter<
-			ReviewItem | undefined | void
+			MergeRequestItem | undefined | void
 		>();
 
 	public readonly onDidChangeTreeData =
 		this.changeEmitter.event;
 
 	public constructor(
-		private readonly store: ReviewStore,
+		private readonly store:
+			MergeRequestsStore,
 	) {
 		this.store.onDidChange(() => {
 			this.changeEmitter.fire();
@@ -51,23 +53,23 @@ export class ReviewTreeProvider
 	}
 
 	public getTreeItem(
-		element: ReviewItem,
+		element: MergeRequestItem,
 	): vscode.TreeItem {
 		return element;
 	}
 
 	public async getChildren(
-		element?: ReviewItem,
-	): Promise<ReviewItem[]> {
+		element?: MergeRequestItem,
+	): Promise<MergeRequestItem[]> {
 		if (!element) {
-			return CATEGORIES.map(key =>
-				ReviewItem.createCategory(key),
+			return CATEGORIES.map((key) =>
+				MergeRequestItem.createCategory(key),
 			);
 		}
 
 		if (element.type === 'category') {
 			return await this.getCategoryItems(
-				element.categoryKey!,
+				element.category!,
 			);
 		}
 
@@ -84,26 +86,27 @@ export class ReviewTreeProvider
 	}
 
 	private async getCategoryItems(
-		categoryKey: CategoryKey,
-	): Promise<ReviewItem[]> {
-		await CATEGORY_LOADER[categoryKey](this.store);
+		category: MergeRequestCategory,
+	): Promise<MergeRequestItem[]> {
+		await CATEGORY_LOADER[category](this.store);
 
-		const mr = CATEGORY_DATA[categoryKey](this.store);
+		const mr =
+			CATEGORY_DATA[category](this.store);
 
-		return mr.map(m =>
-			ReviewItem.createMergeRequest(m),
+		return mr.map((m) =>
+			MergeRequestItem.createMergeRequest(m),
 		);
 	}
 
 	private async getFilesForMR(
 		mergeRequest: GitLabMergeRequest,
-	): Promise<ReviewItem[]> {
+	): Promise<MergeRequestItem[]> {
 		const files =
 			this.store.files.getFiles(mergeRequest);
 
 		if (files) {
-			return files.map(file =>
-				ReviewItem.createFile(
+			return files.map((file) =>
+				MergeRequestItem.createFile(
 					mergeRequest,
 					file,
 				),
@@ -119,8 +122,8 @@ export class ReviewTreeProvider
 			return [];
 		}
 
-		return updatedFiles.map(file =>
-			ReviewItem.createFile(
+		return updatedFiles.map((file) =>
+			MergeRequestItem.createFile(
 				mergeRequest,
 				file,
 			),

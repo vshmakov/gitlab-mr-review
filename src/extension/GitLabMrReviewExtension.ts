@@ -3,8 +3,8 @@ import * as vscode from 'vscode';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { UnifiedDiffParser } from '../review/diff/unified-diff-parser';
 import { OpenedDiffStore } from '../review/OpenedDiffStore';
-import { ReviewStore } from '../store/ReviewStore';
-import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
+import { MergeRequestsStore } from '../store/MergeRequestsStore';
+import { MergeRequestsTreeProvider } from '../tree/MergeRequestsTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import { GitLabCommandRegistrar } from './GitLabCommandRegistrar';
 import { GitLabCommentController } from './GitLabCommentController';
@@ -12,9 +12,9 @@ import { GitLabCommentService } from './GitLabCommentService';
 import { GitLabFileOpener } from './GitLabFileOpener';
 
 export class GitLabMrReviewExtension {
-	private readonly store: ReviewStore;
+	private readonly store: MergeRequestsStore;
 
-	private readonly treeProvider: ReviewTreeProvider;
+	private readonly treeProvider: MergeRequestsTreeProvider;
 
 	private readonly authenticationService:
 		GitLabAuthenticationService;
@@ -39,10 +39,10 @@ export class GitLabMrReviewExtension {
 		const clientFactory =
 			new GitLabClientFactory(context);
 
-		this.store = new ReviewStore(clientFactory);
+		this.store = new MergeRequestsStore(clientFactory);
 
 		this.treeProvider =
-			new ReviewTreeProvider(this.store);
+			new MergeRequestsTreeProvider(this.store);
 
 		this.authenticationService =
 			new GitLabAuthenticationService(

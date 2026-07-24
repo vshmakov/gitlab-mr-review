@@ -3,19 +3,19 @@ import * as vscode from 'vscode';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
-export type ReviewItemType =
+export type MergeRequestItemType =
 	| 'category'
 	| 'mergeRequest'
 	| 'file';
 
-export type CategoryKey =
+export type MergeRequestCategory =
 	| 'needsReview'
 	| 'approved'
 	| 'requestedChanges';
 
-export class ReviewItem extends vscode.TreeItem {
+export class MergeRequestItem extends vscode.TreeItem {
 	private constructor(
-		public readonly type: ReviewItemType,
+		public readonly type: MergeRequestItemType,
 		label: string,
 		collapsibleState:
 			vscode.TreeItemCollapsibleState,
@@ -23,16 +23,16 @@ export class ReviewItem extends vscode.TreeItem {
 			GitLabMergeRequest,
 		public readonly file?:
 			GitLabMergeRequestFile,
-		public readonly categoryKey?:
-			CategoryKey,
+		public readonly category?:
+			MergeRequestCategory,
 	) {
 		super(label, collapsibleState);
 	}
 
 	public static createCategory(
-		categoryKey: CategoryKey,
-	): ReviewItem {
-		const config: Record<CategoryKey, {
+		category: MergeRequestCategory,
+	): MergeRequestItem {
+		const config: Record<MergeRequestCategory, {
 			label: string;
 			icon: string;
 			contextValue: string;
@@ -54,15 +54,15 @@ export class ReviewItem extends vscode.TreeItem {
 			},
 		};
 
-		const entry = config[categoryKey];
+		const entry = config[category];
 
-		const item = new ReviewItem(
+		const item = new MergeRequestItem(
 			'category',
 			entry.label,
 			vscode.TreeItemCollapsibleState.Collapsed,
 			undefined,
 			undefined,
-			categoryKey,
+			category,
 		);
 
 		item.iconPath = new vscode.ThemeIcon(
@@ -76,8 +76,8 @@ export class ReviewItem extends vscode.TreeItem {
 
 	public static createMergeRequest(
 		mergeRequest: GitLabMergeRequest,
-	): ReviewItem {
-		const item = new ReviewItem(
+	): MergeRequestItem {
+		const item = new MergeRequestItem(
 			'mergeRequest',
 			`!${mergeRequest.iid} ${mergeRequest.title}`,
 			vscode.TreeItemCollapsibleState.Collapsed,
@@ -122,15 +122,15 @@ export class ReviewItem extends vscode.TreeItem {
 	public static createFile(
 		mergeRequest: GitLabMergeRequest,
 		file: GitLabMergeRequestFile,
-	): ReviewItem {
+	): MergeRequestItem {
 		const fileName = path.basename(file.path);
 		const directory = path.dirname(file.path);
 		const prefix =
-			ReviewItem.getFilePrefix(file);
+			MergeRequestItem.getFilePrefix(file);
 
 		const label = `${prefix} ${fileName}`;
 
-		const item = new ReviewItem(
+		const item = new MergeRequestItem(
 			'file',
 			label,
 			vscode.TreeItemCollapsibleState.None,
@@ -149,7 +149,7 @@ export class ReviewItem extends vscode.TreeItem {
 		};
 
 		item.tooltip =
-			ReviewItem.getFileTooltip(file);
+			MergeRequestItem.getFileTooltip(file);
 
 		item.contextValue = 'mergeRequestFile';
 

@@ -93,6 +93,10 @@ export class GitLabMrReviewExtension {
 				},
 			);
 
+		this.store.loadPending().catch(() => {
+			// ignored
+		});
+
 		const closeDocumentSubscription =
 			vscode.workspace.onDidCloseTextDocument(
 				(document) => {

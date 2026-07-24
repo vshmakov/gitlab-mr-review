@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
 import { MergeRequestFileItem } from './MergeRequestFileItem';
+import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 
 export type MergeRequestCategory =
 	| 'needsReview'
@@ -52,33 +53,22 @@ export class MergeRequestItem
 		};
 	}
 
-	public getChildren(): MergeRequestFileItem[] {
-		const files =
-			this.store.files.getFiles(this.mergeRequest);
+	public getChildren(): (MergeRequestFileItem | MergeRequestMessageItem)[] {
+		if (this.store.isFilesLoading(this.mergeRequest)) {
+			return [new MergeRequestMessageItem('Loading files...')];
+		}
 
+		const files = this.store.files.getFiles(this.mergeRequest);
 		if (files) {
-			return files.map((file) =>
+			return files.map((f) =>
 				new MergeRequestFileItem(
 					this.mergeRequest,
-					file,
+					f,
 				),
 			);
 		}
 
 		this.store.loadFiles(this.mergeRequest);
-
-		const updatedFiles =
-			this.store.files.getFiles(this.mergeRequest);
-
-		if (!updatedFiles) {
-			return [];
-		}
-
-		return updatedFiles.map((file) =>
-			new MergeRequestFileItem(
-				this.mergeRequest,
-				file,
-			),
-		);
+		return [new MergeRequestMessageItem('Loading files...')];
 	}
 }

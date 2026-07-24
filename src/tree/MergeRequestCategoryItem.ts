@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
 import { MergeRequestCategory, MergeRequestItem } from './MergeRequestItem';
+import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 
 const CATEGORY_CONFIG: Record<MergeRequestCategory, {
 	label: string;
@@ -35,29 +35,6 @@ const CATEGORY_CONFIG: Record<MergeRequestCategory, {
 	},
 };
 
-const CATEGORY_LOADER: Record<
-	MergeRequestCategory,
-	(store: MergeRequestsStore) => Promise<void>
-> = {
-	needsReview: (s) => s.loadPending(),
-	requestedChanges: (s) => s.loadRequestedChanges(),
-	approved: (s) => s.loadApproved(),
-	missed: (s) => s.loadMissedReview(),
-	my: (s) => s.loadMyMergeRequests(),
-};
-
-const CATEGORY_DATA: Record<
-	MergeRequestCategory,
-	(store: MergeRequestsStore) => GitLabMergeRequest[]
-> = {
-	needsReview: (s) => s.pendingMergeRequests,
-	requestedChanges: (s) =>
-		s.requestedChangesMergeRequests,
-	approved: (s) => s.approvedMergeRequests,
-	missed: (s) => s.missedMergeRequests,
-	my: (s) => s.myMergeRequests,
-};
-
 export class MergeRequestCategoryItem
 	extends vscode.TreeItem
 {
@@ -77,14 +54,47 @@ export class MergeRequestCategoryItem
 		this.contextValue = config.contextValue;
 	}
 
-	public getChildren(): MergeRequestItem[] {
-		CATEGORY_LOADER[this.category](this.store);
+	public getChildren(): (MergeRequestItem | MergeRequestMessageItem)[] {
+		// Loading state — store is fetching this category
+		if (this.store.isCategoryLoading(this.category)) {
+			return [new MergeRequestMessageItem('Loading...')];
+		}
 
-		const mr =
-			CATEGORY_DATA[this.category](this.store);
+		// Not yet loaded — trigger load and show loading indicator
+		if (!this.store.isCategoryLoaded(this.category)) {
+			this.loadCategory();
+			return [new MergeRequestMessageItem('Loading...')];
+		}
 
-		return mr.map((m) =>
+		// Loaded — render from store data
+		const mrs = this.store.getCategoryMRs(this.category);
+
+		if (mrs.length === 0) {
+			return [new MergeRequestMessageItem('No merge requests')];
+		}
+
+		return mrs.map((m) =>
 			new MergeRequestItem(m, this.store),
 		);
+	}
+
+	private loadCategory(): void {
+		switch (this.category) {
+			case 'needsReview':
+				this.store.loadPending();
+				break;
+			case 'approved':
+				this.store.loadApproved();
+				break;
+			case 'requestedChanges':
+				this.store.loadRequestedChanges();
+				break;
+			case 'missed':
+				this.store.loadMissedReview();
+				break;
+			case 'my':
+				this.store.loadMyMergeRequests();
+				break;
+		}
 	}
 }

@@ -9,23 +9,40 @@ export class MergeRequestFilesStore {
 		GitLabMergeRequestFile[]
 	>();
 
+	private readonly _loadingFiles = new Set<string>();
+
 	public constructor(
 		private readonly clientFactory:
 			GitLabClientFactory,
 	) {}
 
+	private key(mergeRequest: GitLabMergeRequest): string {
+		return `${mergeRequest.project_id}:${mergeRequest.iid}`;
+	}
+
 	public getFiles(
 		mergeRequest: GitLabMergeRequest,
 	): GitLabMergeRequestFile[] | undefined {
-		const key =
-			`${mergeRequest.project_id}:${mergeRequest.iid}`;
-		return this._cache.get(key);
+		return this._cache.get(this.key(mergeRequest));
+	}
+
+	public isFilesLoading(
+		mergeRequest: GitLabMergeRequest,
+	): boolean {
+		return this._loadingFiles.has(this.key(mergeRequest));
+	}
+
+	public hasFiles(
+		mergeRequest: GitLabMergeRequest,
+	): boolean {
+		return this._cache.has(this.key(mergeRequest));
 	}
 
 	public async loadFiles(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<void> {
-		if (this.getFiles(mergeRequest)) {
+		const k = this.key(mergeRequest);
+		if (this._cache.has(k)) {
 			return;
 		}
 
@@ -34,21 +51,24 @@ export class MergeRequestFilesStore {
 			return;
 		}
 
+		this._loadingFiles.add(k);
+
 		try {
 			const files =
 				await client.getMergeRequestFiles(mergeRequest);
-			const key =
-				`${mergeRequest.project_id}:${mergeRequest.iid}`;
-			this._cache.set(key, files);
+			this._cache.set(k, files);
 		} catch {
 			this.clientFactory.clear();
 			throw new Error(
 				'Не удалось загрузить файлы merge request',
 			);
+		} finally {
+			this._loadingFiles.delete(k);
 		}
 	}
 
 	public refresh(): void {
 		this._cache.clear();
+		this._loadingFiles.clear();
 	}
 }

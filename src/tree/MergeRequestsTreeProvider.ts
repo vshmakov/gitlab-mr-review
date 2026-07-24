@@ -4,11 +4,13 @@ import { MergeRequestCategory } from './MergeRequestItem';
 import { MergeRequestCategoryItem } from './MergeRequestCategoryItem';
 import { MergeRequestFileItem } from './MergeRequestFileItem';
 import { MergeRequestItem } from './MergeRequestItem';
+import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 
 export type MergeRequestTreeItem =
 	| MergeRequestCategoryItem
 	| MergeRequestItem
-	| MergeRequestFileItem;
+	| MergeRequestFileItem
+	| MergeRequestMessageItem;
 
 const CATEGORIES: MergeRequestCategory[] = [
 	'my',

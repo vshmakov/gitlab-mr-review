@@ -16,6 +16,14 @@ const CATEGORY_LOADER: Record<
 	my: (c) => c.getMyMergeRequests(),
 };
 
+const CATEGORY_DATA: Record<MergeRequestCategory, string> = {
+	needsReview: 'pendingMergeRequests',
+	approved: 'approvedMergeRequests',
+	requestedChanges: 'requestedChangesMergeRequests',
+	missed: 'missedMergeRequests',
+	my: 'myMergeRequests',
+};
+
 export type LoadingState =
 	| 'idle'
 	| MergeRequestCategory
@@ -51,30 +59,39 @@ export class MergeRequestsStore {
 		);
 	}
 
-	// -- State accessors --
+	// -- Category state --
 
-	public get pendingMergeRequests():
-		GitLabMergeRequest[] {
+	public isCategoryLoading(category: MergeRequestCategory): boolean {
+		return this._loading === category;
+	}
+
+	public isCategoryLoaded(category: MergeRequestCategory): boolean {
+		return this._loadedCategories.has(category);
+	}
+
+	public getCategoryMRs(category: MergeRequestCategory): GitLabMergeRequest[] {
+		return this._cache.get(category) ?? [];
+	}
+
+	// -- Legacy accessors (kept for compatibility) --
+
+	public get pendingMergeRequests(): GitLabMergeRequest[] {
 		return this._cache.get('needsReview') ?? [];
 	}
 
-	public get approvedMergeRequests():
-		GitLabMergeRequest[] {
+	public get approvedMergeRequests(): GitLabMergeRequest[] {
 		return this._cache.get('approved') ?? [];
 	}
 
-	public get requestedChangesMergeRequests():
-		GitLabMergeRequest[] {
+	public get requestedChangesMergeRequests(): GitLabMergeRequest[] {
 		return this._cache.get('requestedChanges') ?? [];
 	}
 
-	public get missedMergeRequests():
-		GitLabMergeRequest[] {
+	public get missedMergeRequests(): GitLabMergeRequest[] {
 		return this._cache.get('missed') ?? [];
 	}
 
-	public get myMergeRequests():
-		GitLabMergeRequest[] {
+	public get myMergeRequests(): GitLabMergeRequest[] {
 		return this._cache.get('my') ?? [];
 	}
 
@@ -84,6 +101,14 @@ export class MergeRequestsStore {
 
 	public get error(): string | undefined {
 		return this._error;
+	}
+
+	// -- File state --
+
+	public isFilesLoading(
+		mergeRequest: GitLabMergeRequest,
+	): boolean {
+		return this.files.isFilesLoading(mergeRequest);
 	}
 
 	// -- Actions --
@@ -96,8 +121,7 @@ export class MergeRequestsStore {
 		await this.loadCategory('approved');
 	}
 
-	public async loadRequestedChanges():
-		Promise<void> {
+	public async loadRequestedChanges(): Promise<void> {
 		await this.loadCategory('requestedChanges');
 	}
 

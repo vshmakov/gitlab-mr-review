@@ -13,6 +13,11 @@ export class ReviewDataSource {
 	private approvedMergeRequestsLoading?:
 		Promise<GitLabMergeRequest[]>;
 
+	private requestedChangesMergeRequests?: GitLabMergeRequest[];
+
+	private requestedChangesMergeRequestsLoading?:
+		Promise<GitLabMergeRequest[]>;
+
 	private readonly filesCache = new Map<
 		string,
 		GitLabMergeRequestFile[]
@@ -34,6 +39,9 @@ export class ReviewDataSource {
 
 		this.approvedMergeRequests = undefined;
 		this.approvedMergeRequestsLoading = undefined;
+
+		this.requestedChangesMergeRequests = undefined;
+		this.requestedChangesMergeRequestsLoading = undefined;
 
 		this.filesCache.clear();
 		this.filesLoading.clear();
@@ -83,6 +91,30 @@ export class ReviewDataSource {
 			});
 
 		this.approvedMergeRequestsLoading = request;
+
+		return request;
+	}
+
+	public async getRequestedChangesMergeRequests():
+		Promise<GitLabMergeRequest[]> {
+		if (this.requestedChangesMergeRequests) {
+			return this.requestedChangesMergeRequests;
+		}
+
+		if (this.requestedChangesMergeRequestsLoading) {
+			return this.requestedChangesMergeRequestsLoading;
+		}
+
+		const request = this.loadRequestedChangesMergeRequests()
+			.then(mergeRequests => {
+				this.requestedChangesMergeRequests = mergeRequests;
+				return mergeRequests;
+			})
+			.finally(() => {
+				this.requestedChangesMergeRequestsLoading = undefined;
+			});
+
+		this.requestedChangesMergeRequestsLoading = request;
 
 		return request;
 	}
@@ -147,6 +179,24 @@ export class ReviewDataSource {
 		try {
 			const user = await client.getCurrentUser();
 			return await client.getApprovedReviews(user);
+		} catch {
+			this.clientFactory.clear();
+			throw new Error(
+				'Не удалось загрузить merge requests',
+			);
+		}
+	}
+
+	private async loadRequestedChangesMergeRequests():
+		Promise<GitLabMergeRequest[]> {
+		const client = await this.clientFactory.create();
+		if (!client) {
+			return [];
+		}
+
+		try {
+			const user = await client.getCurrentUser();
+			return await client.getRequestedChangesReviews(user);
 		} catch {
 			this.clientFactory.clear();
 			throw new Error(

@@ -200,6 +200,56 @@ export class PendingReviewService {
 		return approvedMergeRequests;
 	}
 
+	public async filterRequestedChangesReviews(
+		mergeRequests: GitLabMergeRequest[],
+		user: GitLabUser,
+	): Promise<GitLabMergeRequest[]> {
+		const requestedChangesMergeRequests:
+			GitLabMergeRequest[] = [];
+
+		for (
+			let offset = 0;
+			offset < mergeRequests.length;
+			offset +=
+				PendingReviewService.GRAPHQL_BATCH_SIZE
+		) {
+			const batch = mergeRequests.slice(
+				offset,
+				offset +
+					PendingReviewService
+						.GRAPHQL_BATCH_SIZE,
+			);
+
+			const requestedChangesBatch =
+				await this.filterRequestedChangesBatch(
+					batch,
+					user.username,
+				);
+
+			requestedChangesMergeRequests.push(
+				...requestedChangesBatch,
+			);
+		}
+
+		return requestedChangesMergeRequests;
+	}
+
+	private async filterRequestedChangesBatch(
+		mergeRequests: GitLabMergeRequest[],
+		username: string,
+	): Promise<GitLabMergeRequest[]> {
+		const approvalStates =
+			await this.getApprovalStates(mergeRequests);
+
+		return mergeRequests.filter(
+			(_mergeRequest, index) =>
+				this.hasRequestedChanges(
+					approvalStates[`mr${index}`],
+					username,
+				),
+		);
+	}
+
 	private async filterApprovedBatch(
 		mergeRequests: GitLabMergeRequest[],
 		username: string,

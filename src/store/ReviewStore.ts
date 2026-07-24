@@ -8,12 +8,15 @@ export type LoadingState =
 	| 'idle'
 	| 'pending'
 	| 'approved'
+	| 'requestedChanges'
 	| 'files';
 
 export class ReviewStore {
 	private readonly _pendingMRs: GitLabMergeRequest[] = [];
 
 	private readonly _approvedMRs: GitLabMergeRequest[] = [];
+
+	private readonly _requestedChangesMRs: GitLabMergeRequest[] = [];
 
 	private readonly _filesCache = new Map<
 		string,
@@ -27,6 +30,8 @@ export class ReviewStore {
 	private _pendingLoaded = false;
 
 	private _approvedLoaded = false;
+
+	private _requestedChangesLoaded = false;
 
 	private readonly changeEmitter =
 		new vscode.EventEmitter<void>();
@@ -50,6 +55,10 @@ export class ReviewStore {
 
 	public get approvedMRs(): GitLabMergeRequest[] {
 		return this._approvedMRs;
+	}
+
+	public get requestedChangesMRs(): GitLabMergeRequest[] {
+		return this._requestedChangesMRs;
 	}
 
 	public get loading(): LoadingState {
@@ -83,6 +92,31 @@ export class ReviewStore {
 			this._pendingMRs.length = 0;
 			this._pendingMRs.push(...mr);
 			this._pendingLoaded = true;
+		} catch (e: unknown) {
+			this._error = e instanceof Error
+				? e.message
+				: String(e);
+		} finally {
+			this._loading = 'idle';
+			this.notify();
+		}
+	}
+
+	public async loadRequestedChanges(): Promise<void> {
+		if (this._requestedChangesLoaded) {
+			return;
+		}
+
+		this._loading = 'requestedChanges';
+		this._error = undefined;
+		this.notify();
+
+		try {
+			const mr =
+				await this.dataSource.getRequestedChangesMergeRequests();
+			this._requestedChangesMRs.length = 0;
+			this._requestedChangesMRs.push(...mr);
+			this._requestedChangesLoaded = true;
 		} catch (e: unknown) {
 			this._error = e instanceof Error
 				? e.message
@@ -151,10 +185,12 @@ export class ReviewStore {
 		this.dataSource.refresh();
 		this._pendingMRs.length = 0;
 		this._approvedMRs.length = 0;
+		this._requestedChangesMRs.length = 0;
 		this._filesCache.clear();
 		this._error = undefined;
 		this._pendingLoaded = false;
 		this._approvedLoaded = false;
+		this._requestedChangesLoaded = false;
 		this.notify();
 	}
 

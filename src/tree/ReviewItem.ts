@@ -10,7 +10,8 @@ export type ReviewItemType =
 
 export type CategoryKey =
 	| 'needsReview'
-	| 'approved';
+	| 'approved'
+	| 'requestedChanges';
 
 export class ReviewItem extends vscode.TreeItem {
 	private constructor(
@@ -45,6 +46,11 @@ export class ReviewItem extends vscode.TreeItem {
 				label: 'I Approved',
 				icon: 'check',
 				contextValue: 'categoryApproved',
+			},
+			requestedChanges: {
+				label: 'I Requested Changes',
+				icon: 'warning',
+				contextValue: 'categoryRequestedChanges',
 			},
 		};
 

@@ -95,6 +95,22 @@ export class GitLabClient {
 		);
 	}
 
+	public async getRequestedChangesReviews(
+		user: GitLabUser,
+	): Promise<GitLabMergeRequest[]> {
+		const mergeRequests =
+			await this.getMergeRequestsForReviewer(user.id);
+
+		if (mergeRequests.length === 0) {
+			return [];
+		}
+
+		return this.pendingReviewService.filterRequestedChangesReviews(
+			mergeRequests,
+			user,
+		);
+	}
+
 	public async getMergeRequestFiles(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<GitLabMergeRequestFile[]> {

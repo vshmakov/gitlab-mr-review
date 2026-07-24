@@ -5,6 +5,7 @@ import { CategoryKey, ReviewItem } from './ReviewItem';
 
 const CATEGORIES: CategoryKey[] = [
 	'needsReview',
+	'requestedChanges',
 	'approved',
 ];
 
@@ -69,14 +70,18 @@ export class ReviewTreeProvider
 	): Promise<ReviewItem[]> {
 		if (categoryKey === 'needsReview') {
 			await this.store.loadPending();
-		} else {
+		} else if (categoryKey === 'approved') {
 			await this.store.loadApproved();
+		} else {
+			await this.store.loadRequestedChanges();
 		}
 
 		const mr =
 			categoryKey === 'needsReview'
 				? this.store.pendingMRs
-				: this.store.approvedMRs;
+				: categoryKey === 'approved'
+					? this.store.approvedMRs
+					: this.store.requestedChangesMRs;
 
 		return mr.map(
 			m => ReviewItem.createMergeRequest(m),

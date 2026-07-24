@@ -9,6 +9,24 @@ const CATEGORIES: CategoryKey[] = [
 	'approved',
 ];
 
+const CATEGORY_LOADER: Record<
+	CategoryKey,
+	(store: ReviewStore) => Promise<void>
+> = {
+	needsReview: (s) => s.loadPending(),
+	requestedChanges: (s) => s.loadRequestedChanges(),
+	approved: (s) => s.loadApproved(),
+};
+
+const CATEGORY_DATA: Record<
+	CategoryKey,
+	(store: ReviewStore) => GitLabMergeRequest[]
+> = {
+	needsReview: (s) => s.pendingMRs,
+	requestedChanges: (s) => s.requestedChangesMRs,
+	approved: (s) => s.approvedMRs,
+};
+
 export class ReviewTreeProvider
 	implements vscode.TreeDataProvider<ReviewItem>
 {
@@ -68,23 +86,12 @@ export class ReviewTreeProvider
 	private async getCategoryItems(
 		categoryKey: CategoryKey,
 	): Promise<ReviewItem[]> {
-		if (categoryKey === 'needsReview') {
-			await this.store.loadPending();
-		} else if (categoryKey === 'approved') {
-			await this.store.loadApproved();
-		} else {
-			await this.store.loadRequestedChanges();
-		}
+		await CATEGORY_LOADER[categoryKey](this.store);
 
-		const mr =
-			categoryKey === 'needsReview'
-				? this.store.pendingMRs
-				: categoryKey === 'approved'
-					? this.store.approvedMRs
-					: this.store.requestedChangesMRs;
+		const mr = CATEGORY_DATA[categoryKey](this.store);
 
-		return mr.map(
-			m => ReviewItem.createMergeRequest(m),
+		return mr.map(m =>
+			ReviewItem.createMergeRequest(m),
 		);
 	}
 
@@ -94,12 +101,11 @@ export class ReviewTreeProvider
 		const files = this.store.getFiles(mergeRequest);
 
 		if (files) {
-			return files.map(
-				file =>
-					ReviewItem.createFile(
-						mergeRequest,
-						file,
-					),
+			return files.map(file =>
+				ReviewItem.createFile(
+					mergeRequest,
+					file,
+				),
 			);
 		}
 
@@ -112,12 +118,11 @@ export class ReviewTreeProvider
 			return [];
 		}
 
-		return updatedFiles.map(
-			file =>
-				ReviewItem.createFile(
-					mergeRequest,
-					file,
-				),
+		return updatedFiles.map(file =>
+			ReviewItem.createFile(
+				mergeRequest,
+				file,
+			),
 		);
 	}
 }

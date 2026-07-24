@@ -2,21 +2,21 @@ import * as vscode from 'vscode';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
+import { CategoryKey } from '../tree/ReviewItem';
 import { ReviewDataSource } from '../tree/ReviewDataSource';
 
 export type LoadingState =
 	| 'idle'
-	| 'pending'
-	| 'approved'
-	| 'requestedChanges'
+	| CategoryKey
 	| 'files';
 
 export class ReviewStore {
-	private readonly _pendingMRs: GitLabMergeRequest[] = [];
+	private readonly _mrCache = new Map<
+		CategoryKey,
+		GitLabMergeRequest[]
+	>();
 
-	private readonly _approvedMRs: GitLabMergeRequest[] = [];
-
-	private readonly _requestedChangesMRs: GitLabMergeRequest[] = [];
+	private readonly _loadedCategories = new Set<CategoryKey>();
 
 	private readonly _filesCache = new Map<
 		string,
@@ -26,12 +26,6 @@ export class ReviewStore {
 	private _loading: LoadingState = 'idle';
 
 	private _error: string | undefined;
-
-	private _pendingLoaded = false;
-
-	private _approvedLoaded = false;
-
-	private _requestedChangesLoaded = false;
 
 	private readonly changeEmitter =
 		new vscode.EventEmitter<void>();
@@ -50,15 +44,15 @@ export class ReviewStore {
 	// -- State accessors --
 
 	public get pendingMRs(): GitLabMergeRequest[] {
-		return this._pendingMRs;
+		return this._mrCache.get('needsReview') ?? [];
 	}
 
 	public get approvedMRs(): GitLabMergeRequest[] {
-		return this._approvedMRs;
+		return this._mrCache.get('approved') ?? [];
 	}
 
 	public get requestedChangesMRs(): GitLabMergeRequest[] {
-		return this._requestedChangesMRs;
+		return this._mrCache.get('requestedChanges') ?? [];
 	}
 
 	public get loading(): LoadingState {
@@ -79,69 +73,35 @@ export class ReviewStore {
 	// -- Actions --
 
 	public async loadPending(): Promise<void> {
-		if (this._pendingLoaded) {
-			return;
-		}
-
-		this._loading = 'pending';
-		this._error = undefined;
-		this.notify();
-
-		try {
-			const mr = await this.dataSource.getMergeRequests();
-			this._pendingMRs.length = 0;
-			this._pendingMRs.push(...mr);
-			this._pendingLoaded = true;
-		} catch (e: unknown) {
-			this._error = e instanceof Error
-				? e.message
-				: String(e);
-		} finally {
-			this._loading = 'idle';
-			this.notify();
-		}
-	}
-
-	public async loadRequestedChanges(): Promise<void> {
-		if (this._requestedChangesLoaded) {
-			return;
-		}
-
-		this._loading = 'requestedChanges';
-		this._error = undefined;
-		this.notify();
-
-		try {
-			const mr =
-				await this.dataSource.getRequestedChangesMergeRequests();
-			this._requestedChangesMRs.length = 0;
-			this._requestedChangesMRs.push(...mr);
-			this._requestedChangesLoaded = true;
-		} catch (e: unknown) {
-			this._error = e instanceof Error
-				? e.message
-				: String(e);
-		} finally {
-			this._loading = 'idle';
-			this.notify();
-		}
+		await this.loadCategory('needsReview');
 	}
 
 	public async loadApproved(): Promise<void> {
-		if (this._approvedLoaded) {
+		await this.loadCategory('approved');
+	}
+
+	public async loadRequestedChanges(): Promise<void> {
+		await this.loadCategory('requestedChanges');
+	}
+
+	private async loadCategory(
+		categoryKey: CategoryKey,
+	): Promise<void> {
+		if (this._loadedCategories.has(categoryKey)) {
 			return;
 		}
 
-		this._loading = 'approved';
+		this._loading = categoryKey;
 		this._error = undefined;
 		this.notify();
 
 		try {
 			const mr =
-				await this.dataSource.getApprovedMergeRequests();
-			this._approvedMRs.length = 0;
-			this._approvedMRs.push(...mr);
-			this._approvedLoaded = true;
+				await this.dataSource.getMergeRequestsByCategory(
+					categoryKey,
+				);
+			this._mrCache.set(categoryKey, mr);
+			this._loadedCategories.add(categoryKey);
 		} catch (e: unknown) {
 			this._error = e instanceof Error
 				? e.message
@@ -183,14 +143,10 @@ export class ReviewStore {
 
 	public refresh(): void {
 		this.dataSource.refresh();
-		this._pendingMRs.length = 0;
-		this._approvedMRs.length = 0;
-		this._requestedChangesMRs.length = 0;
+		this._mrCache.clear();
+		this._loadedCategories.clear();
 		this._filesCache.clear();
 		this._error = undefined;
-		this._pendingLoaded = false;
-		this._approvedLoaded = false;
-		this._requestedChangesLoaded = false;
 		this.notify();
 	}
 

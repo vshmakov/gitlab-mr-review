@@ -16,6 +16,8 @@ export class GitLabClient {
 	private readonly pendingReviewService:
 		PendingReviewService;
 
+	private _currentUser: GitLabUser | null = null;
+
 	public constructor(
 		restClient: GitLabRestClient,
 		noteClient: GitLabNoteClient,
@@ -31,7 +33,13 @@ export class GitLabClient {
 	}
 
 	public async getCurrentUser(): Promise<GitLabUser> {
-		return this.restClient.get<GitLabUser>('/api/v4/user');
+		if (this._currentUser) {
+			return this._currentUser;
+		}
+
+		this._currentUser =
+			await this.restClient.get<GitLabUser>('/api/v4/user');
+		return this._currentUser;
 	}
 
 	public async getMergeRequestsForReviewer(
@@ -63,40 +71,49 @@ export class GitLabClient {
 		};
 	}
 
-	public async getPendingReviews(
-		user: GitLabUser,
-	): Promise<GitLabMergeRequest[]> {
-		const mergeRequests =
-			await this.getMergeRequestsForReviewer(user.id);
-
-		if (mergeRequests.length === 0) {
-			return [];
-		}
-
-		return this.pendingReviewService.filterPendingReviews(
-			mergeRequests,
+	public async getPendingReviews():
+		Promise<GitLabMergeRequest[]> {
+		const user = await this.getCurrentUser();
+		return this.filterReviewsByState(
 			user,
+			(mr, u) =>
+				this.pendingReviewService.filterPendingReviews(
+					mr,
+					u,
+				),
 		);
 	}
 
-	public async getApprovedReviews(
-		user: GitLabUser,
-	): Promise<GitLabMergeRequest[]> {
-		const mergeRequests =
-			await this.getMergeRequestsForReviewer(user.id);
-
-		if (mergeRequests.length === 0) {
-			return [];
-		}
-
-		return this.pendingReviewService.filterApprovedReviews(
-			mergeRequests,
+	public async getApprovedReviews():
+		Promise<GitLabMergeRequest[]> {
+		const user = await this.getCurrentUser();
+		return this.filterReviewsByState(
 			user,
+			(mr, u) =>
+				this.pendingReviewService.filterApprovedReviews(
+					mr,
+					u,
+				),
 		);
 	}
 
-	public async getRequestedChangesReviews(
+	public async getRequestedChangesReviews():
+		Promise<GitLabMergeRequest[]> {
+		const user = await this.getCurrentUser();
+		return this.filterReviewsByState(
+			user,
+			(mr, u) =>
+				this.pendingReviewService
+					.filterRequestedChangesReviews(mr, u),
+		);
+	}
+
+	private async filterReviewsByState(
 		user: GitLabUser,
+		filterFn: (
+			mr: GitLabMergeRequest[],
+			u: GitLabUser,
+		) => Promise<GitLabMergeRequest[]>,
 	): Promise<GitLabMergeRequest[]> {
 		const mergeRequests =
 			await this.getMergeRequestsForReviewer(user.id);
@@ -105,10 +122,7 @@ export class GitLabClient {
 			return [];
 		}
 
-		return this.pendingReviewService.filterRequestedChangesReviews(
-			mergeRequests,
-			user,
-		);
+		return filterFn(mergeRequests, user);
 	}
 
 	public async getMergeRequestFiles(

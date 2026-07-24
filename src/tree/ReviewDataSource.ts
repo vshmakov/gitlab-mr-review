@@ -1,29 +1,36 @@
+import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
+import { CategoryKey } from './ReviewItem';
+
+const CATEGORY_LOADER: Record<
+	CategoryKey,
+	(client: GitLabClient) => Promise<GitLabMergeRequest[]>
+> = {
+	needsReview: (client) => client.getPendingReviews(),
+	approved: (client) => client.getApprovedReviews(),
+	requestedChanges: (client) =>
+		client.getRequestedChangesReviews(),
+};
 
 export class ReviewDataSource {
-	private mergeRequests?: GitLabMergeRequest[];
+	private readonly _mrCache = new Map<
+		CategoryKey,
+		GitLabMergeRequest[]
+	>();
 
-	private mergeRequestsLoading?:
-		Promise<GitLabMergeRequest[]>;
+	private readonly _mrLoading = new Map<
+		CategoryKey,
+		Promise<GitLabMergeRequest[]>
+	>();
 
-	private approvedMergeRequests?: GitLabMergeRequest[];
-
-	private approvedMergeRequestsLoading?:
-		Promise<GitLabMergeRequest[]>;
-
-	private requestedChangesMergeRequests?: GitLabMergeRequest[];
-
-	private requestedChangesMergeRequestsLoading?:
-		Promise<GitLabMergeRequest[]>;
-
-	private readonly filesCache = new Map<
+	private readonly _filesCache = new Map<
 		string,
 		GitLabMergeRequestFile[]
 	>();
 
-	private readonly filesLoading = new Map<
+	private readonly _filesLoading = new Map<
 		string,
 		Promise<GitLabMergeRequestFile[]>
 	>();
@@ -34,87 +41,33 @@ export class ReviewDataSource {
 	) {}
 
 	public refresh(): void {
-		this.mergeRequests = undefined;
-		this.mergeRequestsLoading = undefined;
-
-		this.approvedMergeRequests = undefined;
-		this.approvedMergeRequestsLoading = undefined;
-
-		this.requestedChangesMergeRequests = undefined;
-		this.requestedChangesMergeRequestsLoading = undefined;
-
-		this.filesCache.clear();
-		this.filesLoading.clear();
+		this._mrCache.clear();
+		this._mrLoading.clear();
+		this._filesCache.clear();
+		this._filesLoading.clear();
 	}
 
-	public async getMergeRequests():
-		Promise<GitLabMergeRequest[]> {
-		if (this.mergeRequests) {
-			return this.mergeRequests;
+	public async getMergeRequestsByCategory(
+		categoryKey: CategoryKey,
+	): Promise<GitLabMergeRequest[]> {
+		if (this._mrCache.has(categoryKey)) {
+			return this._mrCache.get(categoryKey)!;
 		}
 
-		if (this.mergeRequestsLoading) {
-			return this.mergeRequestsLoading;
+		if (this._mrLoading.has(categoryKey)) {
+			return this._mrLoading.get(categoryKey)!;
 		}
 
-		const request = this.loadMergeRequests()
-			.then(mergeRequests => {
-				this.mergeRequests = mergeRequests;
-				return mergeRequests;
+		const request = this.loadByCategory(categoryKey)
+			.then(mr => {
+				this._mrCache.set(categoryKey, mr);
+				return mr;
 			})
 			.finally(() => {
-				this.mergeRequestsLoading = undefined;
+				this._mrLoading.delete(categoryKey);
 			});
 
-		this.mergeRequestsLoading = request;
-
-		return request;
-	}
-
-	public async getApprovedMergeRequests():
-		Promise<GitLabMergeRequest[]> {
-		if (this.approvedMergeRequests) {
-			return this.approvedMergeRequests;
-		}
-
-		if (this.approvedMergeRequestsLoading) {
-			return this.approvedMergeRequestsLoading;
-		}
-
-		const request = this.loadApprovedMergeRequests()
-			.then(mergeRequests => {
-				this.approvedMergeRequests = mergeRequests;
-				return mergeRequests;
-			})
-			.finally(() => {
-				this.approvedMergeRequestsLoading = undefined;
-			});
-
-		this.approvedMergeRequestsLoading = request;
-
-		return request;
-	}
-
-	public async getRequestedChangesMergeRequests():
-		Promise<GitLabMergeRequest[]> {
-		if (this.requestedChangesMergeRequests) {
-			return this.requestedChangesMergeRequests;
-		}
-
-		if (this.requestedChangesMergeRequestsLoading) {
-			return this.requestedChangesMergeRequestsLoading;
-		}
-
-		const request = this.loadRequestedChangesMergeRequests()
-			.then(mergeRequests => {
-				this.requestedChangesMergeRequests = mergeRequests;
-				return mergeRequests;
-			})
-			.finally(() => {
-				this.requestedChangesMergeRequestsLoading = undefined;
-			});
-
-		this.requestedChangesMergeRequestsLoading = request;
+		this._mrLoading.set(categoryKey, request);
 
 		return request;
 	}
@@ -125,78 +78,41 @@ export class ReviewDataSource {
 		const cacheKey =
 			this.getMergeRequestCacheKey(mergeRequest);
 
-		const cachedFiles = this.filesCache.get(cacheKey);
-		if (cachedFiles) {
-			return cachedFiles;
+		if (this._filesCache.has(cacheKey)) {
+			return this._filesCache.get(cacheKey)!;
 		}
 
-		const loadingFiles = this.filesLoading.get(cacheKey);
-		if (loadingFiles) {
-			return loadingFiles;
+		if (this._filesLoading.has(cacheKey)) {
+			return this._filesLoading.get(cacheKey)!;
 		}
 
 		const request = this.loadMergeRequestFiles(
 			mergeRequest,
 		)
 			.then(files => {
-				this.filesCache.set(cacheKey, files);
+				this._filesCache.set(cacheKey, files);
 				return files;
 			})
 			.finally(() => {
-				this.filesLoading.delete(cacheKey);
+				this._filesLoading.delete(cacheKey);
 			});
 
-		this.filesLoading.set(cacheKey, request);
+		this._filesLoading.set(cacheKey, request);
 
 		return request;
 	}
 
-	private async loadMergeRequests():
-		Promise<GitLabMergeRequest[]> {
+	private async loadByCategory(
+		categoryKey: CategoryKey,
+	): Promise<GitLabMergeRequest[]> {
 		const client = await this.clientFactory.create();
 		if (!client) {
 			return [];
 		}
 
 		try {
-			const user = await client.getCurrentUser();
-			return await client.getPendingReviews(user);
-		} catch {
-			this.clientFactory.clear();
-			throw new Error(
-				'Не удалось загрузить merge requests',
-			);
-		}
-	}
-
-	private async loadApprovedMergeRequests():
-		Promise<GitLabMergeRequest[]> {
-		const client = await this.clientFactory.create();
-		if (!client) {
-			return [];
-		}
-
-		try {
-			const user = await client.getCurrentUser();
-			return await client.getApprovedReviews(user);
-		} catch {
-			this.clientFactory.clear();
-			throw new Error(
-				'Не удалось загрузить merge requests',
-			);
-		}
-	}
-
-	private async loadRequestedChangesMergeRequests():
-		Promise<GitLabMergeRequest[]> {
-		const client = await this.clientFactory.create();
-		if (!client) {
-			return [];
-		}
-
-		try {
-			const user = await client.getCurrentUser();
-			return await client.getRequestedChangesReviews(user);
+			const loader = CATEGORY_LOADER[categoryKey];
+			return await loader(client);
 		} catch {
 			this.clientFactory.clear();
 			throw new Error(

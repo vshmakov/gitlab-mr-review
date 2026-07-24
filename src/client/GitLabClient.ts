@@ -79,6 +79,49 @@ export class GitLabClient {
 		);
 	}
 
+	public async getApprovedReviews(
+		user: GitLabUser,
+	): Promise<GitLabMergeRequest[]> {
+		const mergeRequests =
+			await this.getMergeRequestsForReviewer(user.id);
+
+		if (mergeRequests.length === 0) {
+			return [];
+		}
+
+		return this.pendingReviewService.filterApprovedReviews(
+			mergeRequests,
+			user,
+		);
+	}
+
+	public async getAllReviews(
+		user: GitLabUser,
+	): Promise<{
+			pending: GitLabMergeRequest[];
+			approved: GitLabMergeRequest[];
+		}> {
+		const mergeRequests =
+			await this.getMergeRequestsForReviewer(user.id);
+
+		if (mergeRequests.length === 0) {
+			return { pending: [], approved: [] };
+		}
+
+		const [pending, approved] = await Promise.all([
+			this.pendingReviewService.filterPendingReviews(
+				mergeRequests,
+				user,
+			),
+			this.pendingReviewService.filterApprovedReviews(
+				mergeRequests,
+				user,
+			),
+		]);
+
+		return { pending, approved };
+	}
+
 	public async getMergeRequestFiles(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<GitLabMergeRequestFile[]> {

@@ -8,6 +8,11 @@ export class ReviewDataSource {
 	private mergeRequestsLoading?:
 		Promise<GitLabMergeRequest[]>;
 
+	private approvedMergeRequests?: GitLabMergeRequest[];
+
+	private approvedMergeRequestsLoading?:
+		Promise<GitLabMergeRequest[]>;
+
 	private readonly filesCache = new Map<
 		string,
 		GitLabMergeRequestFile[]
@@ -26,6 +31,9 @@ export class ReviewDataSource {
 	public refresh(): void {
 		this.mergeRequests = undefined;
 		this.mergeRequestsLoading = undefined;
+
+		this.approvedMergeRequests = undefined;
+		this.approvedMergeRequestsLoading = undefined;
 
 		this.filesCache.clear();
 		this.filesLoading.clear();
@@ -51,6 +59,30 @@ export class ReviewDataSource {
 			});
 
 		this.mergeRequestsLoading = request;
+
+		return request;
+	}
+
+	public async getApprovedMergeRequests():
+		Promise<GitLabMergeRequest[]> {
+		if (this.approvedMergeRequests) {
+			return this.approvedMergeRequests;
+		}
+
+		if (this.approvedMergeRequestsLoading) {
+			return this.approvedMergeRequestsLoading;
+		}
+
+		const request = this.loadApprovedMergeRequests()
+			.then(mergeRequests => {
+				this.approvedMergeRequests = mergeRequests;
+				return mergeRequests;
+			})
+			.finally(() => {
+				this.approvedMergeRequestsLoading = undefined;
+			});
+
+		this.approvedMergeRequestsLoading = request;
 
 		return request;
 	}
@@ -97,6 +129,24 @@ export class ReviewDataSource {
 		try {
 			const user = await client.getCurrentUser();
 			return await client.getPendingReviews(user);
+		} catch {
+			this.clientFactory.clear();
+			throw new Error(
+				'Не удалось загрузить merge requests',
+			);
+		}
+	}
+
+	private async loadApprovedMergeRequests():
+		Promise<GitLabMergeRequest[]> {
+		const client = await this.clientFactory.create();
+		if (!client) {
+			return [];
+		}
+
+		try {
+			const user = await client.getCurrentUser();
+			return await client.getApprovedReviews(user);
 		} catch {
 			this.clientFactory.clear();
 			throw new Error(

@@ -2,7 +2,12 @@ import * as vscode from 'vscode';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { ReviewDataSource } from './ReviewDataSource';
-import { ReviewItem } from './ReviewItem';
+import { CategoryKey, ReviewItem } from './ReviewItem';
+
+const CATEGORIES: CategoryKey[] = [
+	'needsReview',
+	'approved',
+];
 
 export class ReviewTreeProvider
 	implements vscode.TreeDataProvider<ReviewItem>
@@ -41,7 +46,15 @@ export class ReviewTreeProvider
 		element?: ReviewItem,
 	): Promise<ReviewItem[]> {
 		if (!element) {
-			return this.getMergeRequestItems();
+			return CATEGORIES.map(key =>
+				ReviewItem.createCategory(key),
+			);
+		}
+
+		if (element.type === 'category') {
+			return this.getMergeRequestItems(
+				element.categoryKey!,
+			);
 		}
 
 		if (
@@ -56,18 +69,21 @@ export class ReviewTreeProvider
 		return [];
 	}
 
-	private async getMergeRequestItems():
-		Promise<ReviewItem[]> {
+	private async getMergeRequestItems(
+		categoryKey: CategoryKey,
+	): Promise<ReviewItem[]> {
 		try {
-			const mergeRequests =
-				await this.dataSource
-					.getMergeRequests();
+			let mergeRequests: GitLabMergeRequest[];
 
-			void vscode.window.setStatusBarMessage(
-				`GitLab MR Review: найдено ` +
-					`${mergeRequests.length} MR`,
-				5000,
-			);
+			if (categoryKey === 'needsReview') {
+				mergeRequests =
+					await this.dataSource
+						.getMergeRequests();
+			} else {
+				mergeRequests =
+					await this.dataSource
+						.getApprovedMergeRequests();
+			}
 
 			return mergeRequests.map(
 				mergeRequest =>

@@ -47,7 +47,7 @@
       "gitlabMrReview": [
         {
           "id": "gitlabMrReview.pendingReviews",
-          "name": "Needs my review",
+          "name": "Merge Requests",
           "icon": "$(git-pull-request)"
         }
       ]

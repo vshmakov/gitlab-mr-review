@@ -4,8 +4,13 @@ import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
 export type ReviewItemType =
+	| 'category'
 	| 'mergeRequest'
 	| 'file';
+
+export type CategoryKey =
+	| 'needsReview'
+	| 'approved';
 
 export class ReviewItem extends vscode.TreeItem {
 	private constructor(
@@ -17,8 +22,50 @@ export class ReviewItem extends vscode.TreeItem {
 			GitLabMergeRequest,
 		public readonly file?:
 			GitLabMergeRequestFile,
+		public readonly categoryKey?:
+			CategoryKey,
 	) {
 		super(label, collapsibleState);
+	}
+
+	public static createCategory(
+		categoryKey: CategoryKey,
+	): ReviewItem {
+		const config: Record<CategoryKey, {
+			label: string;
+			icon: string;
+			contextValue: string;
+		}> = {
+			needsReview: {
+				label: 'Needs My Review',
+				icon: 'git-pull-request',
+				contextValue: 'categoryNeedsReview',
+			},
+			approved: {
+				label: 'I Approved',
+				icon: 'check',
+				contextValue: 'categoryApproved',
+			},
+		};
+
+		const entry = config[categoryKey];
+
+		const item = new ReviewItem(
+			'category',
+			entry.label,
+			vscode.TreeItemCollapsibleState.Collapsed,
+			undefined,
+			undefined,
+			categoryKey,
+		);
+
+		item.iconPath = new vscode.ThemeIcon(
+			entry.icon,
+		);
+
+		item.contextValue = entry.contextValue;
+
+		return item;
 	}
 
 	public static createMergeRequest(

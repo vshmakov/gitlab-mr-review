@@ -167,4 +167,52 @@ export class PendingReviewService {
 				?.reviewState === 'REQUESTED_CHANGES'
 		);
 	}
+
+	public async filterApprovedReviews(
+		mergeRequests: GitLabMergeRequest[],
+		user: GitLabUser,
+	): Promise<GitLabMergeRequest[]> {
+		const approvedMergeRequests:
+			GitLabMergeRequest[] = [];
+
+		for (
+			let offset = 0;
+			offset < mergeRequests.length;
+			offset +=
+				PendingReviewService.GRAPHQL_BATCH_SIZE
+		) {
+			const batch = mergeRequests.slice(
+				offset,
+				offset +
+					PendingReviewService
+						.GRAPHQL_BATCH_SIZE,
+			);
+
+			const approvedBatch =
+				await this.filterApprovedBatch(
+					batch,
+					user.username,
+				);
+
+			approvedMergeRequests.push(...approvedBatch);
+		}
+
+		return approvedMergeRequests;
+	}
+
+	private async filterApprovedBatch(
+		mergeRequests: GitLabMergeRequest[],
+		username: string,
+	): Promise<GitLabMergeRequest[]> {
+		const approvalStates =
+			await this.getApprovalStates(mergeRequests);
+
+		return mergeRequests.filter(
+			(_mergeRequest, index) =>
+				this.isApprovedByUser(
+					approvalStates[`mr${index}`],
+					username,
+				),
+		);
+	}
 }

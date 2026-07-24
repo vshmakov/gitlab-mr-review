@@ -4,6 +4,7 @@ export interface GitLabMergeRequest {
 	title: string;
 	web_url: string;
 	project_id: number;
+	project_path?: string;
 	updated_at: string;
 	draft: boolean;
 	work_in_progress: boolean;

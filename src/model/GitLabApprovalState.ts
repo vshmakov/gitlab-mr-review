@@ -10,6 +10,9 @@ export interface GitLabGraphQLReviewer
 }
 
 export interface GitLabApprovalState {
+	project?: {
+		fullPath: string;
+	};
 	approvedBy?: {
 		nodes: GitLabGraphQLUser[];
 	};

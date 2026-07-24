@@ -18,8 +18,22 @@ export class PendingReviewService {
 		mergeRequests: GitLabMergeRequest[],
 		user: GitLabUser,
 	): Promise<GitLabMergeRequest[]> {
-		const pendingMergeRequests:
-			GitLabMergeRequest[] = [];
+		return this.filterByState(
+			mergeRequests,
+			user,
+			(state, username) => this.isPendingReview(state, username),
+		);
+	}
+
+	private async filterByState(
+		mergeRequests: GitLabMergeRequest[],
+		user: GitLabUser,
+		predicate: (
+			state: GitLabApprovalState | null,
+			username: string,
+		) => boolean,
+	): Promise<GitLabMergeRequest[]> {
+		const result: GitLabMergeRequest[] = [];
 
 		for (
 			let offset = 0;
@@ -34,32 +48,45 @@ export class PendingReviewService {
 						.GRAPHQL_BATCH_SIZE,
 			);
 
-			const pendingBatch =
-				await this.filterPendingBatch(
+			const batchResult =
+				await this.filterBatch(
 					batch,
 					user.username,
+					predicate,
 				);
 
-			pendingMergeRequests.push(...pendingBatch);
+			result.push(...batchResult);
 		}
 
-		return pendingMergeRequests;
+		return result;
 	}
 
-	private async filterPendingBatch(
+	private async filterBatch(
 		mergeRequests: GitLabMergeRequest[],
 		username: string,
+		predicate: (
+			state: GitLabApprovalState | null,
+			username: string,
+		) => boolean,
 	): Promise<GitLabMergeRequest[]> {
 		const approvalStates =
 			await this.getApprovalStates(mergeRequests);
 
-		return mergeRequests.filter(
-			(_mergeRequest, index) =>
-				this.isPendingReview(
-					approvalStates[`mr${index}`],
-					username,
-				),
-		);
+		const result: GitLabMergeRequest[] = [];
+
+		for (let i = 0; i < mergeRequests.length; i++) {
+			const mr = mergeRequests[i];
+			const state = approvalStates[`mr${i}`];
+
+			if (predicate(state, username)) {
+				result.push({
+					...mr,
+					project_path: state?.project?.fullPath || mr.project_path,
+				});
+			}
+		}
+
+		return result;
 	}
 
 	private async getApprovalStates(
@@ -101,6 +128,10 @@ export class PendingReviewService {
 			mr${index}: mergeRequest(
 				id: ${JSON.stringify(globalId)}
 			) {
+				project {
+					fullPath
+				}
+
 				approvedBy {
 					nodes {
 						username
@@ -172,97 +203,21 @@ export class PendingReviewService {
 		mergeRequests: GitLabMergeRequest[],
 		user: GitLabUser,
 	): Promise<GitLabMergeRequest[]> {
-		const approvedMergeRequests:
-			GitLabMergeRequest[] = [];
-
-		for (
-			let offset = 0;
-			offset < mergeRequests.length;
-			offset +=
-				PendingReviewService.GRAPHQL_BATCH_SIZE
-		) {
-			const batch = mergeRequests.slice(
-				offset,
-				offset +
-					PendingReviewService
-						.GRAPHQL_BATCH_SIZE,
-			);
-
-			const approvedBatch =
-				await this.filterApprovedBatch(
-					batch,
-					user.username,
-				);
-
-			approvedMergeRequests.push(...approvedBatch);
-		}
-
-		return approvedMergeRequests;
+		return this.filterByState(
+			mergeRequests,
+			user,
+			(state, username) => this.isApprovedByUser(state, username),
+		);
 	}
 
 	public async filterRequestedChangesReviews(
 		mergeRequests: GitLabMergeRequest[],
 		user: GitLabUser,
 	): Promise<GitLabMergeRequest[]> {
-		const requestedChangesMergeRequests:
-			GitLabMergeRequest[] = [];
-
-		for (
-			let offset = 0;
-			offset < mergeRequests.length;
-			offset +=
-				PendingReviewService.GRAPHQL_BATCH_SIZE
-		) {
-			const batch = mergeRequests.slice(
-				offset,
-				offset +
-					PendingReviewService
-						.GRAPHQL_BATCH_SIZE,
-			);
-
-			const requestedChangesBatch =
-				await this.filterRequestedChangesBatch(
-					batch,
-					user.username,
-				);
-
-			requestedChangesMergeRequests.push(
-				...requestedChangesBatch,
-			);
-		}
-
-		return requestedChangesMergeRequests;
-	}
-
-	private async filterRequestedChangesBatch(
-		mergeRequests: GitLabMergeRequest[],
-		username: string,
-	): Promise<GitLabMergeRequest[]> {
-		const approvalStates =
-			await this.getApprovalStates(mergeRequests);
-
-		return mergeRequests.filter(
-			(_mergeRequest, index) =>
-				this.hasRequestedChanges(
-					approvalStates[`mr${index}`],
-					username,
-				),
-		);
-	}
-
-	private async filterApprovedBatch(
-		mergeRequests: GitLabMergeRequest[],
-		username: string,
-	): Promise<GitLabMergeRequest[]> {
-		const approvalStates =
-			await this.getApprovalStates(mergeRequests);
-
-		return mergeRequests.filter(
-			(_mergeRequest, index) =>
-				this.isApprovedByUser(
-					approvalStates[`mr${index}`],
-					username,
-				),
+		return this.filterByState(
+			mergeRequests,
+			user,
+			(state, username) => this.hasRequestedChanges(state, username),
 		);
 	}
 }

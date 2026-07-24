@@ -32,7 +32,12 @@
       {
 	"command": "gitlabMrReview.addComment",
 	"title": "GitLab MR Review: Add Comment"
-}
+      },
+      {
+	"command": "gitlabMrReview.approve",
+	"title": "Approve",
+	"icon": "$(check)"
+      }
           ],
     "viewsContainers": {
       "activitybar": [
@@ -58,6 +63,12 @@
           "command": "gitlabMrReview.refresh",
           "when": "view == gitlabMrReview.pendingReviews",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "gitlabMrReview.approve",
+          "when": "view == gitlabMrReview.pendingReviews && viewItem == mergeRequest"
         }
       ]
     },

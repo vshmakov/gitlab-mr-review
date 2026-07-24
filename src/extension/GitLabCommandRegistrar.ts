@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 
+import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { MergeRequestsTreeProvider } from '../tree/MergeRequestsTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
@@ -18,6 +19,8 @@ export class GitLabCommandRegistrar {
 		private readonly fileOpener: GitLabFileOpener,
 		private readonly commentController:
 			GitLabCommentController,
+		private readonly clientFactory:
+			GitLabClientFactory,
 	) {}
 
 	public register(): vscode.Disposable[] {
@@ -28,6 +31,7 @@ export class GitLabCommandRegistrar {
 			this.registerOpenMergeRequestCommand(),
 			this.registerOpenFilePatchCommand(),
 			this.registerAddCommentCommand(),
+			this.registerApproveCommand(),
 		];
 	}
 
@@ -104,6 +108,42 @@ export class GitLabCommandRegistrar {
 					line,
 					text,
 				);
+			},
+		);
+	}
+
+	private registerApproveCommand(): vscode.Disposable {
+		return vscode.commands.registerCommand(
+			'gitlabMrReview.approve',
+			async (mergeRequest: GitLabMergeRequest) => {
+				try {
+					const client =
+						await this.clientFactory.create();
+					if (!client) {
+						vscode.window.showErrorMessage(
+							'GitLab client is not initialized',
+						);
+						return;
+					}
+
+					await client.approveMergeRequest(
+						mergeRequest,
+					);
+
+					this.treeProvider.refresh();
+
+					void vscode.window.showInformationMessage(
+						`MR !${mergeRequest.iid} approved`,
+					);
+				} catch (error: unknown) {
+					const message = error instanceof Error
+						? error.message
+						: String(error);
+
+					void vscode.window.showErrorMessage(
+						`Failed to approve MR: ${message}`,
+					);
+				}
 			},
 		);
 	}

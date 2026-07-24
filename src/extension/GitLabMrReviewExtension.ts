@@ -79,6 +79,7 @@ export class GitLabMrReviewExtension {
 				this.authenticationService,
 				this.fileOpener,
 				this.commentController,
+				clientFactory,
 			);
 	}
 

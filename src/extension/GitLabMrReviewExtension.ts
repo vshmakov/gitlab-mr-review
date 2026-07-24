@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { UnifiedDiffParser } from '../review/diff/unified-diff-parser';
 import { OpenedDiffStore } from '../review/OpenedDiffStore';
+import { ReviewStore } from '../store/ReviewStore';
 import { ReviewTreeProvider } from '../tree/ReviewTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import { GitLabCommandRegistrar } from './GitLabCommandRegistrar';
@@ -11,6 +12,8 @@ import { GitLabCommentService } from './GitLabCommentService';
 import { GitLabFileOpener } from './GitLabFileOpener';
 
 export class GitLabMrReviewExtension {
+	private readonly store: ReviewStore;
+
 	private readonly treeProvider: ReviewTreeProvider;
 
 	private readonly authenticationService:
@@ -36,8 +39,10 @@ export class GitLabMrReviewExtension {
 		const clientFactory =
 			new GitLabClientFactory(context);
 
+		this.store = new ReviewStore(clientFactory);
+
 		this.treeProvider =
-			new ReviewTreeProvider(clientFactory);
+			new ReviewTreeProvider(this.store);
 
 		this.authenticationService =
 			new GitLabAuthenticationService(

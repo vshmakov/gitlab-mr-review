@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
-import { ReviewDataSource } from './ReviewDataSource';
+import { ReviewStore } from '../store/ReviewStore';
 import { CategoryKey, ReviewItem } from './ReviewItem';
 
 const CATEGORIES: CategoryKey[] = [
@@ -20,20 +19,16 @@ export class ReviewTreeProvider
 	public readonly onDidChangeTreeData =
 		this.changeEmitter.event;
 
-	private readonly dataSource:
-		ReviewDataSource;
-
 	public constructor(
-		clientFactory: GitLabClientFactory,
+		private readonly store: ReviewStore,
 	) {
-		this.dataSource = new ReviewDataSource(
-			clientFactory,
-		);
+		this.store.onDidChange(() => {
+			this.changeEmitter.fire();
+		});
 	}
 
 	public refresh(): void {
-		this.dataSource.refresh();
-		this.changeEmitter.fire();
+		this.store.refresh();
 	}
 
 	public getTreeItem(
@@ -52,7 +47,7 @@ export class ReviewTreeProvider
 		}
 
 		if (element.type === 'category') {
-			return this.getMergeRequestItems(
+			return await this.getCategoryItems(
 				element.categoryKey!,
 			);
 		}
@@ -61,7 +56,7 @@ export class ReviewTreeProvider
 			element.type === 'mergeRequest' &&
 			element.mergeRequest
 		) {
-			return this.getFileItems(
+			return this.getFilesForMR(
 				element.mergeRequest,
 			);
 		}
@@ -69,78 +64,55 @@ export class ReviewTreeProvider
 		return [];
 	}
 
-	private async getMergeRequestItems(
+	private async getCategoryItems(
 		categoryKey: CategoryKey,
 	): Promise<ReviewItem[]> {
-		try {
-			let mergeRequests: GitLabMergeRequest[];
-
-			if (categoryKey === 'needsReview') {
-				mergeRequests =
-					await this.dataSource
-						.getMergeRequests();
-			} else {
-				mergeRequests =
-					await this.dataSource
-						.getApprovedMergeRequests();
-			}
-
-			return mergeRequests.map(
-				mergeRequest =>
-					ReviewItem
-						.createMergeRequest(
-							mergeRequest,
-						),
-			);
-		} catch (error: unknown) {
-			this.showLoadError(
-				'Не удалось загрузить GitLab MR',
-				error,
-			);
-
-			return [];
+		if (categoryKey === 'needsReview') {
+			await this.store.loadPending();
+		} else {
+			await this.store.loadApproved();
 		}
+
+		const mr =
+			categoryKey === 'needsReview'
+				? this.store.pendingMRs
+				: this.store.approvedMRs;
+
+		return mr.map(
+			m => ReviewItem.createMergeRequest(m),
+		);
 	}
 
-	private async getFileItems(
+	private async getFilesForMR(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<ReviewItem[]> {
-		try {
-			const files =
-				await this.dataSource
-					.getMergeRequestFiles(
-						mergeRequest,
-					);
+		const files = this.store.getFiles(mergeRequest);
 
+		if (files) {
 			return files.map(
 				file =>
-					ReviewItem.
-				createFile(mergeRequest, file),
+					ReviewItem.createFile(
+						mergeRequest,
+						file,
+					),
 			);
-		} catch (error: unknown) {
-			this.showLoadError(
-				`Не удалось загрузить файлы MR ` +
-					`!${mergeRequest.iid}`,
-				error,
-			);
+		}
 
+		await this.store.loadFiles(mergeRequest);
+
+		const updatedFiles =
+			this.store.getFiles(mergeRequest);
+
+		if (!updatedFiles) {
 			return [];
 		}
-	}
 
-	private showLoadError(
-		prefix: string,
-		error: unknown,
-	): void {
-		const message =
-			error instanceof Error
-				? error.message
-				: String(error);
-
-		console.error(prefix, error);
-
-		void vscode.window.showErrorMessage(
-			`${prefix}: ${message}`,
+		return updatedFiles.map(
+			file =>
+				ReviewItem.createFile(
+					mergeRequest,
+					file,
+				),
 		);
 	}
 }

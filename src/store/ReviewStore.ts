@@ -1,9 +1,18 @@
 import * as vscode from 'vscode';
+import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 import { CategoryKey } from '../tree/ReviewItem';
-import { ReviewDataSource } from '../tree/ReviewDataSource';
+
+const CATEGORY_LOADER: Record<
+	CategoryKey,
+	(client: GitLabClient) => Promise<GitLabMergeRequest[]>
+> = {
+	needsReview: (c) => c.getPendingReviews(),
+	approved: (c) => c.getApprovedReviews(),
+	requestedChanges: (c) => c.getRequestedChangesReviews(),
+};
 
 export type LoadingState =
 	| 'idle'
@@ -33,13 +42,10 @@ export class ReviewStore {
 	public readonly onDidChange =
 		this.changeEmitter.event;
 
-	private readonly dataSource: ReviewDataSource;
-
-	public constructor(clientFactory: GitLabClientFactory) {
-		this.dataSource = new ReviewDataSource(
-			clientFactory,
-		);
-	}
+	public constructor(
+		private readonly clientFactory:
+			GitLabClientFactory,
+	) {}
 
 	// -- State accessors --
 
@@ -66,7 +72,8 @@ export class ReviewStore {
 	public getFiles(
 		mergeRequest: GitLabMergeRequest,
 	): GitLabMergeRequestFile[] | undefined {
-		const key = `${mergeRequest.project_id}:${mergeRequest.iid}`;
+		const key =
+			`${mergeRequest.project_id}:${mergeRequest.iid}`;
 		return this._filesCache.get(key);
 	}
 
@@ -96,10 +103,7 @@ export class ReviewStore {
 		this.notify();
 
 		try {
-			const mr =
-				await this.dataSource.getMergeRequestsByCategory(
-					categoryKey,
-				);
+			const mr = await this.fetchByCategory(categoryKey);
 			this._mrCache.set(categoryKey, mr);
 			this._loadedCategories.add(categoryKey);
 		} catch (e: unknown) {
@@ -124,10 +128,13 @@ export class ReviewStore {
 		this.notify();
 
 		try {
+			const client = await this.clientFactory.create();
+			if (!client) {
+				return;
+			}
+
 			const files =
-				await this.dataSource.getMergeRequestFiles(
-					mergeRequest,
-				);
+				await client.getMergeRequestFiles(mergeRequest);
 			const key =
 				`${mergeRequest.project_id}:${mergeRequest.iid}`;
 			this._filesCache.set(key, files);
@@ -142,12 +149,29 @@ export class ReviewStore {
 	}
 
 	public refresh(): void {
-		this.dataSource.refresh();
 		this._mrCache.clear();
 		this._loadedCategories.clear();
 		this._filesCache.clear();
 		this._error = undefined;
 		this.notify();
+	}
+
+	private async fetchByCategory(
+		categoryKey: CategoryKey,
+	): Promise<GitLabMergeRequest[]> {
+		const client = await this.clientFactory.create();
+		if (!client) {
+			return [];
+		}
+
+		try {
+			return await CATEGORY_LOADER[categoryKey](client);
+		} catch {
+			this.clientFactory.clear();
+			throw new Error(
+				'Не удалось загрузить merge requests',
+			);
+		}
 	}
 
 	private notify(): void {

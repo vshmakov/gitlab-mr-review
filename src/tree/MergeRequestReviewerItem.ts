@@ -11,6 +11,10 @@ export class MergeRequestReviewerItem
 		this.tooltip = `@${user.username}`;
 		this.contextValue = 'reviewer';
 		this.iconPath = new vscode.ThemeIcon('person');
+		this.accessibilityInformation = {
+			label: `${user.name} (@${user.username})`,
+			role: 'treeitem',
+		};
 	}
 
 	public getChildren(): never[] {

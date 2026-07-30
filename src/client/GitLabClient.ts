@@ -201,12 +201,13 @@ export class GitLabClient {
 		const globalId =
 			`gid://gitlab/MergeRequest/${mergeRequest.id}`;
 
-		const query = `query { mr: mergeRequest(id: ${JSON.stringify(globalId)}) { reviewers { nodes { username mergeRequestInteraction { reviewState } } } } }`;
+		const query = `query { mr: mergeRequest(id: ${JSON.stringify(globalId)}) { reviewers { nodes { username name mergeRequestInteraction { reviewState } } } } }`;
 
 		const data = await this.graphQLClient.request<{
 			mr: {
 				reviewers: { nodes: {
 					username: string;
+						name: string;
 					mergeRequestInteraction?: {
 						reviewState: string;
 					};
@@ -218,10 +219,10 @@ export class GitLabClient {
 		return {
 			approvedBy: reviewers
 				.filter(n => n.mergeRequestInteraction?.reviewState === 'APPROVED')
-				.map(n => ({ name: n.username, username: n.username })),
+				.map(n => ({ name: n.name, username: n.username })),
 			requestedChanges: reviewers
 				.filter(n => n.mergeRequestInteraction?.reviewState === 'REQUESTED_CHANGES')
-				.map(n => ({ name: n.username, username: n.username })),
+				.map(n => ({ name: n.name, username: n.username })),
 		};
 	}
 

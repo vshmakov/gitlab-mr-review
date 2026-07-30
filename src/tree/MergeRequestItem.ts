@@ -74,13 +74,12 @@ export class MergeRequestItem
 
 		if (!approvalData) {
 			this.store.loadApprovalData(this.mergeRequest);
+			this.store.loadFiles(this.mergeRequest);
 			return [new MergeRequestMessageItem('Loading...')];
 		}
 
-		const fileCount = (() => {
-			const files = this.store.files.getFiles(this.mergeRequest);
-			return files ? files.length : 0;
-		})();
+		const files = this.store.files.getFiles(this.mergeRequest);
+		const fileCount = files ? files.length : undefined;
 
 		return [
 			new MergeRequestApprovedItem(approvalData),

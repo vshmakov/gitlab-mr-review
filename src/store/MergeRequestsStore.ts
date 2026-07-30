@@ -137,11 +137,15 @@ export class MergeRequestsStore {
 	): Promise<void> {
 		try {
 			await this.approvalStore.loadApprovalData(mergeRequest);
-		} catch {
-			// swallowed — tree will show error
+		} catch (e: unknown) {
+			const msg = e instanceof Error ? e.message : String(e);
+			void vscode.window.showErrorMessage(
+				`Failed to load approval data for MR !${mergeRequest.iid}: ${msg}`,
+			);
 		}
 		this.changeEmitter.fire();
 	}
+
 
 	// -- Actions --
 

@@ -51,10 +51,16 @@ export class MergeRequestApprovalStore {
 			const data =
 				await client.getApprovalData(mergeRequest);
 			this._cache.set(k, data);
-		} catch {
+		} catch (e: unknown) {
 			this.clientFactory.clear();
+			const origMsg = e instanceof Error ? e.message : String(e);
+			console.error(`[ApprovalStore MR !${mergeRequest.iid}] Failed:`, origMsg);
+			this._cache.set(k, {
+				approvedBy: [],
+				requestedChanges: [],
+			});
 			throw new Error(
-				'Не удалось загрузить данные об аппрувах',
+				`Failed to load approval data: ${origMsg}`,
 			);
 		} finally {
 			this._loading.delete(k);

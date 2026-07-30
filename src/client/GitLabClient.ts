@@ -201,29 +201,10 @@ export class GitLabClient {
 		const globalId =
 			`gid://gitlab/MergeRequest/${mergeRequest.id}`;
 
-		const query = `
-			query {
-				mr: mergeRequest(id: ${JSON.stringify(globalId)}) {
-					approvedBy {
-						nodes {
-							username
-						}
-					}
-					reviewers {
-						nodes {
-							username
-							mergeRequestInteraction {
-								reviewState
-							}
-						}
-					}
-				}
-			}
-		`;
+		const query = `query { mr: mergeRequest(id: ${JSON.stringify(globalId)}) { reviewers { nodes { username mergeRequestInteraction { reviewState } } } } }`;
 
 		const data = await this.graphQLClient.request<{
 			mr: {
-				approvedBy: { nodes: { username: string }[] };
 				reviewers: { nodes: {
 					username: string;
 					mergeRequestInteraction?: {
@@ -233,20 +214,14 @@ export class GitLabClient {
 			};
 		}>(query);
 
+		const reviewers = data.mr.reviewers?.nodes ?? [];
 		return {
-			approvedBy: data.mr.approvedBy.nodes.map(
-				(n) => ({ name: n.username, username: n.username }),
-			),
-			requestedChanges: data.mr.reviewers.nodes
-				.filter(
-					(n) =>
-						n.mergeRequestInteraction
-							?.reviewState === 'REQUESTED_CHANGES',
-				)
-				.map((n) => ({
-					name: n.username,
-					username: n.username,
-				})),
+			approvedBy: reviewers
+				.filter(n => n.mergeRequestInteraction?.reviewState === 'APPROVED')
+				.map(n => ({ name: n.username, username: n.username })),
+			requestedChanges: reviewers
+				.filter(n => n.mergeRequestInteraction?.reviewState === 'REQUESTED_CHANGES')
+				.map(n => ({ name: n.username, username: n.username })),
 		};
 	}
 

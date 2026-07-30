@@ -10,10 +10,10 @@ export class MergeRequestChangesItem
 	public constructor(
 		private readonly mergeRequest: GitLabMergeRequest,
 		private readonly store: MergeRequestsStore,
-		private readonly fileCount: number,
+		private readonly fileCount?: number,
 	) {
 		super(
-			`Changes (${fileCount})`,
+			fileCount !== undefined ? `Changes (${fileCount})` : 'Changes',
 			vscode.TreeItemCollapsibleState.Collapsed,
 		);
 

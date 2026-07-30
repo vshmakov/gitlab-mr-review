@@ -9,6 +9,7 @@
   "categories": [
     "Other"
   ],
+  "activationEvents": ["onView:gitlabMrReview.pendingReviews"],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [

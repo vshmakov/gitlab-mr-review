@@ -67,18 +67,19 @@ export class GitLabClientFactory {
 			token,
 		);
 
-		const noteClient = new GitLabNoteClient(baseUrl, token);
-
 		const graphQLClient = new GitLabGraphQLClient(
 			baseUrl,
 			token,
 		);
+
+		const noteClient = new GitLabNoteClient(baseUrl, token);
 
 		const pendingReviewService =
 			new PendingReviewService(graphQLClient);
 
 		return new GitLabClient(
 			restClient,
+			graphQLClient,
 			noteClient,
 			pendingReviewService,
 		);

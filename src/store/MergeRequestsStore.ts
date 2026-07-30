@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
+import { GitLabApprovalData } from '../model/GitLabApprovalData';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { MergeRequestCategory } from '../tree/MergeRequestItem';
+import { MergeRequestApprovalStore } from './MergeRequestApprovalStore';
 import { MergeRequestFilesStore } from './MergeRequestFilesStore';
 
 const CATEGORY_LOADER: Record<
@@ -50,11 +52,16 @@ export class MergeRequestsStore {
 
 	public readonly files: MergeRequestFilesStore;
 
+	public readonly approvalStore: MergeRequestApprovalStore;
+
 	public constructor(
 		private readonly clientFactory:
 			GitLabClientFactory,
 	) {
 		this.files = new MergeRequestFilesStore(
+			clientFactory,
+		);
+		this.approvalStore = new MergeRequestApprovalStore(
 			clientFactory,
 		);
 	}
@@ -109,6 +116,31 @@ export class MergeRequestsStore {
 		mergeRequest: GitLabMergeRequest,
 	): boolean {
 		return this.files.isFilesLoading(mergeRequest);
+	}
+
+	// -- Approval state --
+
+	public isApprovalLoading(
+		mergeRequest: GitLabMergeRequest,
+	): boolean {
+		return this.approvalStore.isApprovalLoading(mergeRequest);
+	}
+
+	public getApprovalData(
+		mergeRequest: GitLabMergeRequest,
+	): GitLabApprovalData | undefined {
+		return this.approvalStore.getApprovalData(mergeRequest);
+	}
+
+	public async loadApprovalData(
+		mergeRequest: GitLabMergeRequest,
+	): Promise<void> {
+		try {
+			await this.approvalStore.loadApprovalData(mergeRequest);
+		} catch {
+			// swallowed — tree will show error
+		}
+		this.changeEmitter.fire();
 	}
 
 	// -- Actions --
@@ -181,6 +213,7 @@ export class MergeRequestsStore {
 		this._cache.clear();
 		this._loadedCategories.clear();
 		this.files.refresh();
+		this.approvalStore.refresh();
 		this._error = undefined;
 		this.notify();
 	}

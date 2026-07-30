@@ -38,7 +38,7 @@ export class MergeRequestFileItem
 
 		this.command = {
 			command: 'gitlabMrReview.openFilePatch',
-			title: 'Открыть патч файла',
+			title: 'Open File Patch',
 			arguments: [{
 				mergeRequest,
 				file,

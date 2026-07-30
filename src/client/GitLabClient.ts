@@ -1,4 +1,5 @@
 import { GitLabRestClient } from './GitLabRestClient';
+import { GitLabGraphQLClient } from './GitLabGraphQLClient';
 import { GitLabNoteClient } from './GitLabNoteClient';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import {
@@ -6,10 +7,13 @@ import {
 	GitLabMergeRequestFile,
 } from '../model/GitLabMergeRequestFile';
 import { GitLabUser } from '../model/GitLabUser';
+import { GitLabApprovalData } from '../model/GitLabApprovalData';
 import { PendingReviewService } from '../review/PendingReviewService';
 
 export class GitLabClient {
 	private readonly restClient: GitLabRestClient;
+
+	private readonly graphQLClient: GitLabGraphQLClient;
 
 	private readonly noteClient: GitLabNoteClient;
 
@@ -20,10 +24,12 @@ export class GitLabClient {
 
 	public constructor(
 		restClient: GitLabRestClient,
+		graphQLClient: GitLabGraphQLClient,
 		noteClient: GitLabNoteClient,
 		pendingReviewService: PendingReviewService,
 	) {
 		this.restClient = restClient;
+		this.graphQLClient = graphQLClient;
 		this.noteClient = noteClient;
 		this.pendingReviewService = pendingReviewService;
 	}
@@ -187,6 +193,61 @@ export class GitLabClient {
 			`merge_requests/${mergeRequest.iid}/approve`;
 
 		await this.restClient.post(path);
+	}
+
+	public async getApprovalData(
+		mergeRequest: GitLabMergeRequest,
+	): Promise<GitLabApprovalData> {
+		const globalId =
+			`gid://gitlab/MergeRequest/${mergeRequest.id}`;
+
+		const query = `
+			query {
+				mr: mergeRequest(id: ${JSON.stringify(globalId)}) {
+					approvedBy {
+						nodes {
+							username
+						}
+					}
+					reviewers {
+						nodes {
+							username
+							mergeRequestInteraction {
+								reviewState
+							}
+						}
+					}
+				}
+			}
+		`;
+
+		const data = await this.graphQLClient.request<{
+			mr: {
+				approvedBy: { nodes: { username: string }[] };
+				reviewers: { nodes: {
+					username: string;
+					mergeRequestInteraction?: {
+						reviewState: string;
+					};
+				}[] };
+			};
+		}>(query);
+
+		return {
+			approvedBy: data.mr.approvedBy.nodes.map(
+				(n) => ({ name: n.username, username: n.username }),
+			),
+			requestedChanges: data.mr.reviewers.nodes
+				.filter(
+					(n) =>
+						n.mergeRequestInteraction
+							?.reviewState === 'REQUESTED_CHANGES',
+				)
+				.map((n) => ({
+					name: n.username,
+					username: n.username,
+				})),
+		};
 	}
 
 	private createReviewerQuery(

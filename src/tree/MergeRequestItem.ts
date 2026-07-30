@@ -1,8 +1,20 @@
 import * as vscode from 'vscode';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
+import { MergeRequestApprovedItem } from './MergeRequestApprovedItem';
+import { MergeRequestChangesItem } from './MergeRequestChangesItem';
 import { MergeRequestFileItem } from './MergeRequestFileItem';
 import { MergeRequestMessageItem } from './MergeRequestMessageItem';
+import { MergeRequestReviewerItem } from './MergeRequestReviewerItem';
+import { MergeRequestRequestedChangesItem } from './MergeRequestRequestedChangesItem';
+
+export type MergeRequestChildItem =
+	| MergeRequestApprovedItem
+	| MergeRequestRequestedChangesItem
+	| MergeRequestChangesItem
+	| MergeRequestFileItem
+	| MergeRequestReviewerItem
+	| MergeRequestMessageItem;
 
 export type MergeRequestCategory =
 	| 'needsReview'
@@ -25,19 +37,19 @@ export class MergeRequestItem
 		);
 
 		this.description =
-			`${mergeRequest.author?.name ?? 'не указан'} ` +
+			`${mergeRequest.author?.name ?? 'not specified'} ` +
 			`${mergeRequest.references?.full ?? ''}`.trim();
 
 		this.tooltip = new vscode.MarkdownString(
 			[
 				`**${mergeRequest.title}**`,
 				'',
-				`Автор: ${
+				`Author: ${
 					mergeRequest.author?.name ??
-					'не указан'
+					'not specified'
 				}`,
 				'',
-				`Обновлён: ${mergeRequest.updated_at}`,
+				`Updated: ${mergeRequest.updated_at}`,
 			].join('\n'),
 		);
 
@@ -48,27 +60,36 @@ export class MergeRequestItem
 
 		this.command = {
 			command: 'gitlabMrReview.openMergeRequest',
-			title: 'Открыть Merge Request',
+			title: 'Open Merge Request',
 			arguments: [mergeRequest],
 		};
 	}
 
-	public getChildren(): (MergeRequestFileItem | MergeRequestMessageItem)[] {
-		if (this.store.isFilesLoading(this.mergeRequest)) {
-			return [new MergeRequestMessageItem('Loading files...')];
+	public getChildren(): MergeRequestChildItem[] {
+		if (this.store.isApprovalLoading(this.mergeRequest)) {
+			return [new MergeRequestMessageItem('Loading...')];
 		}
 
-		const files = this.store.files.getFiles(this.mergeRequest);
-		if (files) {
-			return files.map((f) =>
-				new MergeRequestFileItem(
-					this.mergeRequest,
-					f,
-				),
-			);
+		let approvalData = this.store.getApprovalData(this.mergeRequest);
+
+		if (!approvalData) {
+			this.store.loadApprovalData(this.mergeRequest);
+			return [new MergeRequestMessageItem('Loading...')];
 		}
 
-		this.store.loadFiles(this.mergeRequest);
-		return [new MergeRequestMessageItem('Loading files...')];
+		const fileCount = (() => {
+			const files = this.store.files.getFiles(this.mergeRequest);
+			return files ? files.length : 0;
+		})();
+
+		return [
+			new MergeRequestApprovedItem(approvalData),
+			new MergeRequestRequestedChangesItem(approvalData),
+			new MergeRequestChangesItem(
+				this.mergeRequest,
+				this.store,
+				fileCount,
+			),
+		];
 	}
 }

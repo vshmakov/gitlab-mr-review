@@ -1,15 +1,23 @@
 import * as vscode from 'vscode';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
 import { MergeRequestCategory } from './MergeRequestItem';
+import { MergeRequestApprovedItem } from './MergeRequestApprovedItem';
 import { MergeRequestCategoryItem } from './MergeRequestCategoryItem';
+import { MergeRequestChangesItem } from './MergeRequestChangesItem';
 import { MergeRequestFileItem } from './MergeRequestFileItem';
 import { MergeRequestItem } from './MergeRequestItem';
 import { MergeRequestMessageItem } from './MergeRequestMessageItem';
+import { MergeRequestReviewerItem } from './MergeRequestReviewerItem';
+import { MergeRequestRequestedChangesItem } from './MergeRequestRequestedChangesItem';
 
 export type MergeRequestTreeItem =
 	| MergeRequestCategoryItem
 	| MergeRequestItem
+	| MergeRequestApprovedItem
+	| MergeRequestRequestedChangesItem
+	| MergeRequestChangesItem
 	| MergeRequestFileItem
+	| MergeRequestReviewerItem
 	| MergeRequestMessageItem;
 
 const CATEGORIES: MergeRequestCategory[] = [
@@ -61,6 +69,26 @@ export class MergeRequestsTreeProvider
 			);
 		}
 
-		return element.getChildren();
+		if (element instanceof MergeRequestCategoryItem) {
+			return element.getChildren();
+		}
+
+		if (element instanceof MergeRequestItem) {
+			return element.getChildren();
+		}
+
+		if (element instanceof MergeRequestApprovedItem) {
+			return element.getChildren();
+		}
+
+		if (element instanceof MergeRequestRequestedChangesItem) {
+			return element.getChildren();
+		}
+
+		if (element instanceof MergeRequestChangesItem) {
+			return element.getChildren();
+		}
+
+		return [];
 	}
 }

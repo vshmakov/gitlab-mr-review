@@ -82,7 +82,7 @@ describe('Tree: MergeRequestItem', () => {
 		};
 		const item = new MergeRequestItem(mr, store);
 
-		expect(item.label).toBe('!42 Fix bug');
+		expect(item.label).toBe('Fix bug !42');
 		expect(item.label).not.toContain('**');
 	});
 

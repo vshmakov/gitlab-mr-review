@@ -36,13 +36,13 @@ export class MergeRequestItem implements ITreeItem {
 		public readonly mergeRequest: GitLabMergeRequest,
 		private readonly store: MergeRequestsStore,
 	) {
-		this.label = `!${mergeRequest.iid} ${mergeRequest.title}`;
+		this.label = `${mergeRequest.title} !${mergeRequest.iid}`;
 		this.description =
 			`${mergeRequest.author?.name ?? 'not specified'} ` +
 			`${mergeRequest.references?.full ?? ''}`.trim();
 
 		this.tooltip = [
-			mergeRequest.title,
+			`${mergeRequest.title} !${mergeRequest.iid}`,
 			'',
 			`Author: ${mergeRequest.author?.name ?? 'not specified'}`,
 			'',

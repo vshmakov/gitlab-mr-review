@@ -18,7 +18,7 @@ describe('GitLabCommandRegistrar', () => {
 			env.input, env.commands, http as any,
 		);
 
-		const treeProvider = { refresh: jest.fn() };
+		const treeProvider = { refresh: jest.fn() } as any;
 		const registrar = new GitLabCommandRegistrar(
 			commands, notifier, env.input, env.documents,
 			env.comments, treeProvider, {} as any, {} as any, factory,

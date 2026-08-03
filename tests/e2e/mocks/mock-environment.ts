@@ -1,15 +1,15 @@
-import { SecretStorage } from '../../src/domain/interfaces/secret-storage';
-import { Configuration } from '../../src/domain/interfaces/configuration';
-import { CommandRegistry } from '../../src/domain/interfaces/command-registry';
-import { Input, InputBoxOptions } from '../../src/domain/interfaces/input';
-import { Progress } from '../../src/domain/interfaces/progress';
-import { DocumentService, TextDocument } from '../../src/domain/interfaces/document-service';
-import { UriOpener } from '../../src/domain/interfaces/uri-opener';
-import { Notifier } from '../../src/domain/interfaces/notifier';
-import { CommentManager } from '../../src/domain/interfaces/comment-manager';
-import { Disposable, DisposableCollection } from '../../src/domain/interfaces/disposable';
-import { Environment } from '../../src/domain/interfaces/environment';
-import { HttpClient } from '../../src/domain/interfaces/http';
+import { SecretStorage } from '../../../src/domain/interfaces/secret-storage';
+import { Configuration } from '../../../src/domain/interfaces/configuration';
+import { CommandRegistry } from '../../../src/domain/interfaces/command-registry';
+import { Input, InputBoxOptions } from '../../../src/domain/interfaces/input';
+import { Progress } from '../../../src/domain/interfaces/progress';
+import { DocumentService, TextDocument } from '../../../src/domain/interfaces/document-service';
+import { UriOpener } from '../../../src/domain/interfaces/uri-opener';
+import { Notifier } from '../../../src/domain/interfaces/notifier';
+import { CommentManager } from '../../../src/domain/interfaces/comment-manager';
+import { Disposable, DisposableCollection } from '../../../src/domain/interfaces/disposable';
+import { Environment } from '../../../src/domain/interfaces/environment';
+import { HttpClient } from '../../../src/domain/interfaces/http';
 
 export class MockSecretStorage implements SecretStorage {
 	private _data = new Map<string, string>();

@@ -3,7 +3,7 @@ import { createMr } from '../fixtures';
 
 describe('Missed Reviews', () => {
 	it('finds merged MRs without user approval', async () => {
-		const mergedMr = createMr({ state: 'merged', merged_at: '2024-02-01T00:00:00.000Z' });
+		const mergedMr = createMr({ ...{ state: 'merged', merged_at: '2024-02-01T00:00:00.000Z' } as any });
 
 		const { factory, store } = initApp([
 			routes.user(),
@@ -36,7 +36,7 @@ describe('Missed Reviews', () => {
 	});
 
 	it('excludes merged MRs approved by the user', async () => {
-		const mergedMr = createMr({ state: 'merged', merged_at: '2024-02-01T00:00:00.000Z' });
+		const mergedMr = createMr({ ...{ state: 'merged', merged_at: '2024-02-01T00:00:00.000Z' } as any });
 
 		const { factory, store } = initApp([
 			routes.user(),

@@ -1,4 +1,4 @@
-import { HttpClient, HttpOptions, HttpResponse } from '../../src/domain/interfaces/http';
+import { HttpClient, HttpOptions, HttpResponse } from '../../../src/domain/interfaces/http';
 
 export interface MockRoute {
 	match: (url: string, opts?: HttpOptions) => boolean;

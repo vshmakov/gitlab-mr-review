@@ -6,7 +6,7 @@ import { MergeRequestFileItem } from './MergeRequestFileItem';
 export class MergeRequestReviewedItem implements ITreeItem {
     readonly label: string;
     readonly contextValue = 'reviewed';
-    readonly collapsibleState: 'collapsed' = 'collapsed';
+    readonly collapsibleState: 'expanded' = 'expanded';
     readonly icon = { name: 'check' };
 
     public constructor(

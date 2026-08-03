@@ -13,8 +13,8 @@ export class MergeRequestFileItem implements ITreeItem {
 	readonly accessibilityLabel: string;
 
 	public constructor(
-		mergeRequest: GitLabMergeRequest | null,
-		file: GitLabMergeRequestFile,
+		public readonly mergeRequest: GitLabMergeRequest | null,
+		public readonly file: GitLabMergeRequestFile,
 		reviewed = false,
 	) {
 		const fileName = path.basename(file.path);

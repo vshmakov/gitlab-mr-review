@@ -1,6 +1,5 @@
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
-import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 import { Disposable } from '../interfaces/disposable';
 import { CommandRegistry } from '../interfaces/command-registry';
 import { Notifier } from '../interfaces/notifier';
@@ -162,26 +161,14 @@ export class GitLabCommandRegistrar {
 		return this.commands.register(
 			'gitlabMrReview.markAsReviewed',
 			(item: MergeRequestFileItem | undefined) => {
-				if (!item) {
+				if (!item || !item.mergeRequest) {
 					this.notifier.showWarning('No file selected');
 					return;
 				}
-				const args = item.command?.arguments?.[0] as
-					| OpenFilePatchCommandArguments
-					| undefined;
-				if (!args) {
-					this.notifier.showError('Cannot access file data');
-					return;
-				}
-				const { mergeRequest, file } = args;
-				if (!mergeRequest) {
-					this.notifier.showError('No merge request context');
-					return;
-				}
 
-				this.store.reviewed.markAsReviewed(mergeRequest, file);
+				this.store.reviewed.markAsReviewed(item.mergeRequest, item.file);
 				this.reviewedPersistence.save(this.store.reviewed);
-				this.treeProvider.refresh();
+				this.store.notifyTree();
 			},
 		);
 	}
@@ -190,26 +177,14 @@ export class GitLabCommandRegistrar {
 		return this.commands.register(
 			'gitlabMrReview.unmarkAsReviewed',
 			(item: MergeRequestFileItem | undefined) => {
-				if (!item) {
+				if (!item || !item.mergeRequest) {
 					this.notifier.showWarning('No file selected');
 					return;
 				}
-				const args = item.command?.arguments?.[0] as
-					| OpenFilePatchCommandArguments
-					| undefined;
-				if (!args) {
-					this.notifier.showError('Cannot access file data');
-					return;
-				}
-				const { mergeRequest, file } = args;
-				if (!mergeRequest) {
-					this.notifier.showError('No merge request context');
-					return;
-				}
 
-				this.store.reviewed.unmarkAsReviewed(mergeRequest, file);
+				this.store.reviewed.unmarkAsReviewed(item.mergeRequest, item.file);
 				this.reviewedPersistence.save(this.store.reviewed);
-				this.treeProvider.refresh();
+				this.store.notifyTree();
 			},
 		);
 	}

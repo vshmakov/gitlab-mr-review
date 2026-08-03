@@ -230,6 +230,10 @@ export class MergeRequestsStore {
 		this.notify();
 	}
 
+	public notifyTree(): void {
+		this.changeEmitter.fire();
+	}
+
 	private async fetchByCategory(
 		category: MergeRequestCategory,
 	): Promise<GitLabMergeRequest[]> {

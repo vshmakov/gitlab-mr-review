@@ -33,7 +33,15 @@ export class GitLabClientFactory {
 				credentials.token,
 			);
 			return this.client;
-		} catch {
+		} catch (error: unknown) {
+			const message =
+				error instanceof Error
+					? error.message
+					: String(error);
+			console.error('[ClientFactory] build failed:', message);
+			void vscode.window.showErrorMessage(
+				`Не удалось создать GitLab клиент: ${message}`,
+			);
 			this.client = undefined;
 			return undefined;
 		}
@@ -48,7 +56,15 @@ export class GitLabClientFactory {
 			await client.getCurrentUser();
 			this.client = client;
 			return true;
-		} catch {
+		} catch (error: unknown) {
+			const message =
+				error instanceof Error
+					? error.message
+					: String(error);
+			console.error('[ClientFactory] setCredentials failed:', message);
+			void vscode.window.showErrorMessage(
+				`Ошибка подключения к GitLab: ${message}`,
+			);
 			this.client = undefined;
 			return false;
 		}

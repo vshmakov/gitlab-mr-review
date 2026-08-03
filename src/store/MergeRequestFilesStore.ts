@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
@@ -57,10 +59,18 @@ export class MergeRequestFilesStore {
 			const files =
 				await client.getMergeRequestFiles(mergeRequest);
 			this._cache.set(k, files);
-		} catch {
+		} catch (error: unknown) {
+			const message =
+				error instanceof Error
+					? error.message
+					: String(error);
+			console.error('[FilesStore] loadFiles failed:', message);
+			void vscode.window.showErrorMessage(
+				`Не удалось загрузить файлы: ${message}`,
+			);
 			this.clientFactory.clear();
 			throw new Error(
-				'Не удалось загрузить файлы merge request',
+				`Не удалось загрузить файлы merge request: ${message}`,
 			);
 		} finally {
 			this._loadingFiles.delete(k);

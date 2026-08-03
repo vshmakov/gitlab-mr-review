@@ -1,11 +1,5 @@
-import {
-	REVIEW_APPROVED,
-	REVIEW_REQUESTED_CHANGES,
-	buildApprovalDataQuery,
-} from './graphql-queries';
 import { GitLabRestClient } from './GitLabRestClient';
 import { GitLabGraphQLClient } from './GitLabGraphQLClient';
-import { GitLabNoteClient } from './GitLabNoteClient';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import {
 	GitLabMergeRequestDiffResponse,
@@ -14,13 +8,20 @@ import {
 import { GitLabUser } from '../model/GitLabUser';
 import { GitLabApprovalData } from '../model/GitLabApprovalData';
 import { PendingReviewService } from '../review/PendingReviewService';
+import {
+	createMergeRequestDiffsPath,
+	mapMergeRequestFile,
+} from './diff-utils';
+import { fetchApprovalData } from './graphql-queries';
+
+const MERGED_STATE = 'merged';
+const OPENED_STATE = 'opened';
+const DEFAULT_PER_PAGE = 100;
 
 export class GitLabClient {
 	private readonly restClient: GitLabRestClient;
 
 	private readonly graphQLClient: GitLabGraphQLClient;
-
-	private readonly noteClient: GitLabNoteClient;
 
 	private readonly pendingReviewService:
 		PendingReviewService;
@@ -30,17 +31,11 @@ export class GitLabClient {
 	public constructor(
 		restClient: GitLabRestClient,
 		graphQLClient: GitLabGraphQLClient,
-		noteClient: GitLabNoteClient,
 		pendingReviewService: PendingReviewService,
 	) {
 		this.restClient = restClient;
 		this.graphQLClient = graphQLClient;
-		this.noteClient = noteClient;
 		this.pendingReviewService = pendingReviewService;
-	}
-
-	public getNoteClient(): GitLabNoteClient {
-		return this.noteClient;
 	}
 
 	public async getCurrentUser(): Promise<GitLabUser> {
@@ -67,7 +62,7 @@ export class GitLabClient {
 		reviewerId: number,
 	): Promise<GitLabMergeRequest[]> {
 		const query =
-			this.createReviewerQuery(reviewerId, 'merged', 20);
+			this.createReviewerQuery(reviewerId, MERGED_STATE, 20);
 
 		return this.restClient.get<GitLabMergeRequest[]>(
 			`/api/v4/merge_requests?${query}`,
@@ -176,18 +171,13 @@ export class GitLabClient {
 	public async getMergeRequestFiles(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<GitLabMergeRequestFile[]> {
-		const path = this.createMergeRequestDiffsPath(
-			mergeRequest,
-		);
+		const path = createMergeRequestDiffsPath(mergeRequest);
 
-		const diffs =
-			await this.restClient.get<
-				GitLabMergeRequestDiffResponse[]
-			>(path);
+		const diffs = await this.restClient.get<
+			GitLabMergeRequestDiffResponse[]
+		>(path);
 
-		return diffs.map(diff =>
-			this.mapMergeRequestFile(diff),
-		);
+		return diffs.map(mapMergeRequestFile);
 	}
 
 	public async approveMergeRequest(
@@ -203,38 +193,13 @@ export class GitLabClient {
 	public async getApprovalData(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<GitLabApprovalData> {
-		const globalId =
-			`gid://gitlab/MergeRequest/${mergeRequest.id}`;
-
-		const query = buildApprovalDataQuery(globalId);
-
-		const data = await this.graphQLClient.request<{
-			mr: {
-				reviewers: { nodes: {
-					username: string;
-						name: string;
-					mergeRequestInteraction?: {
-						reviewState: string;
-					};
-				}[] };
-			};
-		}>(query);
-
-		const reviewers = data.mr.reviewers?.nodes ?? [];
-		return {
-			approvedBy: reviewers
-				.filter(n => n.mergeRequestInteraction?.reviewState === REVIEW_APPROVED)
-				.map(n => ({ name: n.name, username: n.username })),
-			requestedChanges: reviewers
-				.filter(n => n.mergeRequestInteraction?.reviewState === REVIEW_REQUESTED_CHANGES)
-				.map(n => ({ name: n.name, username: n.username })),
-		};
+		return fetchApprovalData(mergeRequest, this.graphQLClient);
 	}
 
 	private createReviewerQuery(
 		reviewerId: number,
-		state: string = 'opened',
-		perPage: number = 100,
+		state: string = OPENED_STATE,
+		perPage: number = DEFAULT_PER_PAGE,
 	): string {
 		return new URLSearchParams({
 			scope: 'all',
@@ -251,41 +216,11 @@ export class GitLabClient {
 	): string {
 		return new URLSearchParams({
 			scope: 'all',
-			state: 'opened',
+			state: OPENED_STATE,
 			author_id: authorId.toString(),
 			order_by: 'updated_at',
 			sort: 'desc',
-			per_page: '100',
+			per_page: DEFAULT_PER_PAGE.toString(),
 		}).toString();
-	}
-
-	private createMergeRequestDiffsPath(
-		mergeRequest: GitLabMergeRequest,
-	): string {
-		const query = new URLSearchParams({
-			per_page: '100',
-		}).toString();
-
-		return (
-			`/api/v4/projects/` +
-			`${mergeRequest.project_id}/` +
-			`merge_requests/${mergeRequest.iid}/diffs?${query}`
-		);
-	}
-
-	private mapMergeRequestFile(
-		diff: GitLabMergeRequestDiffResponse,
-	): GitLabMergeRequestFile {
-		return {
-			path: diff.deleted_file
-				? diff.old_path
-				: diff.new_path,
-			oldPath: diff.old_path,
-			newPath: diff.new_path,
-			diff: diff.diff,
-			added: diff.new_file,
-			deleted: diff.deleted_file,
-			renamed: diff.renamed_file,
-		};
 	}
 }

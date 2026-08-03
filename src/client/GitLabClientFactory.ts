@@ -75,6 +75,14 @@ export class GitLabClientFactory {
 		this.client = undefined;
 	}
 
+	public async createNoteClient(): Promise<GitLabNoteClient | undefined> {
+		const credentials = await this.loadCredentials();
+		if (!credentials) {
+			return undefined;
+		}
+		return new GitLabNoteClient(credentials.baseUrl, credentials.token);
+	}
+
 	private buildClient(
 		baseUrl: string,
 		token: string,
@@ -89,15 +97,12 @@ export class GitLabClientFactory {
 			token,
 		);
 
-		const noteClient = new GitLabNoteClient(baseUrl, token);
-
 		const pendingReviewService =
 			new PendingReviewService(graphQLClient);
 
 		return new GitLabClient(
 			restClient,
 			graphQLClient,
-			noteClient,
 			pendingReviewService,
 		);
 	}

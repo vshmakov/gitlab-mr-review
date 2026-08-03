@@ -35,8 +35,15 @@ export class GitLabCommentService {
 			client,
 		);
 
+		const noteClient = await this.clientFactory.createNoteClient();
+		if (!noteClient) {
+			void vscode.window.showWarningMessage(
+				'GitLab клиент не инициализирован.',
+			);
+			return;
+		}
+
 		try {
-			const noteClient = client.getNoteClient();
 
 			const note = await noteClient.createDraftNote(
 				mergeRequest,

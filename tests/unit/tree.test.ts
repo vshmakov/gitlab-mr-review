@@ -71,6 +71,21 @@ describe('Tree: MergeRequestCategoryItem', () => {
 });
 
 describe('Tree: MergeRequestItem', () => {
+	it('label contains iid and title without markdown', () => {
+		const store = createMockStore();
+
+		const mr = {
+			id: 100, iid: 42, title: 'Fix bug', web_url: 'http://test',
+			project_id: 10, project_path: 'g/p', updated_at: '2024-01-01',
+			draft: false, work_in_progress: false,
+			author: { name: 'Author', username: 'author' },
+		};
+		const item = new MergeRequestItem(mr, store);
+
+		expect(item.label).toBe('!42 Fix bug');
+		expect(item.label).not.toContain('**');
+	});
+
 	it('returns loading message when approval data is loading', () => {
 		const store = createMockStore();
 		store.isApprovalLoading.mockReturnValue(true);

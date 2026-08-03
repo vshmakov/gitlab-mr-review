@@ -8,10 +8,12 @@ import { MergeRequestChangesItem } from '../../domain/tree/MergeRequestChangesIt
 import { MergeRequestFileItem } from '../../domain/tree/MergeRequestFileItem';
 import { MergeRequestMessageItem } from '../../domain/tree/MergeRequestMessageItem';
 import { MergeRequestReviewerItem } from '../../domain/tree/MergeRequestReviewerItem';
+import { MergeRequestOverviewItem } from '../../domain/tree/MergeRequestOverviewItem';
 
 export type MergeRequestTreeItem =
 	| MergeRequestCategoryItem
 	| MergeRequestItem
+	| MergeRequestOverviewItem
 	| MergeRequestApprovedItem
 	| MergeRequestRequestedChangesItem
 	| MergeRequestChangesItem

@@ -5,6 +5,7 @@ import { MergeRequestFileItem } from '../../src/domain/tree/MergeRequestFileItem
 import { MergeRequestMessageItem } from '../../src/domain/tree/MergeRequestMessageItem';
 import { MergeRequestApprovedItem, MergeRequestRequestedChangesItem } from '../../src/domain/tree/ReviewerListTreeItem';
 import { MergeRequestReviewerItem } from '../../src/domain/tree/MergeRequestReviewerItem';
+import { MergeRequestOverviewItem } from '../../src/domain/tree/MergeRequestOverviewItem';
 
 // Mock store
 function createMockStore(): any {
@@ -120,10 +121,11 @@ describe('Tree: MergeRequestItem', () => {
 		const item = new MergeRequestItem(mr, store);
 		const children = item.getChildren();
 
-		expect(children).toHaveLength(3);
-		expect(children[0]).toBeInstanceOf(MergeRequestApprovedItem);
-		expect(children[1]).toBeInstanceOf(MergeRequestRequestedChangesItem);
-		expect(children[2]).toBeInstanceOf(MergeRequestChangesItem);
+		expect(children).toHaveLength(4);
+		expect(children[0]).toBeInstanceOf(MergeRequestOverviewItem);
+		expect(children[1]).toBeInstanceOf(MergeRequestApprovedItem);
+		expect(children[2]).toBeInstanceOf(MergeRequestRequestedChangesItem);
+		expect(children[3]).toBeInstanceOf(MergeRequestChangesItem);
 	});
 });
 

@@ -7,8 +7,10 @@ import { MergeRequestFileItem } from './MergeRequestFileItem';
 import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 import { MergeRequestReviewerItem } from './MergeRequestReviewerItem';
 import { MergeRequestRequestedChangesItem } from './ReviewerListTreeItem';
+import { MergeRequestOverviewItem } from './MergeRequestOverviewItem';
 
 export type MergeRequestChildItem =
+	| MergeRequestOverviewItem
 	| MergeRequestApprovedItem
 	| MergeRequestRequestedChangesItem
 	| MergeRequestChangesItem
@@ -73,6 +75,7 @@ export class MergeRequestItem implements ITreeItem {
 		const fileCount = files ? files.length : undefined;
 
 		return [
+			new MergeRequestOverviewItem(this.mergeRequest.user_notes_count),
 			new MergeRequestApprovedItem(approvalData),
 			new MergeRequestRequestedChangesItem(approvalData),
 			new MergeRequestChangesItem(

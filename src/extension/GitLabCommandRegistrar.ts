@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { MergeRequestItem } from '../tree/MergeRequestItem';
 import { MergeRequestsTreeProvider } from '../tree/MergeRequestsTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import { GitLabCommentController } from './GitLabCommentController';
@@ -125,7 +126,7 @@ export class GitLabCommandRegistrar {
 	private registerApproveCommand(): vscode.Disposable {
 		return vscode.commands.registerCommand(
 			'gitlabMrReview.approve',
-			async (item: any) => {
+			async (item: MergeRequestItem | undefined) => {
 				if (!item || !item.mergeRequest) {
 					vscode.window.showErrorMessage(
 						'No MR selected',

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(sed -i \"s|from '\\\\.\\\\./\\\\.\\\\./uri-opener'|from '../uri-opener'|g\" infrastructure/extension/GitLabFileOpener.ts)",
       "Bash(sed -i \"s|from '\\\\.\\\\./\\\\.\\\\./environment'|from '../environment'|g\" infrastructure/extension/GitLabMrReviewExtension.ts)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npx jest *)"
     ]
   }
 }

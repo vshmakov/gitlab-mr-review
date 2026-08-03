@@ -1,0 +1,104 @@
+import * as vscode from 'vscode';
+import { CommentManager, CommentContext } from '../../domain/interfaces/comment-manager';
+import { TextDocument } from '../../domain/interfaces/document-service';
+import { Notifier } from '../../domain/interfaces/notifier';
+
+interface VsCodeCommentContext {
+	parsedDiff: { lines: { documentLine: number; commentable: boolean; oldLine?: number; newLine?: number }[] };
+	mergeRequest: CommentContext['mergeRequest'];
+	file: CommentContext['file'];
+	threads: vscode.CommentThread[];
+}
+
+export class VsCodeCommentManager implements CommentManager {
+	private readonly controller: vscode.CommentController;
+	private readonly contexts = new Map<string, VsCodeCommentContext>();
+
+	constructor(private readonly notifier: Notifier) {
+		this.controller = vscode.comments.createCommentController(
+			'gitlab-mr-review',
+			'GitLab MR Review',
+		);
+
+		this.controller.commentingRangeProvider = {
+			provideCommentingRanges: (doc: vscode.TextDocument) =>
+				this.getCommentingRanges(doc),
+		};
+	}
+
+	dispose(): void {
+		this.controller.dispose();
+	}
+
+	setContext(document: TextDocument, context: CommentContext): void {
+		const vsCodeContext: VsCodeCommentContext = {
+			parsedDiff: { lines: context.lines },
+			mergeRequest: context.mergeRequest,
+			file: context.file,
+			threads: [],
+		};
+		this.contexts.set(document.uri, vsCodeContext);
+	}
+
+	onDocumentOpened(document: TextDocument, _context: CommentContext): void {
+		const uri = vscode.Uri.parse(document.uri);
+		// Trigger VS Code to re-evaluate commenting ranges
+		this.controller.createCommentThread(uri, new vscode.Range(0, 0, 0, 0), []);
+	}
+
+	async addComment(
+		document: TextDocument,
+		line: number,
+		text: string,
+	): Promise<boolean> {
+		const context = this.contexts.get(document.uri);
+		if (!context) {
+			return false;
+		}
+
+		const parsedLine = context.parsedDiff.lines[line];
+		if (!parsedLine || !parsedLine.commentable) {
+			this.notifier.showWarning('Эта строка не поддерживает комментарии');
+			return false;
+		}
+
+		const uri = vscode.Uri.parse(document.uri);
+		const range = new vscode.Range(
+			new vscode.Position(line, 0),
+			new vscode.Position(line, 0),
+		);
+
+		const thread = this.controller.createCommentThread(uri, range, [
+			{
+				body: text,
+				mode: vscode.CommentMode.Preview,
+				author: { name: 'You' },
+				contextValue: 'pending',
+			},
+		]);
+		thread.canReply = false;
+		context.threads.push(thread);
+
+		return true;
+	}
+
+	private getCommentingRanges(
+		document: vscode.TextDocument,
+	): vscode.Range[] | undefined {
+		const context = this.contexts.get(document.uri.toString());
+		if (!context) return undefined;
+
+		const ranges: vscode.Range[] = [];
+		for (const line of context.parsedDiff.lines) {
+			if (line.commentable) {
+				ranges.push(
+					new vscode.Range(
+						new vscode.Position(line.documentLine, 0),
+						new vscode.Position(line.documentLine, 0),
+					),
+				);
+			}
+		}
+		return ranges.length > 0 ? ranges : undefined;
+	}
+}

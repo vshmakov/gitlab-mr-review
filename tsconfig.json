@@ -9,6 +9,7 @@
         "types": [
             "node",
             "mocha",
+            "jest",
         ],
         "sourceMap": true,
         "rootDir": "src",

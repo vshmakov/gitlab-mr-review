@@ -9,7 +9,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": ["onView:gitlabMrReview.pendingReviews"],
+  "activationEvents": [
+    "onView:gitlabMrReview.pendingReviews"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -27,19 +29,19 @@
         "title": "GitLab MR Review: Log Out"
       },
       {
-	"command": "gitlabMrReview.openFilePatch",
-	"title": "GitLab MR Review: Open File Patch"
+        "command": "gitlabMrReview.openFilePatch",
+        "title": "GitLab MR Review: Open File Patch"
       },
       {
-	"command": "gitlabMrReview.addComment",
-	"title": "GitLab MR Review: Add Comment"
+        "command": "gitlabMrReview.addComment",
+        "title": "GitLab MR Review: Add Comment"
       },
       {
-	"command": "gitlabMrReview.approve",
-	"title": "Approve",
-	"icon": "$(check)"
+        "command": "gitlabMrReview.approve",
+        "title": "Approve",
+        "icon": "$(check)"
       }
-          ],
+    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -97,17 +99,21 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "test:unit": "jest --passWithNoTests"
   },
   "devDependencies": {
-    "@types/vscode": "^1.125.0",
+    "@types/jest": "^30.0.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
-    "typescript-eslint": "^8.61.1",
-    "eslint": "^10.5.0",
-    "typescript": "^6.0.3",
+    "@types/vscode": "^1.125.0",
     "@vscode/test-cli": "^0.0.15",
-    "@vscode/test-electron": "^3.0.0"
+    "@vscode/test-electron": "^3.0.0",
+    "eslint": "^10.5.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.12",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1"
   },
   "overrides": {
     "diff": "^8.0.4",

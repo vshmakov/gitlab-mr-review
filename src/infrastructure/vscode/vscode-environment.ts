@@ -45,6 +45,7 @@ export function createVsCodeEnvironment(
 		notifier,
 		comments,
 		http: new VsCodeHttpClient(),
+		globalState: context.globalState,
 		disposables,
 	};
 }

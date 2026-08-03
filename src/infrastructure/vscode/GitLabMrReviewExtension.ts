@@ -7,6 +7,7 @@ import { MergeRequestsTreeProvider } from './vscode-tree-provider';
 import { GitLabAuthenticationService } from '../../domain/service/GitLabAuthenticationService';
 import { GitLabCommandRegistrar } from '../../domain/service/GitLabCommandRegistrar';
 import { GitLabFileOpener } from '../../domain/service/GitLabFileOpener';
+import { VsCodeReviewedPersistence } from './vscode-reviewed-persistence';
 
 export class GitLabMrReviewExtension {
 	private readonly store: MergeRequestsStore;
@@ -15,6 +16,7 @@ export class GitLabMrReviewExtension {
 	private readonly unifiedDiffParser: UnifiedDiffParser;
 	private readonly fileOpener: GitLabFileOpener;
 	private readonly commandRegistrar: GitLabCommandRegistrar;
+	private readonly reviewedPersistence: VsCodeReviewedPersistence;
 
 	public constructor(public readonly env: Environment) {
 		const clientFactory = new GitLabClientFactory(
@@ -27,6 +29,9 @@ export class GitLabMrReviewExtension {
 		);
 
 		this.store = new MergeRequestsStore(clientFactory, env.notifier);
+
+		this.reviewedPersistence = new VsCodeReviewedPersistence(env.globalState);
+		this.reviewedPersistence.restore(this.store.reviewed);
 
 		this.treeProvider = new MergeRequestsTreeProvider(this.store);
 
@@ -59,6 +64,8 @@ export class GitLabMrReviewExtension {
 			this.authenticationService,
 			this.fileOpener,
 			clientFactory,
+			this.store,
+			this.reviewedPersistence,
 		);
 	}
 

@@ -1,5 +1,6 @@
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 import { Disposable } from '../interfaces/disposable';
 import { CommandRegistry } from '../interfaces/command-registry';
 import { Notifier } from '../interfaces/notifier';
@@ -7,12 +8,15 @@ import { Input } from '../interfaces/input';
 import { DocumentService } from '../interfaces/document-service';
 import { CommentManager } from '../interfaces/comment-manager';
 import { MergeRequestItem } from '../tree/MergeRequestItem';
+import { MergeRequestFileItem } from '../tree/MergeRequestFileItem';
 import { MergeRequestsTreeProvider } from '../../infrastructure/vscode/vscode-tree-provider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import {
 	GitLabFileOpener,
 	OpenFilePatchCommandArguments,
 } from './GitLabFileOpener';
+import { MergeRequestsStore } from '../store/MergeRequestsStore';
+import { ReviewedPersistence } from '../interfaces/reviewed-persistence';
 
 export class GitLabCommandRegistrar {
 	public constructor(
@@ -25,6 +29,8 @@ export class GitLabCommandRegistrar {
 		private readonly authenticationService: GitLabAuthenticationService,
 		private readonly fileOpener: GitLabFileOpener,
 		private readonly clientFactory: GitLabClientFactory,
+		private readonly store: MergeRequestsStore,
+		private readonly reviewedPersistence: ReviewedPersistence,
 	) {}
 
 	public register(): Disposable[] {
@@ -36,6 +42,8 @@ export class GitLabCommandRegistrar {
 			this.registerOpenFilePatchCommand(),
 			this.registerAddCommentCommand(),
 			this.registerApproveCommand(),
+			this.registerMarkAsReviewedCommand(),
+			this.registerUnmarkAsReviewedCommand(),
 		];
 	}
 
@@ -146,6 +154,62 @@ export class GitLabCommandRegistrar {
 						`Failed to approve MR: ${message}`,
 					);
 				}
+			},
+		);
+	}
+
+	private registerMarkAsReviewedCommand(): Disposable {
+		return this.commands.register(
+			'gitlabMrReview.markAsReviewed',
+			(item: MergeRequestFileItem | undefined) => {
+				if (!item) {
+					this.notifier.showWarning('No file selected');
+					return;
+				}
+				const args = item.command?.arguments?.[0] as
+					| OpenFilePatchCommandArguments
+					| undefined;
+				if (!args) {
+					this.notifier.showError('Cannot access file data');
+					return;
+				}
+				const { mergeRequest, file } = args;
+				if (!mergeRequest) {
+					this.notifier.showError('No merge request context');
+					return;
+				}
+
+				this.store.reviewed.markAsReviewed(mergeRequest, file);
+				this.reviewedPersistence.save(this.store.reviewed);
+				this.treeProvider.refresh();
+			},
+		);
+	}
+
+	private registerUnmarkAsReviewedCommand(): Disposable {
+		return this.commands.register(
+			'gitlabMrReview.unmarkAsReviewed',
+			(item: MergeRequestFileItem | undefined) => {
+				if (!item) {
+					this.notifier.showWarning('No file selected');
+					return;
+				}
+				const args = item.command?.arguments?.[0] as
+					| OpenFilePatchCommandArguments
+					| undefined;
+				if (!args) {
+					this.notifier.showError('Cannot access file data');
+					return;
+				}
+				const { mergeRequest, file } = args;
+				if (!mergeRequest) {
+					this.notifier.showError('No merge request context');
+					return;
+				}
+
+				this.store.reviewed.unmarkAsReviewed(mergeRequest, file);
+				this.reviewedPersistence.save(this.store.reviewed);
+				this.treeProvider.refresh();
 			},
 		);
 	}

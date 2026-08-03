@@ -6,6 +6,7 @@ import { MergeRequestMessageItem } from '../../src/domain/tree/MergeRequestMessa
 import { MergeRequestApprovedItem, MergeRequestRequestedChangesItem } from '../../src/domain/tree/ReviewerListTreeItem';
 import { MergeRequestReviewerItem } from '../../src/domain/tree/MergeRequestReviewerItem';
 import { MergeRequestOverviewItem } from '../../src/domain/tree/MergeRequestOverviewItem';
+import { MergeRequestReviewedItem } from '../../src/domain/tree/MergeRequestReviewedItem';
 
 // Mock store
 function createMockStore(): any {
@@ -20,6 +21,10 @@ function createMockStore(): any {
 			approvedBy: [{ name: 'Reviewer', username: 'reviewer' }],
 			requestedChanges: [],
 		})),
+		reviewed: {
+			getReviewedFiles: jest.fn(() => []),
+			isReviewed: jest.fn(() => false),
+		},
 		loadPending: jest.fn(),
 		loadApproved: jest.fn(),
 		loadRequestedChanges: jest.fn(),
@@ -232,5 +237,87 @@ describe('Tree: MergeRequestReviewerItem', () => {
 		const item = new MergeRequestReviewerItem({ name: 'Alice', username: 'alice' });
 		expect(item.label).toBe('Alice');
 		expect(item.description).toBe('alice');
+	});
+});
+
+describe('Tree: MergeRequestChangesItem with Reviewed', () => {
+	it('shows Reviewed sub-item when files are reviewed', () => {
+		const store = createMockStore();
+		store.isFilesLoading.mockReturnValue(false);
+		const files = [
+			{ path: 'src/a.ts', oldPath: 'src/a.ts', newPath: 'src/a.ts', diff: '+a', added: false, deleted: false, renamed: false },
+			{ path: 'src/b.ts', oldPath: 'src/b.ts', newPath: 'src/b.ts', diff: '+b', added: false, deleted: false, renamed: false },
+		];
+		store.files.getFiles.mockReturnValue(files);
+		store.reviewed.getReviewedFiles.mockReturnValue([files[0]]);
+		store.reviewed.isReviewed.mockImplementation((mr: any, f: any) => f.path === 'src/a.ts');
+
+		const mr = { id: 100, iid: 42, project_id: 10 };
+		const item = new MergeRequestChangesItem(mr as any, store);
+		const children = item.getChildren();
+
+		expect(children).toHaveLength(2);
+		expect(children[0]).toBeInstanceOf(MergeRequestFileItem);
+		expect(children[1]).toBeInstanceOf(MergeRequestReviewedItem);
+	});
+
+	it('does not show Reviewed when no files are reviewed', () => {
+		const store = createMockStore();
+		store.isFilesLoading.mockReturnValue(false);
+		const files = [
+			{ path: 'src/a.ts', oldPath: 'src/a.ts', newPath: 'src/a.ts', diff: '+a', added: false, deleted: false, renamed: false },
+		];
+		store.files.getFiles.mockReturnValue(files);
+		store.reviewed.getReviewedFiles.mockReturnValue([]);
+		store.reviewed.isReviewed.mockReturnValue(false);
+
+		const mr = { id: 100, iid: 42, project_id: 10 };
+		const item = new MergeRequestChangesItem(mr as any, store);
+		const children = item.getChildren();
+
+		expect(children).toHaveLength(1);
+		expect(children[0]).toBeInstanceOf(MergeRequestFileItem);
+		expect(children[0]).not.toBeInstanceOf(MergeRequestReviewedItem);
+	});
+});
+
+describe('Tree: MergeRequestReviewedItem', () => {
+	it('shows count in label', () => {
+		const files = [
+			{ path: 'src/a.ts', oldPath: 'src/a.ts', newPath: 'src/a.ts', diff: '+a', added: false, deleted: false, renamed: false },
+		];
+		const item = new MergeRequestReviewedItem(files, 1);
+		expect(item.label).toBe('Reviewed (1)');
+	});
+
+	it('returns file items as children', () => {
+		const files = [
+			{ path: 'src/a.ts', oldPath: 'src/a.ts', newPath: 'src/a.ts', diff: '+a', added: false, deleted: false, renamed: false },
+		];
+		const item = new MergeRequestReviewedItem(files, 1);
+		const children = item.getChildren();
+
+		expect(children).toHaveLength(1);
+		expect(children[0]).toBeInstanceOf(MergeRequestFileItem);
+	});
+});
+
+describe('Tree: MergeRequestFileItem reviewed flag', () => {
+	it('sets contextValue to reviewed when flagged', () => {
+		const file = {
+			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
+			diff: '+line', added: false, deleted: false, renamed: false,
+		};
+		const item = new MergeRequestFileItem(null as any, file, true);
+		expect(item.contextValue).toBe('mergeRequestFile.reviewed');
+	});
+
+	it('sets default contextValue when not reviewed', () => {
+		const file = {
+			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
+			diff: '+line', added: false, deleted: false, renamed: false,
+		};
+		const item = new MergeRequestFileItem(null as any, file, false);
+		expect(item.contextValue).toBe('mergeRequestFile');
 	});
 });

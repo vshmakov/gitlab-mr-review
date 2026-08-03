@@ -9,6 +9,7 @@ import { MergeRequestFileItem } from '../../domain/tree/MergeRequestFileItem';
 import { MergeRequestMessageItem } from '../../domain/tree/MergeRequestMessageItem';
 import { MergeRequestReviewerItem } from '../../domain/tree/MergeRequestReviewerItem';
 import { MergeRequestOverviewItem } from '../../domain/tree/MergeRequestOverviewItem';
+import { MergeRequestReviewedItem } from '../../domain/tree/MergeRequestReviewedItem';
 
 export type MergeRequestTreeItem =
 	| MergeRequestCategoryItem
@@ -17,6 +18,7 @@ export type MergeRequestTreeItem =
 	| MergeRequestApprovedItem
 	| MergeRequestRequestedChangesItem
 	| MergeRequestChangesItem
+	| MergeRequestReviewedItem
 	| MergeRequestFileItem
 	| MergeRequestReviewerItem
 	| MergeRequestMessageItem;
@@ -87,6 +89,10 @@ export class MergeRequestsTreeProvider
 		}
 
 		if (element instanceof MergeRequestChangesItem) {
+			return element.getChildren();
+		}
+
+		if (element instanceof MergeRequestReviewedItem) {
 			return element.getChildren();
 		}
 

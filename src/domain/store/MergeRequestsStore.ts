@@ -7,6 +7,7 @@ import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { MergeRequestCategory } from '../tree/MergeRequestItem';
 import { MergeRequestApprovalStore } from './MergeRequestApprovalStore';
 import { MergeRequestFilesStore } from './MergeRequestFilesStore';
+import { ReviewedFilesStore } from './ReviewedFilesStore';
 
 const CATEGORY_LOADER: Record<
 	MergeRequestCategory,
@@ -55,6 +56,8 @@ export class MergeRequestsStore {
 
 	public readonly approvalStore: MergeRequestApprovalStore;
 
+	public readonly reviewed: ReviewedFilesStore;
+
 	public constructor(
 		private readonly clientFactory: GitLabClientFactory,
 		private readonly notifier: Notifier,
@@ -67,6 +70,7 @@ export class MergeRequestsStore {
 			clientFactory,
 			notifier,
 		);
+		this.reviewed = new ReviewedFilesStore();
 	}
 
 	// -- Category state --
@@ -221,6 +225,7 @@ export class MergeRequestsStore {
 		this._loadedCategories.clear();
 		this.files.refresh();
 		this.approvalStore.refresh();
+		this.reviewed.refresh();
 		this._error = undefined;
 		this.notify();
 	}

@@ -40,6 +40,14 @@
         "command": "gitlabMrReview.approve",
         "title": "Approve",
         "icon": "$(check)"
+      },
+      {
+        "command": "gitlabMrReview.markAsReviewed",
+        "title": "Mark as Reviewed"
+      },
+      {
+        "command": "gitlabMrReview.unmarkAsReviewed",
+        "title": "Mark as Unreviewed"
       }
     ],
     "viewsContainers": {
@@ -72,6 +80,16 @@
         {
           "command": "gitlabMrReview.approve",
           "when": "view == gitlabMrReview.pendingReviews && viewItem == mergeRequest"
+        },
+        {
+          "command": "gitlabMrReview.markAsReviewed",
+          "when": "view == gitlabMrReview.pendingReviews && viewItem == mergeRequestFile",
+          "group": "1_review"
+        },
+        {
+          "command": "gitlabMrReview.unmarkAsReviewed",
+          "when": "view == gitlabMrReview.pendingReviews && viewItem == mergeRequestFile.reviewed",
+          "group": "1_review"
         }
       ],
       "editor/context": [

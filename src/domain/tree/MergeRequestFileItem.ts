@@ -7,14 +7,15 @@ export class MergeRequestFileItem implements ITreeItem {
 	readonly label: string;
 	readonly description?: string;
 	readonly tooltip: string;
-	readonly contextValue = 'mergeRequestFile';
+	readonly contextValue: string;
 	readonly collapsibleState: 'none' = 'none';
 	readonly command: Command;
 	readonly accessibilityLabel: string;
 
 	public constructor(
-		mergeRequest: GitLabMergeRequest,
+		mergeRequest: GitLabMergeRequest | null,
 		file: GitLabMergeRequestFile,
+		reviewed = false,
 	) {
 		const fileName = path.basename(file.path);
 		const directory = path.dirname(file.path);
@@ -24,6 +25,9 @@ export class MergeRequestFileItem implements ITreeItem {
 		this.description = directory === '.' ? undefined : directory;
 		this.tooltip = getFileTooltip(file);
 		this.accessibilityLabel = `${prefix} ${fileName}`;
+		this.contextValue = reviewed
+			? 'mergeRequestFile.reviewed'
+			: 'mergeRequestFile';
 
 		this.command = {
 			command: 'gitlabMrReview.openFilePatch',

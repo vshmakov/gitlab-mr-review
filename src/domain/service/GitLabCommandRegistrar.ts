@@ -7,7 +7,7 @@ import { Input } from '../interfaces/input';
 import { DocumentService } from '../interfaces/document-service';
 import { CommentManager } from '../interfaces/comment-manager';
 import { MergeRequestItem } from '../tree/MergeRequestItem';
-import { MergeRequestsTreeProvider } from '../../infrastructure/tree/MergeRequestsTreeProvider';
+import { MergeRequestsTreeProvider } from '../../infrastructure/vscode/vscode-tree-provider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
 import {
 	GitLabFileOpener,

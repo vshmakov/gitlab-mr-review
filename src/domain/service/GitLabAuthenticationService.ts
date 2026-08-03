@@ -1,5 +1,5 @@
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
-import { MergeRequestsTreeProvider } from '../../infrastructure/tree/MergeRequestsTreeProvider';
+import { MergeRequestsTreeProvider } from '../../infrastructure/vscode/vscode-tree-provider';
 import { TOKEN_SECRET_KEY } from '../client/constants';
 import { normalizeBaseUrl } from '../client/url-utils';
 import { SecretStorage } from '../interfaces/secret-storage';

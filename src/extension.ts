@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { createVsCodeEnvironment } from './infrastructure/vscode/vscode-environment';
-import { GitLabMrReviewExtension } from './infrastructure/extension/GitLabMrReviewExtension';
+import { GitLabMrReviewExtension } from './infrastructure/vscode/GitLabMrReviewExtension';
 
 let extension: GitLabMrReviewExtension | undefined;
 

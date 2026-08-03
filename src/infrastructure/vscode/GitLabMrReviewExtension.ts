@@ -3,7 +3,7 @@ import { Environment } from '../../domain/interfaces/environment';
 import { GitLabClientFactory } from '../../domain/client/GitLabClientFactory';
 import { UnifiedDiffParser } from '../../domain/diff/unified-diff-parser';
 import { MergeRequestsStore } from '../../domain/store/MergeRequestsStore';
-import { MergeRequestsTreeProvider } from '../tree/MergeRequestsTreeProvider';
+import { MergeRequestsTreeProvider } from './vscode-tree-provider';
 import { GitLabAuthenticationService } from '../../domain/service/GitLabAuthenticationService';
 import { GitLabCommandRegistrar } from '../../domain/service/GitLabCommandRegistrar';
 import { GitLabFileOpener } from '../../domain/service/GitLabFileOpener';

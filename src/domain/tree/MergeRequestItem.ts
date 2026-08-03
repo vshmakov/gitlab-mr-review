@@ -42,7 +42,7 @@ export class MergeRequestItem implements ITreeItem {
 			`${mergeRequest.references?.full ?? ''}`.trim();
 
 		this.tooltip = [
-			`**${mergeRequest.title}**`,
+			mergeRequest.title,
 			'',
 			`Author: ${mergeRequest.author?.name ?? 'not specified'}`,
 			'',

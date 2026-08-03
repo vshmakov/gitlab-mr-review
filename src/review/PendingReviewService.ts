@@ -1,3 +1,4 @@
+import { REVIEW_REQUESTED_CHANGES } from '../client/graphql-queries';
 import { GitLabGraphQLClient } from '../client/GitLabGraphQLClient';
 import {
 	GitLabApprovalState,
@@ -195,7 +196,7 @@ export class PendingReviewService {
 		return (
 			currentReviewer
 				?.mergeRequestInteraction
-				?.reviewState === 'REQUESTED_CHANGES'
+				?.reviewState === REVIEW_REQUESTED_CHANGES
 		);
 	}
 

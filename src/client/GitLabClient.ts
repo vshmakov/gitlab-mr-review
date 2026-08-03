@@ -1,3 +1,8 @@
+import {
+	REVIEW_APPROVED,
+	REVIEW_REQUESTED_CHANGES,
+	buildApprovalDataQuery,
+} from './graphql-queries';
 import { GitLabRestClient } from './GitLabRestClient';
 import { GitLabGraphQLClient } from './GitLabGraphQLClient';
 import { GitLabNoteClient } from './GitLabNoteClient';
@@ -201,7 +206,7 @@ export class GitLabClient {
 		const globalId =
 			`gid://gitlab/MergeRequest/${mergeRequest.id}`;
 
-		const query = `query { mr: mergeRequest(id: ${JSON.stringify(globalId)}) { reviewers { nodes { username name mergeRequestInteraction { reviewState } } } } }`;
+		const query = buildApprovalDataQuery(globalId);
 
 		const data = await this.graphQLClient.request<{
 			mr: {
@@ -218,10 +223,10 @@ export class GitLabClient {
 		const reviewers = data.mr.reviewers?.nodes ?? [];
 		return {
 			approvedBy: reviewers
-				.filter(n => n.mergeRequestInteraction?.reviewState === 'APPROVED')
+				.filter(n => n.mergeRequestInteraction?.reviewState === REVIEW_APPROVED)
 				.map(n => ({ name: n.name, username: n.username })),
 			requestedChanges: reviewers
-				.filter(n => n.mergeRequestInteraction?.reviewState === 'REQUESTED_CHANGES')
+				.filter(n => n.mergeRequestInteraction?.reviewState === REVIEW_REQUESTED_CHANGES)
 				.map(n => ({ name: n.name, username: n.username })),
 		};
 	}

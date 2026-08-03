@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
 import { MergeRequestCategory } from './MergeRequestItem';
-import { MergeRequestApprovedItem } from './MergeRequestApprovedItem';
+import { MergeRequestApprovedItem } from './ReviewerListTreeItem';
 import { MergeRequestCategoryItem } from './MergeRequestCategoryItem';
 import { MergeRequestChangesItem } from './MergeRequestChangesItem';
 import { MergeRequestFileItem } from './MergeRequestFileItem';
 import { MergeRequestItem } from './MergeRequestItem';
 import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 import { MergeRequestReviewerItem } from './MergeRequestReviewerItem';
-import { MergeRequestRequestedChangesItem } from './MergeRequestRequestedChangesItem';
+import { MergeRequestRequestedChangesItem } from './ReviewerListTreeItem';
 
 export type MergeRequestTreeItem =
 	| MergeRequestCategoryItem

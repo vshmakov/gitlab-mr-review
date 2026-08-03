@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
-import { MergeRequestApprovedItem } from './MergeRequestApprovedItem';
+import { MergeRequestApprovedItem } from './ReviewerListTreeItem';
 import { MergeRequestChangesItem } from './MergeRequestChangesItem';
 import { MergeRequestFileItem } from './MergeRequestFileItem';
 import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 import { MergeRequestReviewerItem } from './MergeRequestReviewerItem';
-import { MergeRequestRequestedChangesItem } from './MergeRequestRequestedChangesItem';
+import { MergeRequestRequestedChangesItem } from './ReviewerListTreeItem';
 
 export type MergeRequestChildItem =
 	| MergeRequestApprovedItem

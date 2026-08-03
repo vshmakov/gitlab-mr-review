@@ -1,4 +1,5 @@
 import { normalizeBaseUrl } from './url-utils';
+import { HttpClient, HttpResponse } from '../interfaces/http';
 
 interface GitLabGraphQLResponse<T> {
 	data?: T;
@@ -15,6 +16,7 @@ export class GitLabGraphQLClient {
 	public constructor(
 		baseUrl: string,
 		private readonly token: string,
+		private readonly http: HttpClient,
 	) {
 		this.baseUrl = normalizeBaseUrl(baseUrl);
 	}
@@ -23,7 +25,7 @@ export class GitLabGraphQLClient {
 		query: string,
 		variables: Record<string, unknown> = {},
 	): Promise<T> {
-		const response = await fetch(
+		const response = await this.http.request(
 			`${this.baseUrl}/api/graphql`,
 			{
 				method: 'POST',
@@ -40,11 +42,11 @@ export class GitLabGraphQLClient {
 		}
 
 		const result =
-			await response.json() as GitLabGraphQLResponse<T>;
+			await response.json<GitLabGraphQLResponse<T>>();
 
 		this.assertSuccessfulResponse(result);
 
-		return result.data;
+		return result.data as T;
 	}
 
 	private createHeaders(): Record<string, string> {
@@ -56,7 +58,7 @@ export class GitLabGraphQLClient {
 	}
 
 	private async createRequestError(
-		response: Response,
+		response: HttpResponse,
 	): Promise<Error> {
 		const responseText = await response.text();
 

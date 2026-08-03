@@ -5,6 +5,7 @@ import { GitLabGraphQLClient } from './GitLabGraphQLClient';
 import { PendingReviewService } from '../service/PendingReviewService';
 import { TOKEN_SECRET_KEY } from './constants';
 import { normalizeBaseUrl } from './url-utils';
+import { HttpClient } from '../interfaces/http';
 import { SecretStorage } from '../interfaces/secret-storage';
 import { Configuration } from '../interfaces/configuration';
 import { Notifier } from '../interfaces/notifier';
@@ -20,6 +21,7 @@ export class GitLabClientFactory {
 		private readonly notifier: Notifier,
 		private readonly input: Input,
 		private readonly commands: CommandRegistry,
+		private readonly http: HttpClient,
 	) {}
 
 	public async create(): Promise<GitLabClient | undefined> {
@@ -88,7 +90,7 @@ export class GitLabClientFactory {
 		if (!credentials) {
 			return undefined;
 		}
-		return new GitLabNoteClient(credentials.baseUrl, credentials.token);
+		return new GitLabNoteClient(credentials.baseUrl, credentials.token, this.http);
 	}
 
 	private buildClient(
@@ -98,11 +100,13 @@ export class GitLabClientFactory {
 		const restClient = new GitLabRestClient(
 			baseUrl,
 			token,
+			this.http,
 		);
 
 		const graphQLClient = new GitLabGraphQLClient(
 			baseUrl,
 			token,
+			this.http,
 		);
 
 		const pendingReviewService =

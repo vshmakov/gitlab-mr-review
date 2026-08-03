@@ -1,6 +1,7 @@
 import { normalizeBaseUrl } from './url-utils';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
+import { HttpClient } from '../interfaces/http';
 
 export interface GitLabNote {
 	id: number;
@@ -10,7 +11,11 @@ export class GitLabNoteClient {
 	private readonly baseUrl: string;
 	private readonly token: string;
 
-	public constructor(baseUrl: string, token: string) {
+	public constructor(
+		baseUrl: string,
+		token: string,
+		private readonly http: HttpClient,
+	) {
 		this.baseUrl = normalizeBaseUrl(baseUrl);
 		this.token = token;
 	}
@@ -26,7 +31,7 @@ export class GitLabNoteClient {
 			`/api/v4/projects/${mergeRequest.project_id}/` +
 			`merge_requests/${mergeRequest.iid}/draft_notes`;
 
-		const formData = new FormData();
+		const formData = new URLSearchParams();
 
 		formData.append('note', body);
 		formData.append('position[position_type]', 'text');
@@ -44,12 +49,13 @@ export class GitLabNoteClient {
 			formData.append('position[new_line]', String(newLine));
 		}
 
-		const response = await fetch(`${this.baseUrl}${path}`, {
+		const response = await this.http.request(`${this.baseUrl}${path}`, {
 			method: 'POST',
 			headers: {
 				'PRIVATE-TOKEN': this.token,
+				'Content-Type': 'application/x-www-form-urlencoded',
 			},
-			body: formData,
+			body: formData.toString(),
 		});
 
 		if (!response.ok) {
@@ -59,7 +65,7 @@ export class GitLabNoteClient {
 			);
 		}
 
-		return response.json() as Promise<GitLabNote>;
+		return response.json<GitLabNote>();
 	}
 
 	public async submitNote(
@@ -70,7 +76,7 @@ export class GitLabNoteClient {
 			`/api/v4/projects/${mergeRequest.project_id}/` +
 			`merge_requests/${mergeRequest.iid}/notes/${noteId}`;
 
-		const response = await fetch(`${this.baseUrl}${path}`, {
+		const response = await this.http.request(`${this.baseUrl}${path}`, {
 			method: 'PATCH',
 			headers: {
 				'PRIVATE-TOKEN': this.token,
@@ -86,6 +92,6 @@ export class GitLabNoteClient {
 			);
 		}
 
-		return response.json() as Promise<GitLabNote>;
+		return response.json<GitLabNote>();
 	}
 }

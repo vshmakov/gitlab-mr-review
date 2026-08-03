@@ -10,6 +10,7 @@ import { VsCodeDocumentService } from './vscode-document-service';
 import { VsCodeUriOpener } from './vscode-uri-opener';
 import { VsCodeNotifier } from './vscode-notifier';
 import { VsCodeCommentManager } from './vscode-comment-manager';
+import { VsCodeHttpClient } from './vscode-http';
 
 class VsCodeDisposableCollection implements DisposableCollection {
 	private readonly items: vscode.Disposable[] = [];
@@ -43,6 +44,7 @@ export function createVsCodeEnvironment(
 		uri: new VsCodeUriOpener(),
 		notifier,
 		comments,
+		http: new VsCodeHttpClient(),
 		disposables,
 	};
 }

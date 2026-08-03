@@ -23,6 +23,7 @@ export class GitLabMrReviewExtension {
 			env.notifier,
 			env.input,
 			env.commands,
+			env.http,
 		);
 
 		this.store = new MergeRequestsStore(clientFactory, env.notifier);

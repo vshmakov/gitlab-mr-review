@@ -1,4 +1,5 @@
 import { normalizeBaseUrl } from './url-utils';
+import { HttpClient, HttpResponse } from '../interfaces/http';
 
 export class GitLabRestClient {
 	private readonly baseUrl: string;
@@ -6,6 +7,7 @@ export class GitLabRestClient {
 	public constructor(
 		baseUrl: string,
 		private readonly token: string,
+		private readonly http: HttpClient,
 	) {
 		this.baseUrl = normalizeBaseUrl(baseUrl);
 	}
@@ -15,7 +17,7 @@ export class GitLabRestClient {
 	}
 
 	public async get<T>(path: string): Promise<T> {
-		const response = await fetch(`${this.baseUrl}${path}`, {
+		const response = await this.http.request(`${this.baseUrl}${path}`, {
 			headers: this.createHeaders(),
 		});
 
@@ -23,19 +25,19 @@ export class GitLabRestClient {
 			throw await this.createRequestError(response);
 		}
 
-		return response.json() as Promise<T>;
+		return response.json<T>();
 	}
 
 	public async post<T>(
 		path: string,
 		body: Record<string, string> = {},
 	): Promise<T> {
-		const response = await fetch(
+		const response = await this.http.request(
 			`${this.baseUrl}${path}`,
 			{
 				method: 'POST',
 				headers: this.createHeaders(),
-				body: new URLSearchParams(body),
+				body: new URLSearchParams(body).toString(),
 			},
 		);
 
@@ -43,7 +45,7 @@ export class GitLabRestClient {
 			throw await this.createRequestError(response);
 		}
 
-		return response.json() as Promise<T>;
+		return response.json<T>();
 	}
 
 	private createHeaders(): Record<string, string> {
@@ -56,7 +58,7 @@ export class GitLabRestClient {
 	}
 
 	private async createRequestError(
-		response: Response,
+		response: HttpResponse,
 	): Promise<Error> {
 		const responseText =
 			await response.text();

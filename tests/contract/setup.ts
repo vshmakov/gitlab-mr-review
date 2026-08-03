@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { HttpClient, HttpOptions, HttpResponse } from '../../src/domain/interfaces/http';
 
 export const GITLAB_URL = process.env.GITLAB_URL ?? 'https://gitlab.com';

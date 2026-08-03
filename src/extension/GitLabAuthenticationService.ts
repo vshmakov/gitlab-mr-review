@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { MergeRequestsTreeProvider } from '../tree/MergeRequestsTreeProvider';
 import { TOKEN_SECRET_KEY } from '../infra/constants';
+import { normalizeBaseUrl } from '../infra/url-utils';
 
 export class GitLabAuthenticationService {
 	private static readonly CONFIGURATION_SECTION =
@@ -156,7 +157,7 @@ export class GitLabAuthenticationService {
 			return undefined;
 		}
 
-		return trimmedValue.replace(/\/+$/, '');
+		return normalizeBaseUrl(trimmedValue);
 	}
 
 	private showAuthenticationError(message: string): void {

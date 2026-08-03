@@ -1,3 +1,5 @@
+import { normalizeBaseUrl } from '../infra/url-utils';
+
 interface GitLabGraphQLResponse<T> {
 	data?: T;
 	errors?: GitLabGraphQLError[];
@@ -14,7 +16,7 @@ export class GitLabGraphQLClient {
 		baseUrl: string,
 		private readonly token: string,
 	) {
-		this.baseUrl = baseUrl.replace(/\/+$/, '');
+		this.baseUrl = normalizeBaseUrl(baseUrl);
 	}
 
 	public async request<T>(

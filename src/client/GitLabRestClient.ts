@@ -1,3 +1,5 @@
+import { normalizeBaseUrl } from '../infra/url-utils';
+
 export class GitLabRestClient {
 	private readonly baseUrl: string;
 
@@ -5,7 +7,7 @@ export class GitLabRestClient {
 		baseUrl: string,
 		private readonly token: string,
 	) {
-		this.baseUrl = baseUrl.replace(/\/+$/, '');
+		this.baseUrl = normalizeBaseUrl(baseUrl);
 	}
 
 	public getBaseUrl(): string {

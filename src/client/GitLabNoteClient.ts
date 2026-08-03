@@ -1,3 +1,4 @@
+import { normalizeBaseUrl } from '../infra/url-utils';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
@@ -10,7 +11,7 @@ export class GitLabNoteClient {
 	private readonly token: string;
 
 	public constructor(baseUrl: string, token: string) {
-		this.baseUrl = baseUrl.replace(/\/+$/, '');
+		this.baseUrl = normalizeBaseUrl(baseUrl);
 		this.token = token;
 	}
 

@@ -5,6 +5,7 @@ import { GitLabNoteClient } from './GitLabNoteClient';
 import { GitLabGraphQLClient } from './GitLabGraphQLClient';
 import { PendingReviewService } from '../review/PendingReviewService';
 import { TOKEN_SECRET_KEY } from '../infra/constants';
+import { normalizeBaseUrl } from '../infra/url-utils';
 
 export class GitLabClientFactory {
 	private client?: GitLabClient;
@@ -120,11 +121,11 @@ export class GitLabClientFactory {
 	}
 
 	private getBaseUrl(): string {
-		return vscode.workspace
-			.getConfiguration('gitlabMrReview')
-			.get<string>('url', '')
-			.trim()
-			.replace(/\/+$/, '');
+		return normalizeBaseUrl(
+			vscode.workspace
+				.getConfiguration('gitlabMrReview')
+				.get<string>('url', ''),
+		);
 	}
 
 	private async requestAuthentication(

@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabApprovalData } from '../model/GitLabApprovalData';
@@ -55,12 +57,11 @@ export class MergeRequestApprovalStore {
 			this.clientFactory.clear();
 			const origMsg = e instanceof Error ? e.message : String(e);
 			console.error(`[ApprovalStore MR !${mergeRequest.iid}] Failed:`, origMsg);
-			this._cache.set(k, {
-				approvedBy: [],
-				requestedChanges: [],
-			});
+			void vscode.window.showErrorMessage(
+				`Не удалось загрузить данные рецензий: ${origMsg}`,
+			);
 			throw new Error(
-				`Failed to load approval data: ${origMsg}`,
+				`Не удалось загрузить данные рецензий: ${origMsg}`,
 			);
 		} finally {
 			this._loading.delete(k);

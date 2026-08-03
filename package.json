@@ -98,7 +98,8 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests --testPathIgnorePatterns=tests/contract",
+    "test:contract": "jest tests/contract --passWithNoTests"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

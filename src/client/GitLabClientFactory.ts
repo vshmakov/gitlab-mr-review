@@ -1,4 +1,3 @@
-import * as vscode from 'vscode';
 import { GitLabClient } from './GitLabClient';
 import { GitLabRestClient } from './GitLabRestClient';
 import { GitLabNoteClient } from './GitLabNoteClient';
@@ -6,12 +5,21 @@ import { GitLabGraphQLClient } from './GitLabGraphQLClient';
 import { PendingReviewService } from '../review/PendingReviewService';
 import { TOKEN_SECRET_KEY } from '../infra/constants';
 import { normalizeBaseUrl } from '../infra/url-utils';
+import { SecretStorage } from '../infra/secret-storage';
+import { Configuration } from '../infra/configuration';
+import { Notifier } from '../infra/notifier';
+import { Input } from '../infra/input';
+import { CommandRegistry } from '../infra/command-registry';
 
 export class GitLabClientFactory {
 	private client?: GitLabClient;
 
 	public constructor(
-		private readonly context: vscode.ExtensionContext,
+		private readonly secrets: SecretStorage,
+		private readonly config: Configuration,
+		private readonly notifier: Notifier,
+		private readonly input: Input,
+		private readonly commands: CommandRegistry,
 	) {}
 
 	public async create(): Promise<GitLabClient | undefined> {
@@ -40,7 +48,7 @@ export class GitLabClientFactory {
 					? error.message
 					: String(error);
 			console.error('[ClientFactory] build failed:', message);
-			void vscode.window.showErrorMessage(
+			this.notifier.showError(
 				`Не удалось создать GitLab клиент: ${message}`,
 			);
 			this.client = undefined;
@@ -63,7 +71,7 @@ export class GitLabClientFactory {
 					? error.message
 					: String(error);
 			console.error('[ClientFactory] setCredentials failed:', message);
-			void vscode.window.showErrorMessage(
+			this.notifier.showError(
 				`Ошибка подключения к GitLab: ${message}`,
 			);
 			this.client = undefined;
@@ -116,8 +124,7 @@ export class GitLabClientFactory {
 			return undefined;
 		}
 
-		const token =
-			await this.context.secrets.get(TOKEN_SECRET_KEY);
+		const token = await this.secrets.get(TOKEN_SECRET_KEY);
 		if (!token) {
 			return undefined;
 		}
@@ -127,27 +134,22 @@ export class GitLabClientFactory {
 
 	private getBaseUrl(): string {
 		return normalizeBaseUrl(
-			vscode.workspace
-				.getConfiguration('gitlabMrReview')
-				.get<string>('url', ''),
+			this.config.get<string>('gitlabMrReview', 'url', ''),
 		);
 	}
 
 	private async requestAuthentication(
 		message: string,
 	): Promise<void> {
-		const action =
-			await vscode.window.showWarningMessage(
-				message,
-				'Authenticate',
-			);
+		const action = await this.input.showWarningMessage(
+			message,
+			'Authenticate',
+		);
 
 		if (action !== 'Authenticate') {
 			return;
 		}
 
-		await vscode.commands.executeCommand(
-			'gitlabMrReview.authenticate',
-		);
+		await this.commands.execute('gitlabMrReview.authenticate');
 	}
 }

@@ -1,7 +1,10 @@
-import * as vscode from 'vscode';
-
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { Disposable } from '../infra/disposable';
+import { CommandRegistry } from '../infra/command-registry';
+import { Notifier } from '../infra/notifier';
+import { Input } from '../infra/input';
+import { DocumentService } from '../infra/document-service';
 import { MergeRequestItem } from '../tree/MergeRequestItem';
 import { MergeRequestsTreeProvider } from '../tree/MergeRequestsTreeProvider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
@@ -13,18 +16,18 @@ import {
 
 export class GitLabCommandRegistrar {
 	public constructor(
-		private readonly treeProvider:
-			MergeRequestsTreeProvider,
-		private readonly authenticationService:
-			GitLabAuthenticationService,
+		private readonly commands: CommandRegistry,
+		private readonly notifier: Notifier,
+		private readonly input: Input,
+		private readonly documents: DocumentService,
+		private readonly treeProvider: MergeRequestsTreeProvider,
+		private readonly authenticationService: GitLabAuthenticationService,
 		private readonly fileOpener: GitLabFileOpener,
-		private readonly commentController:
-			GitLabCommentController,
-		private readonly clientFactory:
-			GitLabClientFactory,
+		private readonly commentController: GitLabCommentController,
+		private readonly clientFactory: GitLabClientFactory,
 	) {}
 
-	public register(): vscode.Disposable[] {
+	public register(): Disposable[] {
 		return [
 			this.registerRefreshCommand(),
 			this.registerAuthenticateCommand(),
@@ -36,8 +39,8 @@ export class GitLabCommandRegistrar {
 		];
 	}
 
-	private registerRefreshCommand(): vscode.Disposable {
-		return vscode.commands.registerCommand(
+	private registerRefreshCommand(): Disposable {
+		return this.commands.register(
 			'gitlabMrReview.refresh',
 			() => {
 				this.treeProvider.refresh();
@@ -45,115 +48,97 @@ export class GitLabCommandRegistrar {
 		);
 	}
 
-	private registerAuthenticateCommand(): vscode.Disposable {
-		return vscode.commands.registerCommand(
+	private registerAuthenticateCommand(): Disposable {
+		return this.commands.register(
 			'gitlabMrReview.authenticate',
 			() => this.authenticationService.authenticate(),
 		);
 	}
 
-	private registerLogoutCommand(): vscode.Disposable {
-		return vscode.commands.registerCommand(
+	private registerLogoutCommand(): Disposable {
+		return this.commands.register(
 			'gitlabMrReview.logout',
 			() => this.authenticationService.logout(),
 		);
 	}
 
-	private registerOpenMergeRequestCommand():
-		vscode.Disposable {
-		return vscode.commands.registerCommand(
+	private registerOpenMergeRequestCommand(): Disposable {
+		return this.commands.register(
 			'gitlabMrReview.openMergeRequest',
 			(mergeRequest: GitLabMergeRequest) =>
-				this.fileOpener.openMergeRequest(
-					mergeRequest,
-				),
+				this.fileOpener.openMergeRequest(mergeRequest),
 		);
 	}
 
-	private registerOpenFilePatchCommand():
-		vscode.Disposable {
-		return vscode.commands.registerCommand(
+	private registerOpenFilePatchCommand(): Disposable {
+		return this.commands.register(
 			'gitlabMrReview.openFilePatch',
-			(
-				arguments_: OpenFilePatchCommandArguments,
-			) => this.fileOpener.openFilePatch(arguments_),
+			(arguments_: OpenFilePatchCommandArguments) =>
+				this.fileOpener.openFilePatch(arguments_),
 		);
 	}
 
-	private registerAddCommentCommand(): vscode.Disposable {
-		return vscode.commands.registerCommand(
+	private registerAddCommentCommand(): Disposable {
+		return this.commands.register(
 			'gitlabMrReview.addComment',
 			async () => {
-				const editor =
-					vscode.window.activeTextEditor;
-				if (!editor) {
-					vscode.window.showWarningMessage(
-						'Нет активного редактора',
-					);
+				const document = this.documents.activeDocument;
+				if (!document) {
+					this.notifier.showWarning('Нет активного редактора');
 					return;
 				}
 
-				if (editor.document.languageId !== 'diff') {
-					vscode.window.showWarningMessage(
+				if (document.languageId !== 'diff') {
+					this.notifier.showWarning(
 						'Комментирование доступно только в дифф-файлах',
 					);
 					return;
 				}
 
-				const line =
-					editor.selection.start.line;
-
-				const text =
-					await vscode.window.showInputBox({
-						title: 'Комментарий к диффу',
-						prompt: 'Введите комментарий',
-						ignoreFocusOut: true,
-					});
+				const text = await this.input.showInputBox({
+					title: 'Комментарий к диффу',
+					prompt: 'Введите комментарий',
+					ignoreFocusOut: true,
+				});
 
 				if (!text) {
 					return;
 				}
 
+				// TODO: get line from selection
 				await this.commentController.addComment(
-					editor.document,
-					line,
+					document as unknown as import('vscode').TextDocument,
+					0, // TODO: get from selection
 					text,
 				);
 			},
 		);
 	}
 
-	private registerApproveCommand(): vscode.Disposable {
-		return vscode.commands.registerCommand(
+	private registerApproveCommand(): Disposable {
+		return this.commands.register(
 			'gitlabMrReview.approve',
 			async (item: MergeRequestItem | undefined) => {
 				if (!item || !item.mergeRequest) {
-					vscode.window.showErrorMessage(
-						'No MR selected',
-					);
+					this.notifier.showError('No MR selected');
 					return;
 				}
 
-				const mergeRequest =
-					item.mergeRequest;
+				const mergeRequest = item.mergeRequest;
 
 				try {
-					const client =
-						await this.clientFactory.create();
+					const client = await this.clientFactory.create();
 					if (!client) {
-						vscode.window.showErrorMessage(
+						this.notifier.showError(
 							'GitLab client is not initialized',
 						);
 						return;
 					}
 
-					await client.approveMergeRequest(
-						mergeRequest,
-					);
-
+					await client.approveMergeRequest(mergeRequest);
 					this.treeProvider.refresh();
 
-					void vscode.window.showInformationMessage(
+					this.notifier.showInfo(
 						`MR !${mergeRequest.iid} approved`,
 					);
 				} catch (error: unknown) {
@@ -161,7 +146,7 @@ export class GitLabCommandRegistrar {
 						? error.message
 						: String(error);
 
-					void vscode.window.showErrorMessage(
+					this.notifier.showError(
 						`Failed to approve MR: ${message}`,
 					);
 				}

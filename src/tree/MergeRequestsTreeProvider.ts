@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
+import { toVsCodeTreeItem } from '../infra/vscode-tree-adapter';
 import { MergeRequestCategory } from './MergeRequestItem';
-import { MergeRequestApprovedItem } from './ReviewerListTreeItem';
+import { MergeRequestApprovedItem, MergeRequestRequestedChangesItem } from './ReviewerListTreeItem';
 import { MergeRequestCategoryItem } from './MergeRequestCategoryItem';
 import { MergeRequestChangesItem } from './MergeRequestChangesItem';
 import { MergeRequestFileItem } from './MergeRequestFileItem';
 import { MergeRequestItem } from './MergeRequestItem';
 import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 import { MergeRequestReviewerItem } from './MergeRequestReviewerItem';
-import { MergeRequestRequestedChangesItem } from './ReviewerListTreeItem';
 
 export type MergeRequestTreeItem =
 	| MergeRequestCategoryItem
@@ -54,7 +54,7 @@ export class MergeRequestsTreeProvider
 	public getTreeItem(
 		element: MergeRequestTreeItem,
 	): vscode.TreeItem {
-		return element;
+		return toVsCodeTreeItem(element);
 	}
 
 	public getChildren(

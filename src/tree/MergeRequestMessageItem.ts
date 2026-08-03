@@ -1,14 +1,12 @@
-import * as vscode from 'vscode';
+import { ITreeItem } from '../infra/tree-item';
 
-export class MergeRequestMessageItem
-	extends vscode.TreeItem
-{
+export class MergeRequestMessageItem implements ITreeItem {
+	readonly label: string;
+	readonly contextValue = 'message';
+	readonly collapsibleState: 'none' = 'none';
+
 	public constructor(message: string) {
-		super(message);
-
-		this.contextValue = 'message';
-		this.collapsibleState =
-			vscode.TreeItemCollapsibleState.None;
+		this.label = message;
 	}
 
 	public getChildren(): never[] {

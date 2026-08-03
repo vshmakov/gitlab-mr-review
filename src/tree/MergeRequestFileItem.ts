@@ -1,80 +1,52 @@
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { Command, ITreeItem } from '../infra/tree-item';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
-export class MergeRequestFileItem
-	extends vscode.TreeItem
-{
+export class MergeRequestFileItem implements ITreeItem {
+	readonly label: string;
+	readonly description?: string;
+	readonly tooltip: string;
+	readonly contextValue = 'mergeRequestFile';
+	readonly collapsibleState: 'none' = 'none';
+	readonly command: Command;
+	readonly accessibilityLabel: string;
+
 	public constructor(
 		mergeRequest: GitLabMergeRequest,
 		file: GitLabMergeRequestFile,
 	) {
 		const fileName = path.basename(file.path);
 		const directory = path.dirname(file.path);
-		const prefix = MergeRequestFileItem.getFilePrefix(
-			file,
-		);
+		const prefix = getFilePrefix(file);
 
-		super(
-			`${prefix} ${fileName}`,
-			vscode.TreeItemCollapsibleState.None,
-		);
-
-		this.description =
-			directory === '.'
-				? undefined
-				: directory;
-
-		this.accessibilityInformation = {
-			label: `${prefix} ${fileName}`,
-			role: 'treeitem',
-		};
-
-		this.tooltip =
-			MergeRequestFileItem.getFileTooltip(file);
-
-		this.contextValue = 'mergeRequestFile';
+		this.label = `${prefix} ${fileName}`;
+		this.description = directory === '.' ? undefined : directory;
+		this.tooltip = getFileTooltip(file);
+		this.accessibilityLabel = `${prefix} ${fileName}`;
 
 		this.command = {
 			command: 'gitlabMrReview.openFilePatch',
 			title: 'Open File Patch',
-			arguments: [{
-				mergeRequest,
-				file,
-			}],
+			arguments: [{ mergeRequest, file }],
 		};
-	}
-
-	private static getFilePrefix(
-		file: GitLabMergeRequestFile,
-	): string {
-		if (file.added) {
-			return 'A';
-		}
-
-		if (file.deleted) {
-			return 'D';
-		}
-
-		if (file.renamed) {
-			return 'R';
-		}
-
-		return 'M';
-	}
-
-	private static getFileTooltip(
-		file: GitLabMergeRequestFile,
-	): string {
-		if (file.renamed) {
-			return `${file.oldPath} → ${file.newPath}`;
-		}
-
-		return file.path;
 	}
 
 	public getChildren(): never[] {
 		return [];
 	}
+}
+
+function getFilePrefix(file: GitLabMergeRequestFile): string {
+	if (file.added) return 'A';
+	if (file.deleted) return 'D';
+	if (file.renamed) return 'R';
+	return 'M';
+}
+
+function getFileTooltip(file: GitLabMergeRequestFile): string {
+	if (file.renamed) {
+		return `${file.oldPath} → ${file.newPath}`;
+	}
+	return file.path;
 }

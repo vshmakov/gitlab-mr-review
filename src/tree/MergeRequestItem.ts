@@ -1,5 +1,5 @@
-import * as vscode from 'vscode';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { ITreeItem } from '../infra/tree-item';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
 import { MergeRequestApprovedItem } from './ReviewerListTreeItem';
 import { MergeRequestChangesItem } from './MergeRequestChangesItem';
@@ -23,40 +23,31 @@ export type MergeRequestCategory =
 	| 'missed'
 	| 'my';
 
-export class MergeRequestItem
-	extends vscode.TreeItem
-{
+export class MergeRequestItem implements ITreeItem {
+	readonly label: string;
+	readonly description: string;
+	readonly tooltip: string;
+	readonly contextValue = 'mergeRequest';
+	readonly collapsibleState: 'collapsed' = 'collapsed';
+	readonly icon = { name: 'git-pull-request' };
+	readonly command: { command: string; title: string; arguments: unknown[] };
+
 	public constructor(
-		public readonly mergeRequest:
-			GitLabMergeRequest,
+		public readonly mergeRequest: GitLabMergeRequest,
 		private readonly store: MergeRequestsStore,
 	) {
-		super(
-			`!${mergeRequest.iid} ${mergeRequest.title}`,
-			vscode.TreeItemCollapsibleState.Collapsed,
-		);
-
+		this.label = `!${mergeRequest.iid} ${mergeRequest.title}`;
 		this.description =
 			`${mergeRequest.author?.name ?? 'not specified'} ` +
 			`${mergeRequest.references?.full ?? ''}`.trim();
 
-		this.tooltip = new vscode.MarkdownString(
-			[
-				`**${mergeRequest.title}**`,
-				'',
-				`Author: ${
-					mergeRequest.author?.name ??
-					'not specified'
-				}`,
-				'',
-				`Updated: ${mergeRequest.updated_at}`,
-			].join('\n'),
-		);
-
-		this.contextValue = 'mergeRequest';
-
-		this.iconPath =
-			new vscode.ThemeIcon('git-pull-request');
+		this.tooltip = [
+			`**${mergeRequest.title}**`,
+			'',
+			`Author: ${mergeRequest.author?.name ?? 'not specified'}`,
+			'',
+			`Updated: ${mergeRequest.updated_at}`,
+		].join('\n');
 
 		this.command = {
 			command: 'gitlabMrReview.openMergeRequest',

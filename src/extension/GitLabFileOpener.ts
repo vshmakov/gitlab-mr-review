@@ -1,10 +1,9 @@
-import * as vscode from 'vscode';
-
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 import { UnifiedDiffParser } from '../review/diff/unified-diff-parser';
-import { OpenedDiffStore } from '../review/OpenedDiffStore';
-import { GitLabCommentController } from './GitLabCommentController';
+import { Notifier } from '../infra/notifier';
+import { DocumentService } from '../infra/document-service';
+import { UriOpener } from '../infra/uri-opener';
 
 export interface OpenFilePatchCommandArguments {
 	mergeRequest: GitLabMergeRequest;
@@ -12,65 +11,40 @@ export interface OpenFilePatchCommandArguments {
 }
 
 export class GitLabFileOpener {
-	private readonly unifiedDiffParser: UnifiedDiffParser;
-
-	private readonly openedDiffStore: OpenedDiffStore;
-
-	private readonly commentController: GitLabCommentController;
-
 	public constructor(
-		unifiedDiffParser: UnifiedDiffParser,
-		openedDiffStore: OpenedDiffStore,
-		commentController: GitLabCommentController,
-	) {
-		this.unifiedDiffParser = unifiedDiffParser;
-		this.openedDiffStore = openedDiffStore;
-		this.commentController = commentController;
-	}
+		private readonly uriOpener: UriOpener,
+		private readonly notifier: Notifier,
+		private readonly documents: DocumentService,
+		private readonly unifiedDiffParser: UnifiedDiffParser,
+	) {}
 
 	public async openMergeRequest(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<void> {
-		await vscode.env.openExternal(
-			vscode.Uri.parse(mergeRequest.web_url),
-		);
+		this.uriOpener.openExternal(mergeRequest.web_url);
 	}
 
 	public async openFilePatch(
 		arguments_: OpenFilePatchCommandArguments,
 	): Promise<void> {
-		const { mergeRequest, file } = arguments_;
+		const { file } = arguments_;
 
 		if (!file.diff.trim()) {
-			void vscode.window.showInformationMessage(
+			this.notifier.showInfo(
 				`Для файла ${file.path} патч отсутствует.`,
 			);
 			return;
 		}
 
 		const patchContent = this.createPatchContent(file);
+		const parsedDiff = this.unifiedDiffParser.parse(patchContent);
 
-		const parsedDiff = this.unifiedDiffParser.parse(
-			patchContent,
+		const document = await this.documents.openVirtualDocument(
+			parsedDiff.text,
+			'diff',
 		);
 
-		const document =
-			await vscode.workspace.openTextDocument({
-				content: parsedDiff.text,
-				language: 'diff',
-			});
-
-		this.openedDiffStore.set(document, {
-			mergeRequest,
-			file,
-			parsedDiff,
-		});
-
-		this.commentController.onDocumentOpened(document);
-
-		await vscode.window.showTextDocument(document, {
-			preview: false,
-		});
+		this.documents.showDocument(document);
 	}
 
 	private createPatchContent(

@@ -1,24 +1,24 @@
-import * as vscode from 'vscode';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { ITreeItem } from '../infra/tree-item';
 import { MergeRequestFileItem } from './MergeRequestFileItem';
 import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
 
-export class MergeRequestChangesItem
-	extends vscode.TreeItem
-{
+export class MergeRequestChangesItem implements ITreeItem {
+	readonly label: string;
+	readonly contextValue = 'changes';
+	readonly collapsibleState: 'collapsed' = 'collapsed';
+	readonly icon = { name: 'list' };
+
 	public constructor(
 		private readonly mergeRequest: GitLabMergeRequest,
 		private readonly store: MergeRequestsStore,
 		private readonly fileCount?: number,
 	) {
-		super(
-			fileCount !== undefined ? `Changes (${fileCount})` : 'Changes',
-			vscode.TreeItemCollapsibleState.Collapsed,
-		);
-
-		this.contextValue = 'changes';
-		this.iconPath = new vscode.ThemeIcon('list');
+		this.label =
+			fileCount !== undefined
+				? `Changes (${fileCount})`
+				: 'Changes';
 	}
 
 	public getChildren(): (MergeRequestFileItem | MergeRequestMessageItem)[] {

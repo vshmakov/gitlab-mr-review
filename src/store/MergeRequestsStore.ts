@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
+import { Notifier } from '../infra/notifier';
 import { GitLabApprovalData } from '../model/GitLabApprovalData';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { MergeRequestCategory } from '../tree/MergeRequestItem';
@@ -55,14 +56,16 @@ export class MergeRequestsStore {
 	public readonly approvalStore: MergeRequestApprovalStore;
 
 	public constructor(
-		private readonly clientFactory:
-			GitLabClientFactory,
+		private readonly clientFactory: GitLabClientFactory,
+		private readonly notifier: Notifier,
 	) {
 		this.files = new MergeRequestFilesStore(
 			clientFactory,
+			notifier,
 		);
 		this.approvalStore = new MergeRequestApprovalStore(
 			clientFactory,
+			notifier,
 		);
 	}
 
@@ -139,7 +142,7 @@ export class MergeRequestsStore {
 			await this.approvalStore.loadApprovalData(mergeRequest);
 		} catch (e: unknown) {
 			const msg = e instanceof Error ? e.message : String(e);
-			void vscode.window.showErrorMessage(
+			this.notifier.showError(
 				`Failed to load approval data for MR !${mergeRequest.iid}: ${msg}`,
 			);
 		}

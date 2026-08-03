@@ -1,5 +1,5 @@
-import * as vscode from 'vscode';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
+import { ITreeItem } from '../infra/tree-item';
 import { MergeRequestCategory, MergeRequestItem } from './MergeRequestItem';
 import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 
@@ -35,23 +35,20 @@ const CATEGORY_CONFIG: Record<MergeRequestCategory, {
 	},
 };
 
-export class MergeRequestCategoryItem
-	extends vscode.TreeItem
-{
+export class MergeRequestCategoryItem implements ITreeItem {
+	readonly label: string;
+	readonly contextValue: string;
+	readonly collapsibleState: 'collapsed' = 'collapsed';
+	readonly icon: { name: string };
+
 	public constructor(
 		public readonly category: MergeRequestCategory,
 		private readonly store: MergeRequestsStore,
 	) {
 		const config = CATEGORY_CONFIG[category];
-
-		super(
-			config.label,
-			vscode.TreeItemCollapsibleState.Collapsed,
-		);
-
-		this.iconPath =
-			new vscode.ThemeIcon(config.icon);
+		this.label = config.label;
 		this.contextValue = config.contextValue;
+		this.icon = { name: config.icon };
 	}
 
 	public getChildren(): (MergeRequestItem | MergeRequestMessageItem)[] {

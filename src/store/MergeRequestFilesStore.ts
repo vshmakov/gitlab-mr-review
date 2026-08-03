@@ -1,7 +1,6 @@
-import * as vscode from 'vscode';
-
 import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
+import { Notifier } from '../infra/notifier';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
@@ -14,8 +13,8 @@ export class MergeRequestFilesStore {
 	private readonly _loadingFiles = new Set<string>();
 
 	public constructor(
-		private readonly clientFactory:
-			GitLabClientFactory,
+		private readonly clientFactory: GitLabClientFactory,
+		private readonly notifier: Notifier,
 	) {}
 
 	private key(mergeRequest: GitLabMergeRequest): string {
@@ -65,7 +64,7 @@ export class MergeRequestFilesStore {
 					? error.message
 					: String(error);
 			console.error('[FilesStore] loadFiles failed:', message);
-			void vscode.window.showErrorMessage(
+			this.notifier.showError(
 				`Не удалось загрузить файлы: ${message}`,
 			);
 			this.clientFactory.clear();

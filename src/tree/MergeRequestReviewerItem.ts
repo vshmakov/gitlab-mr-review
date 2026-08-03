@@ -1,20 +1,20 @@
-import * as vscode from 'vscode';
 import { GitLabApprovalUser } from '../model/GitLabApprovalData';
+import { ITreeItem } from '../infra/tree-item';
 
-export class MergeRequestReviewerItem
-	extends vscode.TreeItem
-{
+export class MergeRequestReviewerItem implements ITreeItem {
+	readonly label: string;
+	readonly description: string;
+	readonly tooltip: string;
+	readonly contextValue = 'reviewer';
+	readonly collapsibleState: 'none' = 'none';
+	readonly icon = { name: 'person' };
+	readonly accessibilityLabel: string;
+
 	public constructor(user: GitLabApprovalUser) {
-		super(user.name, vscode.TreeItemCollapsibleState.None);
-
+		this.label = user.name;
 		this.description = user.username;
 		this.tooltip = `@${user.username}`;
-		this.contextValue = 'reviewer';
-		this.iconPath = new vscode.ThemeIcon('person');
-		this.accessibilityInformation = {
-			label: `${user.name} (@${user.username})`,
-			role: 'treeitem',
-		};
+		this.accessibilityLabel = `${user.name} (@${user.username})`;
 	}
 
 	public getChildren(): never[] {

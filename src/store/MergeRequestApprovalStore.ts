@@ -1,7 +1,5 @@
-import * as vscode from 'vscode';
-
-import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
+import { Notifier } from '../infra/notifier';
 import { GitLabApprovalData } from '../model/GitLabApprovalData';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 
@@ -14,8 +12,8 @@ export class MergeRequestApprovalStore {
 	private readonly _loading = new Set<string>();
 
 	public constructor(
-		private readonly clientFactory:
-			GitLabClientFactory,
+		private readonly clientFactory: GitLabClientFactory,
+		private readonly notifier: Notifier,
 	) {}
 
 	private key(mergeRequest: GitLabMergeRequest): string {
@@ -57,7 +55,7 @@ export class MergeRequestApprovalStore {
 			this.clientFactory.clear();
 			const origMsg = e instanceof Error ? e.message : String(e);
 			console.error(`[ApprovalStore MR !${mergeRequest.iid}] Failed:`, origMsg);
-			void vscode.window.showErrorMessage(
+			this.notifier.showError(
 				`Не удалось загрузить данные рецензий: ${origMsg}`,
 			);
 			throw new Error(

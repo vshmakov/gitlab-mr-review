@@ -1,7 +1,6 @@
-import * as vscode from 'vscode';
-
 import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
+import { Notifier } from '../infra/notifier';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
@@ -17,6 +16,7 @@ export interface DiffCommentData {
 export class GitLabCommentService {
 	public constructor(
 		private readonly clientFactory: GitLabClientFactory,
+		private readonly notifier: Notifier,
 	) {}
 
 	public async handleComment(
@@ -24,7 +24,7 @@ export class GitLabCommentService {
 	): Promise<void> {
 		const client = await this.clientFactory.create();
 		if (!client) {
-			void vscode.window.showWarningMessage(
+			this.notifier.showWarning(
 				'GitLab клиент не инициализирован.',
 			);
 			return;
@@ -37,14 +37,13 @@ export class GitLabCommentService {
 
 		const noteClient = await this.clientFactory.createNoteClient();
 		if (!noteClient) {
-			void vscode.window.showWarningMessage(
+			this.notifier.showWarning(
 				'GitLab клиент не инициализирован.',
 			);
 			return;
 		}
 
 		try {
-
 			const note = await noteClient.createDraftNote(
 				mergeRequest,
 				data.file,
@@ -53,7 +52,7 @@ export class GitLabCommentService {
 				data.newLine,
 			);
 
-			void vscode.window.showInformationMessage(
+			this.notifier.showInfo(
 				`Черновик создан (note #${note.id})`,
 			);
 		} catch (error: unknown) {
@@ -64,7 +63,7 @@ export class GitLabCommentService {
 
 			console.error('[CommentService] error:', message);
 
-			void vscode.window.showErrorMessage(
+			this.notifier.showError(
 				`Не удалось создать черновик: ${message}`,
 			);
 		}

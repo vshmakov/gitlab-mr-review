@@ -1,9 +1,12 @@
-import * as vscode from 'vscode';
-
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { MergeRequestsTreeProvider } from '../tree/MergeRequestsTreeProvider';
 import { TOKEN_SECRET_KEY } from '../infra/constants';
 import { normalizeBaseUrl } from '../infra/url-utils';
+import { SecretStorage } from '../infra/secret-storage';
+import { Configuration } from '../infra/configuration';
+import { Notifier } from '../infra/notifier';
+import { Input } from '../infra/input';
+import { Progress } from '../infra/progress';
 
 export class GitLabAuthenticationService {
 	private static readonly CONFIGURATION_SECTION =
@@ -12,9 +15,12 @@ export class GitLabAuthenticationService {
 	private static readonly URL_CONFIGURATION_KEY = 'url';
 
 	public constructor(
-		private readonly context: vscode.ExtensionContext,
-		private readonly treeProvider:
-			MergeRequestsTreeProvider,
+		private readonly secrets: SecretStorage,
+		private readonly config: Configuration,
+		private readonly notifier: Notifier,
+		private readonly input: Input,
+		private readonly progress: Progress,
+		private readonly treeProvider: MergeRequestsTreeProvider,
 		private readonly clientFactory: GitLabClientFactory,
 	) {}
 
@@ -25,14 +31,7 @@ export class GitLabAuthenticationService {
 			return;
 		}
 
-		await vscode.window.withProgress(
-			{
-				location:
-					vscode.ProgressLocation.Notification,
-				title:
-					'GitLab: выполняется аутентификация...',
-				cancellable: false,
-			},
+		await this.progress.withProgress(
 			async () =>
 				this.performAuthentication(
 					credentials.baseUrl,
@@ -42,27 +41,23 @@ export class GitLabAuthenticationService {
 	}
 
 	public async logout(): Promise<void> {
-		await this.context.secrets.delete(TOKEN_SECRET_KEY);
+		await this.secrets.delete(TOKEN_SECRET_KEY);
 		this.clientFactory.clear();
 		this.treeProvider.refresh();
 
-		void vscode.window.showInformationMessage(
-			'Выход из GitLab выполнен.',
-		);
+		this.notifier.showInfo('Выход из GitLab выполнен.');
 	}
 
 	private async requestCredentials(): Promise<
 		GitLabCredentials | undefined
 	> {
-		const configuration = this.getConfiguration();
-
-		const enteredUrl = await vscode.window.showInputBox({
+		const enteredUrl = await this.input.showInputBox({
 			title: 'GitLab Authentication',
 			prompt: 'Введите URL GitLab',
 			placeHolder: 'https://gitlab.example.com',
-			value: configuration.get<string>(
-				GitLabAuthenticationService
-					.URL_CONFIGURATION_KEY,
+			value: this.config.get<string>(
+				GitLabAuthenticationService.CONFIGURATION_SECTION,
+				GitLabAuthenticationService.URL_CONFIGURATION_KEY,
 				'',
 			),
 			ignoreFocusOut: true,
@@ -74,13 +69,12 @@ export class GitLabAuthenticationService {
 			return undefined;
 		}
 
-		const enteredToken =
-			await vscode.window.showInputBox({
-				title: 'GitLab Authentication',
-				prompt: 'Введите Personal Access Token',
-				password: true,
-				ignoreFocusOut: true,
-			});
+		const enteredToken = await this.input.showInputBox({
+			title: 'GitLab Authentication',
+			prompt: 'Введите Personal Access Token',
+			password: true,
+			ignoreFocusOut: true,
+		});
 
 		const token = enteredToken?.trim();
 
@@ -88,10 +82,7 @@ export class GitLabAuthenticationService {
 			return undefined;
 		}
 
-		return {
-			baseUrl,
-			token,
-		};
+		return { baseUrl, token };
 	}
 
 	private async performAuthentication(
@@ -104,9 +95,7 @@ export class GitLabAuthenticationService {
 		);
 
 		if (!success) {
-			this.showAuthenticationError(
-				'Неверный URL или токен.',
-			);
+			this.showAuthenticationError('Неверный URL или токен.');
 			return;
 		}
 
@@ -115,7 +104,7 @@ export class GitLabAuthenticationService {
 		const client = await this.clientFactory.create();
 		if (client) {
 			const user = await client.getCurrentUser();
-			void vscode.window.showInformationMessage(
+			this.notifier.showInfo(
 				`GitLab: выполнен вход как ` +
 					`${user.name} (@${user.username}).`,
 			);
@@ -128,40 +117,27 @@ export class GitLabAuthenticationService {
 		baseUrl: string,
 		token: string,
 	): Promise<void> {
-		await this.getConfiguration().update(
-			GitLabAuthenticationService
-				.URL_CONFIGURATION_KEY,
+		await this.config.update(
+			GitLabAuthenticationService.CONFIGURATION_SECTION,
+			GitLabAuthenticationService.URL_CONFIGURATION_KEY,
 			baseUrl,
-			vscode.ConfigurationTarget.Global,
 		);
 
-		await this.context.secrets.store(
-			TOKEN_SECRET_KEY,
-			token,
-		);
-	}
-
-	private getConfiguration(): vscode.WorkspaceConfiguration {
-		return vscode.workspace.getConfiguration(
-			GitLabAuthenticationService
-				.CONFIGURATION_SECTION,
-		);
+		await this.secrets.store(TOKEN_SECRET_KEY, token);
 	}
 
 	private normalizeUrl(
 		value: string | undefined,
 	): string | undefined {
 		const trimmedValue = value?.trim();
-
 		if (!trimmedValue) {
 			return undefined;
 		}
-
 		return normalizeBaseUrl(trimmedValue);
 	}
 
 	private showAuthenticationError(message: string): void {
-		void vscode.window.showErrorMessage(
+		this.notifier.showError(
 			`Ошибка аутентификации GitLab: ${message}`,
 		);
 	}

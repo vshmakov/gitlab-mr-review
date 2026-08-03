@@ -1,32 +1,30 @@
-import * as vscode from 'vscode';
 import { GitLabApprovalData } from '../model/GitLabApprovalData';
+import { ITreeItem } from '../infra/tree-item';
 import { MergeRequestReviewerItem } from './MergeRequestReviewerItem';
 
 export interface ReviewerListConfig {
 	label: string;
 	contextValue: string;
 	iconName: string;
-	iconColor: vscode.ThemeColor;
+	iconColor: string;
 	getReviewers(data: GitLabApprovalData): { name: string; username: string }[];
 }
 
-export class ReviewerListTreeItem extends vscode.TreeItem {
+export class ReviewerListTreeItem implements ITreeItem {
+	readonly label: string;
+	readonly contextValue: string;
+	readonly collapsibleState: 'none' | 'collapsed';
+	readonly icon: { name: string; color: string };
 	private readonly _reviewers: { name: string; username: string }[];
 
 	public constructor(config: ReviewerListConfig, approvalData: GitLabApprovalData) {
-		const reviewers = config.getReviewers(approvalData);
-		const count = reviewers.length;
+		this._reviewers = config.getReviewers(approvalData);
+		const count = this._reviewers.length;
 
-		super(
-			`${config.label} (${count})`,
-			count > 0
-				? vscode.TreeItemCollapsibleState.Collapsed
-				: vscode.TreeItemCollapsibleState.None,
-		);
-
-		this._reviewers = reviewers;
+		this.label = `${config.label} (${count})`;
 		this.contextValue = config.contextValue;
-		this.iconPath = new vscode.ThemeIcon(config.iconName, config.iconColor);
+		this.collapsibleState = count > 0 ? 'collapsed' : 'none';
+		this.icon = { name: config.iconName, color: config.iconColor };
 	}
 
 	public getChildren(): MergeRequestReviewerItem[] {
@@ -43,7 +41,7 @@ const approvedConfig: ReviewerListConfig = {
 	label: 'Approved',
 	contextValue: 'approved',
 	iconName: 'check',
-	iconColor: new vscode.ThemeColor('charts.green'),
+	iconColor: 'charts.green',
 	getReviewers: (data) => data.approvedBy,
 };
 
@@ -51,7 +49,7 @@ const requestedChangesConfig: ReviewerListConfig = {
 	label: 'Requested Changes',
 	contextValue: 'requestedChanges',
 	iconName: 'warning',
-	iconColor: new vscode.ThemeColor('charts.yellow'),
+	iconColor: 'charts.yellow',
 	getReviewers: (data) => data.requestedChanges,
 };
 

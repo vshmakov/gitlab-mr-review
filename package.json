@@ -117,7 +117,9 @@
     "watch": "tsc -watch -p ./",
     "lint": "eslint src",
     "test": "jest --passWithNoTests --testPathIgnorePatterns=tests/contract",
-    "test:contract": "jest tests/contract --passWithNoTests"
+    "test:contract": "jest tests/contract --passWithNoTests",
+    "rebuild": "npm run compile && npm run test",
+    "install-ext": "npm run compile && npm run test && npx vsce package && code --install-extension ./gitlab-mr-review-*.vsix && rm -f *.vsix"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

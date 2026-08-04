@@ -4,18 +4,12 @@ import { Command, ITreeItem } from './tree-item';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
 export class MergeRequestFileItem implements ITreeItem {
-	public get contextValue(): string {
-		return this._getReviewed()
-			? 'mergeRequestFile.reviewed'
-			: 'mergeRequestFile';
-	}
+	readonly description: string | undefined;
 	readonly collapsibleState: 'none' = 'none';
 	readonly command: Command;
-	readonly accessibilityLabel: string;
 
 	private readonly _baseLabel: string;
 	private readonly _baseTooltip: string;
-	private readonly _description: string | undefined;
 
 	public constructor(
 		public readonly mergeRequest: GitLabMergeRequest | null,
@@ -28,8 +22,7 @@ export class MergeRequestFileItem implements ITreeItem {
 
 		this._baseLabel = `${prefix} ${fileName}`;
 		this._baseTooltip = getFileTooltip(file);
-		this._description = directory === '.' ? undefined : directory;
-		this.accessibilityLabel = `${prefix} ${fileName}`;
+		this.description = directory === '.' ? undefined : directory;
 
 		this.command = {
 			command: 'gitlabMrReview.openFilePatch',
@@ -39,15 +32,23 @@ export class MergeRequestFileItem implements ITreeItem {
 	}
 
 	public get label(): string {
-		return this._getReviewed() ? `[R] ${this._baseLabel}` : this._baseLabel;
+		return this._getReviewed() ? `* ${this._baseLabel}` : this._baseLabel;
 	}
 
 	public get tooltip(): string {
-		return this._getReviewed() ? `[R] ${this._baseTooltip}` : this._baseTooltip;
+		return this._baseTooltip;
 	}
 
-	public get description(): string | undefined {
-		return this._description;
+	public get contextValue(): string {
+		return this._getReviewed()
+			? 'mergeRequestFile.reviewed'
+			: 'mergeRequestFile';
+	}
+
+	public get accessibilityLabel(): string {
+		return this._getReviewed()
+			? `* ${this._baseLabel}`
+			: this._baseLabel;
 	}
 
 	public getReviewed(): boolean {

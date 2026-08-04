@@ -44,14 +44,17 @@ export class MergeRequestChangesItem implements ITreeItem {
 						this.mergeRequest,
 						reviewedFiles,
 						reviewedFiles.length,
+						this.store,
 					),
 				);
 			}
 
 			result.push(
 				...unreviewedFiles.map((f) =>
-					new MergeRequestFileItem(this.mergeRequest, f, () =>
-						this.store.reviewed.isReviewed(this.mergeRequest, f),
+					new MergeRequestFileItem(
+						this.mergeRequest,
+						f,
+						MergeRequestFileItem.isReviewed(this.store, this.mergeRequest, f),
 					),
 				),
 			);

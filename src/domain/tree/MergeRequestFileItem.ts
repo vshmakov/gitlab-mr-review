@@ -31,6 +31,14 @@ export class MergeRequestFileItem implements ITreeItem {
 		};
 	}
 
+	static isReviewed(
+		store: { reviewed: { isReviewed: (mr: GitLabMergeRequest, f: GitLabMergeRequestFile) => boolean } },
+		mr: GitLabMergeRequest,
+		file: GitLabMergeRequestFile,
+	): () => boolean {
+		return () => store.reviewed.isReviewed(mr, file);
+	}
+
 	public get label(): string {
 		return this._getReviewed() ? `* ${this._baseLabel}` : this._baseLabel;
 	}

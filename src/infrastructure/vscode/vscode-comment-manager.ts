@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import { CommentManager, CommentContext } from '../../domain/interfaces/comment-manager';
+import { CommentManager, CommentContext, CommentLine } from '../../domain/interfaces/comment-manager';
 import { TextDocument } from '../../domain/interfaces/document-service';
 import { Notifier } from '../../domain/interfaces/notifier';
 
 interface VsCodeCommentContext {
-	parsedDiff: { lines: { documentLine: number; commentable: boolean; oldLine?: number; newLine?: number }[] };
 	mergeRequest: CommentContext['mergeRequest'];
 	file: CommentContext['file'];
+	lines: CommentLine[];
 	threads: vscode.CommentThread[];
 }
 
@@ -32,9 +32,9 @@ export class VsCodeCommentManager implements CommentManager {
 
 	setContext(document: TextDocument, context: CommentContext): void {
 		const vsCodeContext: VsCodeCommentContext = {
-			parsedDiff: { lines: context.lines },
 			mergeRequest: context.mergeRequest,
 			file: context.file,
+			lines: context.lines,
 			threads: [],
 		};
 		this.contexts.set(document.uri, vsCodeContext);
@@ -42,7 +42,6 @@ export class VsCodeCommentManager implements CommentManager {
 
 	onDocumentOpened(document: TextDocument, _context: CommentContext): void {
 		const uri = vscode.Uri.parse(document.uri);
-		// Trigger VS Code to re-evaluate commenting ranges
 		this.controller.createCommentThread(uri, new vscode.Range(0, 0, 0, 0), []);
 	}
 
@@ -56,9 +55,8 @@ export class VsCodeCommentManager implements CommentManager {
 			return false;
 		}
 
-		const parsedLine = context.parsedDiff.lines[line];
+		const parsedLine = context.lines[line];
 		if (!parsedLine || !parsedLine.commentable) {
-			this.notifier.showWarning('Эта строка не поддерживает комментарии');
 			return false;
 		}
 
@@ -89,7 +87,7 @@ export class VsCodeCommentManager implements CommentManager {
 		if (!context) return undefined;
 
 		const ranges: vscode.Range[] = [];
-		for (const line of context.parsedDiff.lines) {
+		for (const line of context.lines) {
 			if (line.commentable) {
 				ranges.push(
 					new vscode.Range(

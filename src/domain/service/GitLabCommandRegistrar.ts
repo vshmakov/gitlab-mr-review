@@ -113,7 +113,12 @@ export class GitLabCommandRegistrar {
 				}
 
 				// TODO: get line from selection
-				await this.comments.addComment(document, 0, text);
+				const success = await this.comments.addComment(document, 0, text);
+				if (!success) {
+					this.notifier.showWarning(
+						'Эта строка не поддерживает комментарии',
+					);
+				}
 			},
 		);
 	}

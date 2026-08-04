@@ -18,3 +18,11 @@ export interface ITreeItem {
 
 	getChildren?(): ITreeItem[];
 }
+
+export const CATEGORIES = [
+	'my',
+	'needsReview',
+	'requestedChanges',
+	'approved',
+	'missed',
+] as const;

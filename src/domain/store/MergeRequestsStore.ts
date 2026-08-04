@@ -37,6 +37,17 @@ const CATEGORY_PROGRESS_TITLE: Record<MergeRequestCategory, string> = {
 	my: 'Loading My MRs...',
 };
 
+export type MergeRequestsChangeType =
+	| 'category'
+	| 'mergeRequest'
+	| 'refresh';
+
+export interface MergeRequestsChange {
+	type: MergeRequestsChangeType;
+	category?: MergeRequestCategory;
+	mergeRequest?: GitLabMergeRequest;
+}
+
 export type LoadingState =
 	| 'idle'
 	| MergeRequestCategory
@@ -55,8 +66,8 @@ export class MergeRequestsStore {
 
 	private _error: string | undefined;
 
-	private readonly changeEmitter: EventEmitter<void> =
-		createEventEmitter<void>();
+	private readonly changeEmitter: EventEmitter<MergeRequestsChange> =
+		createEventEmitter<MergeRequestsChange>();
 
 	public readonly onDidChange =
 		this.changeEmitter.event;
@@ -161,7 +172,7 @@ export class MergeRequestsStore {
 					`Failed to load approval data for MR !${mergeRequest.iid}: ${msg}`,
 				);
 			}
-			this.changeEmitter.fire();
+			this.changeEmitter.fire({ type: 'mergeRequest', mergeRequest });
 		};
 
 		if (this.progress) {
@@ -203,7 +214,7 @@ export class MergeRequestsStore {
 
 		this._loading = category;
 		this._error = undefined;
-		this.notify();
+		this.notifyCategory(category);
 
 		const load = async () => {
 			try {
@@ -216,7 +227,7 @@ export class MergeRequestsStore {
 					: String(e);
 			} finally {
 				this._loading = 'idle';
-				this.notify();
+				this.notifyCategory(category);
 			}
 		};
 
@@ -232,7 +243,7 @@ export class MergeRequestsStore {
 	): Promise<void> {
 		this._loading = 'files';
 		this._error = undefined;
-		this.notify();
+		this.notifyMergeRequest(mergeRequest);
 
 		try {
 			await this.files.loadFiles(mergeRequest);
@@ -242,7 +253,7 @@ export class MergeRequestsStore {
 				: String(e);
 		} finally {
 			this._loading = 'idle';
-			this.notify();
+			this.notifyMergeRequest(mergeRequest);
 		}
 	}
 
@@ -252,7 +263,7 @@ export class MergeRequestsStore {
 		this.files.refresh();
 		this.approvalStore.refresh();
 		this._error = undefined;
-		this.notify();
+		this.notifyRefresh();
 	}
 
 
@@ -276,6 +287,18 @@ export class MergeRequestsStore {
 	}
 
 	private notify(): void {
-		this.changeEmitter.fire();
+		this.changeEmitter.fire({ type: 'refresh' });
+	}
+
+	private notifyCategory(category: MergeRequestCategory): void {
+		this.changeEmitter.fire({ type: 'category', category });
+	}
+
+	private notifyMergeRequest(mergeRequest: GitLabMergeRequest): void {
+		this.changeEmitter.fire({ type: 'mergeRequest', mergeRequest });
+	}
+
+	private notifyRefresh(): void {
+		this.changeEmitter.fire({ type: 'refresh' });
 	}
 }

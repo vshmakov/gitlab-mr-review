@@ -225,14 +225,10 @@ export class MergeRequestsStore {
 		this._loadedCategories.clear();
 		this.files.refresh();
 		this.approvalStore.refresh();
-		this.reviewed.refresh();
 		this._error = undefined;
 		this.notify();
 	}
 
-	public notifyTree(): void {
-		this.changeEmitter.fire();
-	}
 
 	private async fetchByCategory(
 		category: MergeRequestCategory,

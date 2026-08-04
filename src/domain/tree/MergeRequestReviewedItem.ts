@@ -6,10 +6,11 @@ import { MergeRequestFileItem } from './MergeRequestFileItem';
 export class MergeRequestReviewedItem implements ITreeItem {
     readonly label: string;
     readonly contextValue = 'reviewed';
-    readonly collapsibleState: 'expanded' = 'expanded';
+    readonly collapsibleState: 'collapsed' = 'collapsed';
     readonly icon = { name: 'check' };
 
     public constructor(
+        private readonly mergeRequest: GitLabMergeRequest,
         private readonly files: GitLabMergeRequestFile[],
         private readonly fileCount: number,
     ) {
@@ -17,6 +18,6 @@ export class MergeRequestReviewedItem implements ITreeItem {
     }
 
     public getChildren(): MergeRequestFileItem[] {
-        return this.files.map((f) => new MergeRequestFileItem(null as any, f, true));
+        return this.files.map((f) => new MergeRequestFileItem(this.mergeRequest, f, true));
     }
 }

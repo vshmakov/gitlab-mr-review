@@ -257,8 +257,8 @@ describe('Tree: MergeRequestChangesItem with Reviewed', () => {
 		const children = item.getChildren();
 
 		expect(children).toHaveLength(2);
-		expect(children[0]).toBeInstanceOf(MergeRequestFileItem);
-		expect(children[1]).toBeInstanceOf(MergeRequestReviewedItem);
+		expect(children[0]).toBeInstanceOf(MergeRequestReviewedItem);
+		expect(children[1]).toBeInstanceOf(MergeRequestFileItem);
 	});
 
 	it('does not show Reviewed when no files are reviewed', () => {
@@ -277,7 +277,6 @@ describe('Tree: MergeRequestChangesItem with Reviewed', () => {
 
 		expect(children).toHaveLength(1);
 		expect(children[0]).toBeInstanceOf(MergeRequestFileItem);
-		expect(children[0]).not.toBeInstanceOf(MergeRequestReviewedItem);
 	});
 });
 
@@ -286,7 +285,7 @@ describe('Tree: MergeRequestReviewedItem', () => {
 		const files = [
 			{ path: 'src/a.ts', oldPath: 'src/a.ts', newPath: 'src/a.ts', diff: '+a', added: false, deleted: false, renamed: false },
 		];
-		const item = new MergeRequestReviewedItem(files, 1);
+		const item = new MergeRequestReviewedItem({} as any, files, 1);
 		expect(item.label).toBe('Reviewed (1)');
 	});
 
@@ -294,7 +293,7 @@ describe('Tree: MergeRequestReviewedItem', () => {
 		const files = [
 			{ path: 'src/a.ts', oldPath: 'src/a.ts', newPath: 'src/a.ts', diff: '+a', added: false, deleted: false, renamed: false },
 		];
-		const item = new MergeRequestReviewedItem(files, 1);
+		const item = new MergeRequestReviewedItem({} as any, files, 1);
 		const children = item.getChildren();
 
 		expect(children).toHaveLength(1);

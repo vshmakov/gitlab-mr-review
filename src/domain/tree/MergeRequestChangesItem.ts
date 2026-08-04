@@ -8,7 +8,7 @@ import { MergeRequestsStore } from '../store/MergeRequestsStore';
 export class MergeRequestChangesItem implements ITreeItem {
 	readonly label: string;
 	readonly contextValue = 'changes';
-	readonly collapsibleState: 'expanded' = 'expanded';
+	readonly collapsibleState: 'collapsed' = 'collapsed';
 	readonly icon = { name: 'list' };
 
 	public constructor(
@@ -37,19 +37,23 @@ export class MergeRequestChangesItem implements ITreeItem {
 				(f) => !this.store.reviewed.isReviewed(this.mergeRequest, f),
 			);
 
-			const result: (MergeRequestFileItem | MergeRequestReviewedItem)[] =
-				unreviewedFiles.map((f) =>
-					new MergeRequestFileItem(this.mergeRequest, f),
-				);
+			const result: (MergeRequestReviewedItem | MergeRequestFileItem)[] = [];
 
 			if (reviewedFiles.length > 0) {
 				result.push(
 					new MergeRequestReviewedItem(
+						this.mergeRequest,
 						reviewedFiles,
 						reviewedFiles.length,
 					),
 				);
 			}
+
+			result.push(
+				...unreviewedFiles.map((f) =>
+					new MergeRequestFileItem(this.mergeRequest, f),
+				),
+			);
 
 			return result;
 		}

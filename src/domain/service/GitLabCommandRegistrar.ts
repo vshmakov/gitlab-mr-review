@@ -168,7 +168,7 @@ export class GitLabCommandRegistrar {
 
 				this.store.reviewed.markAsReviewed(item.mergeRequest, item.file);
 				this.reviewedPersistence.save(this.store.reviewed);
-				this.notifier.showInfo(`Marked as reviewed: ${item.file.path}`);
+				this.treeProvider.refreshFile(item);
 			},
 		);
 	}
@@ -184,7 +184,7 @@ export class GitLabCommandRegistrar {
 
 				this.store.reviewed.unmarkAsReviewed(item.mergeRequest, item.file);
 				this.reviewedPersistence.save(this.store.reviewed);
-				this.notifier.showInfo(`Marked as unreviewed: ${item.file.path}`);
+				this.treeProvider.refreshFile(item);
 			},
 		);
 	}

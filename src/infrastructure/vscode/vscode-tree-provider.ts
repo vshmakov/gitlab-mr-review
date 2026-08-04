@@ -54,10 +54,23 @@ export class MergeRequestsTreeProvider
 		this.store.refresh();
 	}
 
+	public refreshFile(fileItem: MergeRequestFileItem): void {
+		this.changeEmitter.fire(fileItem);
+	}
+
 	public getTreeItem(
 		element: MergeRequestTreeItem,
 	): vscode.TreeItem {
-		return toVsCodeTreeItem(element);
+		const vscodeItem = toVsCodeTreeItem(element);
+		if (element instanceof MergeRequestFileItem && element.mergeRequest) {
+			const isReviewed = this.store.reviewed.isReviewed(
+				element.mergeRequest, element.file,
+			);
+			vscodeItem.contextValue = isReviewed
+				? 'mergeRequestFile.reviewed'
+				: 'mergeRequestFile';
+		}
+		return vscodeItem;
 	}
 
 	public getChildren(

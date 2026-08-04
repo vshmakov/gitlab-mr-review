@@ -152,15 +152,23 @@ export class MergeRequestsStore {
 	public async loadApprovalData(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<void> {
-		try {
-			await this.approvalStore.loadApprovalData(mergeRequest);
-		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : String(e);
-			this.notifier.showError(
-				`Failed to load approval data for MR !${mergeRequest.iid}: ${msg}`,
-			);
+		const load = async () => {
+			try {
+				await this.approvalStore.loadApprovalData(mergeRequest);
+			} catch (e: unknown) {
+				const msg = e instanceof Error ? e.message : String(e);
+				this.notifier.showError(
+					`Failed to load approval data for MR !${mergeRequest.iid}: ${msg}`,
+				);
+			}
+			this.changeEmitter.fire();
+		};
+
+		if (this.progress) {
+			await this.progress.withProgress(load);
+		} else {
+			await load();
 		}
-		this.changeEmitter.fire();
 	}
 
 

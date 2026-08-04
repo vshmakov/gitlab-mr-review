@@ -117,6 +117,32 @@ describe('PendingReviewService', () => {
 		expect(client.request).not.toHaveBeenCalled();
 	});
 
+	it('handles null state in GraphQL response', async () => {
+		const client = createMockGraphQLClient();
+		client.request.mockResolvedValue({
+			mr0: null,
+		});
+		const service = new PendingReviewService(client);
+		const mrs = [{ id: 1, iid: 1, project_id: 10, project_path: 'g/p' }];
+
+		const result = await service.filterPendingReviews(mrs as any, mockUser as any);
+
+		expect(result).toHaveLength(1);
+	});
+
+	it('batch boundary at exactly 10 items', async () => {
+		const client = createMockGraphQLClient();
+		client.request.mockResolvedValue({});
+		const service = new PendingReviewService(client);
+		const mrs = Array.from({ length: 10 }, (_, i) => ({
+			id: i + 1, iid: i + 1, project_id: 10, project_path: 'g/p',
+		}));
+
+		await service.filterPendingReviews(mrs as any, mockUser as any);
+
+		expect(client.request).toHaveBeenCalledTimes(1);
+	});
+
 	it('enriches project_path from GraphQL response', async () => {
 		const client = createMockGraphQLClient();
 		client.request.mockResolvedValue({

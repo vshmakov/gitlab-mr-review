@@ -71,4 +71,17 @@ describe('GitLabRestClient', () => {
 
 		expect(http.request.mock.calls[0][0]).toBe('https://gitlab.com/api/v4/user');
 	});
+
+	it('post throws on non-ok response', async () => {
+		const http = createMockHttp();
+		http.request.mockResolvedValue({
+			ok: false,
+			status: 403,
+			statusText: 'Forbidden',
+			text: () => 'Access denied',
+		});
+		const client = new GitLabRestClient('https://gitlab.com', 'token123', http);
+
+		await expect(client.post('/api/v4/approve')).rejects.toThrow('403');
+	});
 });

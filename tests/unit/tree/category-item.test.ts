@@ -83,4 +83,40 @@ describe('Tree: MergeRequestCategoryItem', () => {
 		expect(item.collapsibleState).toBe('collapsed');
 		expect(item.icon).toEqual({ name: icon });
 	});
+
+	it('loadCategory calls loadApproved for approved', () => {
+		const store = createMockStore();
+		store.isCategoryLoaded.mockReturnValue(false);
+		store.isCategoryLoading.mockReturnValue(false);
+		const item = new MergeRequestCategoryItem('approved', store);
+		item.getChildren();
+		expect(store.loadApproved).toHaveBeenCalled();
+	});
+
+	it('loadCategory calls loadRequestedChanges for requestedChanges', () => {
+		const store = createMockStore();
+		store.isCategoryLoaded.mockReturnValue(false);
+		store.isCategoryLoading.mockReturnValue(false);
+		const item = new MergeRequestCategoryItem('requestedChanges', store);
+		item.getChildren();
+		expect(store.loadRequestedChanges).toHaveBeenCalled();
+	});
+
+	it('loadCategory calls loadMissedReview for missed', () => {
+		const store = createMockStore();
+		store.isCategoryLoaded.mockReturnValue(false);
+		store.isCategoryLoading.mockReturnValue(false);
+		const item = new MergeRequestCategoryItem('missed', store);
+		item.getChildren();
+		expect(store.loadMissedReview).toHaveBeenCalled();
+	});
+
+	it('loadCategory calls loadMyMergeRequests for my', () => {
+		const store = createMockStore();
+		store.isCategoryLoaded.mockReturnValue(false);
+		store.isCategoryLoading.mockReturnValue(false);
+		const item = new MergeRequestCategoryItem('my', store);
+		item.getChildren();
+		expect(store.loadMyMergeRequests).toHaveBeenCalled();
+	});
 });

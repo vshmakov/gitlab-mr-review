@@ -72,6 +72,19 @@ describe('GitLabGraphQLClient', () => {
 		await expect(client.request('query { mr }')).rejects.toThrow('500');
 	});
 
+	it('joins multiple error messages', async () => {
+		const http = createMockHttp();
+		http.request.mockResolvedValue({
+			ok: true,
+			json: () => ({
+				errors: [{ message: 'Error 1' }, { message: 'Error 2' }],
+			}),
+		});
+		const client = new GitLabGraphQLClient('https://gitlab.com', 'token123', http);
+
+		await expect(client.request('query { mr }')).rejects.toThrow('Error 1; Error 2');
+	});
+
 	it('returns data from response', async () => {
 		const http = createMockHttp();
 		http.request.mockResolvedValue({

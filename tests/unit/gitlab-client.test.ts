@@ -129,4 +129,52 @@ describe('GitLabClient', () => {
 		const mrCall = calls.find(c => c[0].includes('merge_requests'));
 		expect(mrCall[0]).toContain('author_id=1');
 	});
+
+	it('getMissedReviews fetches merged and filters pending', async () => {
+		const { restClient, graphQLClient, pendingReviewService } = createMocks();
+		const mrs = [{ id: 1, iid: 1, project_id: 10, project_path: 'g/p', state: 'merged' }];
+		restClient.get.mockImplementation((path: string) => {
+			if (path.includes('/user')) return Promise.resolve({ id: 1, username: 'alice' });
+			return Promise.resolve(mrs);
+		});
+		pendingReviewService.filterPendingReviews.mockResolvedValue(mrs);
+		const client = new GitLabClient(restClient, graphQLClient, pendingReviewService);
+
+		const result = await client.getMissedReviews();
+
+		expect(pendingReviewService.filterPendingReviews).toHaveBeenCalled();
+		expect(result).toHaveLength(1);
+	});
+
+	it('getApprovedReviews delegates to pendingReviewService', async () => {
+		const { restClient, graphQLClient, pendingReviewService } = createMocks();
+		const mrs = [{ id: 1, iid: 1, project_id: 10, project_path: 'g/p' }];
+		restClient.get.mockImplementation((path: string) => {
+			if (path.includes('/user')) return Promise.resolve({ id: 1, username: 'alice' });
+			return Promise.resolve(mrs);
+		});
+		pendingReviewService.filterApprovedReviews.mockResolvedValue(mrs);
+		const client = new GitLabClient(restClient, graphQLClient, pendingReviewService);
+
+		const result = await client.getApprovedReviews();
+
+		expect(pendingReviewService.filterApprovedReviews).toHaveBeenCalled();
+		expect(result).toHaveLength(1);
+	});
+
+	it('getRequestedChangesReviews delegates to pendingReviewService', async () => {
+		const { restClient, graphQLClient, pendingReviewService } = createMocks();
+		const mrs = [{ id: 1, iid: 1, project_id: 10, project_path: 'g/p' }];
+		restClient.get.mockImplementation((path: string) => {
+			if (path.includes('/user')) return Promise.resolve({ id: 1, username: 'alice' });
+			return Promise.resolve(mrs);
+		});
+		pendingReviewService.filterRequestedChangesReviews.mockResolvedValue(mrs);
+		const client = new GitLabClient(restClient, graphQLClient, pendingReviewService);
+
+		const result = await client.getRequestedChangesReviews();
+
+		expect(pendingReviewService.filterRequestedChangesReviews).toHaveBeenCalled();
+		expect(result).toHaveLength(1);
+	});
 });

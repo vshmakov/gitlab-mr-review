@@ -122,6 +122,31 @@ describe('MergeRequestsStore', () => {
 		expect(listener).toHaveBeenCalledTimes(2);
 	});
 
+	it('legacy getters return cached data', async () => {
+		const { client, clientFactory, notifier } = createMocks();
+		const mrs = [{ id: 1, iid: 1, project_id: 10, project_path: 'g/p' }];
+		client.getPendingReviews.mockResolvedValue(mrs);
+		const store = new MergeRequestsStore(clientFactory, notifier);
+
+		await store.loadPending();
+
+		expect(store.pendingMergeRequests).toEqual(mrs);
+	});
+
+	it('refresh cascades to sub-stores', async () => {
+		const { client, clientFactory, notifier } = createMocks();
+		client.getPendingReviews.mockResolvedValue([]);
+		client.getMergeRequestFiles.mockResolvedValue([]);
+		const store = new MergeRequestsStore(clientFactory, notifier);
+
+		await store.loadPending();
+		await store.loadFiles({ project_id: 10, iid: 42 } as any);
+		store.refresh();
+
+		expect(store.files.hasFiles({ project_id: 10, iid: 42 } as any)).toBe(false);
+		expect(store.approvalStore._cache.size).toBe(0);
+	});
+
 	it('loadFiles sets loading to files', async () => {
 		const { client, clientFactory, notifier } = createMocks();
 		const loadingStates: string[] = [];

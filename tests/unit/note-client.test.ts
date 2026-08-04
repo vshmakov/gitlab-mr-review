@@ -94,4 +94,13 @@ describe('GitLabNoteClient', () => {
 
 		expect(http.request.mock.calls[0][0]).toContain('/api/v4/projects/10/merge_requests/42/notes/123');
 	});
+
+	it('submitNote throws on non-ok response', async () => {
+		const http = createMockHttp();
+		http.request.mockResolvedValue({ ok: false, status: 404, text: () => 'Not found' });
+		const client = new GitLabNoteClient('https://gitlab.com', 'token123', http);
+		const mr = { project_id: 10, iid: 42 };
+
+		await expect(client.submitNote(mr as any, 123)).rejects.toThrow('404');
+	});
 });

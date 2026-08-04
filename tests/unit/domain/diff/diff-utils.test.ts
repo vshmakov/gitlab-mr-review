@@ -1,4 +1,4 @@
-import { createMergeRequestDiffsPath, mapMergeRequestFile } from '../../src/domain/diff/diff-utils';
+import { createMergeRequestDiffsPath, mapMergeRequestFile } from '../../../../src/domain/diff/diff-utils';
 
 describe('createMergeRequestDiffsPath', () => {
 	it('produces correct path with project_id and iid', () => {

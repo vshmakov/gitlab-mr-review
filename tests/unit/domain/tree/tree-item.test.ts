@@ -1,4 +1,4 @@
-import { CATEGORIES } from '../../../src/domain/tree/tree-item';
+import { CATEGORIES } from '../../../../src/domain/tree/tree-item';
 
 describe('CATEGORIES', () => {
 	it('has 5 categories', () => {

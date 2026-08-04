@@ -1,5 +1,5 @@
-import { UnifiedDiffParser } from '../../src/domain/diff/unified-diff-parser';
-import { ParsedDiff } from '../../src/domain/diff/parsed-diff';
+import { UnifiedDiffParser } from '../../../../src/domain/diff/unified-diff-parser';
+import { ParsedDiff } from '../../../../src/domain/diff/parsed-diff';
 
 describe('UnifiedDiffParser', () => {
 	let parser: UnifiedDiffParser;

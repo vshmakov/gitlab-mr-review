@@ -1,4 +1,4 @@
-import { MergeRequestOverviewItem } from '../../../src/domain/tree/MergeRequestOverviewItem';
+import { MergeRequestOverviewItem } from '../../../../src/domain/tree/MergeRequestOverviewItem';
 
 describe('Tree: MergeRequestOverviewItem', () => {
 	it('label without notesCount', () => {

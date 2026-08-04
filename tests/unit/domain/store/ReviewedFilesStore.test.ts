@@ -1,6 +1,6 @@
-import { ReviewedFilesStore } from '../../src/domain/store/ReviewedFilesStore';
-import { GitLabMergeRequest } from '../../src/domain/model/GitLabMergeRequest';
-import { GitLabMergeRequestFile } from '../../src/domain/model/GitLabMergeRequestFile';
+import { ReviewedFilesStore } from '../../../../src/domain/store/ReviewedFilesStore';
+import { GitLabMergeRequest } from '../../../../src/domain/model/GitLabMergeRequest';
+import { GitLabMergeRequestFile } from '../../../../src/domain/model/GitLabMergeRequestFile';
 
 function createMR(): GitLabMergeRequest {
 	return {

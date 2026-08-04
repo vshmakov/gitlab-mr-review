@@ -1,5 +1,5 @@
-import { GitLabClientFactory } from '../../src/domain/client/GitLabClientFactory';
-import { TOKEN_SECRET_KEY } from '../../src/domain/client/constants';
+import { GitLabClientFactory } from '../../../../src/domain/client/GitLabClientFactory';
+import { TOKEN_SECRET_KEY } from '../../../../src/domain/client/constants';
 
 function createMocks() {
 	const secrets = {

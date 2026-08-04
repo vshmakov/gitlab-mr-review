@@ -1,4 +1,4 @@
-import { normalizeBaseUrl } from '../../src/domain/client/url-utils';
+import { normalizeBaseUrl } from '../../../../src/domain/client/url-utils';
 
 describe('normalizeBaseUrl', () => {
 	it('removes single trailing slash', () => {

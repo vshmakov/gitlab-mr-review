@@ -1,4 +1,4 @@
-import { MergeRequestMessageItem } from '../../../src/domain/tree/MergeRequestMessageItem';
+import { MergeRequestMessageItem } from '../../../../src/domain/tree/MergeRequestMessageItem';
 
 describe('Tree: MergeRequestMessageItem', () => {
 	it('displays message as label', () => {

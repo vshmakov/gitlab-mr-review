@@ -1,4 +1,4 @@
-import { GitLabNoteClient } from '../../src/domain/client/GitLabNoteClient';
+import { GitLabNoteClient } from '../../../../src/domain/client/GitLabNoteClient';
 
 function createMockHttp() {
 	return {

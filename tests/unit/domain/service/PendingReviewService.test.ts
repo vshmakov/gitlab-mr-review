@@ -1,4 +1,4 @@
-import { PendingReviewService } from '../../src/domain/service/PendingReviewService';
+import { PendingReviewService } from '../../../../src/domain/service/PendingReviewService';
 
 function createMockGraphQLClient(): any {
 	return {

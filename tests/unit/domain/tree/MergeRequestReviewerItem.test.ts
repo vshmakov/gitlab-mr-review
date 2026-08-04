@@ -1,5 +1,5 @@
-import { MergeRequestApprovedItem, MergeRequestRequestedChangesItem } from '../../../src/domain/tree/ReviewerListTreeItem';
-import { MergeRequestReviewerItem } from '../../../src/domain/tree/MergeRequestReviewerItem';
+import { MergeRequestApprovedItem, MergeRequestRequestedChangesItem } from '../../../../src/domain/tree/ReviewerListTreeItem';
+import { MergeRequestReviewerItem } from '../../../../src/domain/tree/MergeRequestReviewerItem';
 
 describe('Tree: MergeRequestApprovedItem', () => {
 	it('shows reviewer count in label', () => {

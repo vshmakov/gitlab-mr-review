@@ -1,4 +1,4 @@
-import { createEventEmitter } from '../../src/domain/store/event';
+import { createEventEmitter } from '../../../../src/domain/store/event';
 
 describe('createEventEmitter', () => {
 	it('fires data to registered listeners', () => {

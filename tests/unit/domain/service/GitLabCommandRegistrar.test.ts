@@ -1,4 +1,4 @@
-import { GitLabCommandRegistrar } from '../../src/domain/service/GitLabCommandRegistrar';
+import { GitLabCommandRegistrar } from '../../../../src/domain/service/GitLabCommandRegistrar';
 
 function createMocks(): any {
 	const handlers: Record<string, Function> = {};

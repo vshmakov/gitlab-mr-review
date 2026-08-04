@@ -1,8 +1,8 @@
-import { GitLabFileOpener } from '../../src/domain/service/GitLabFileOpener';
-import { UnifiedDiffParser } from '../../src/domain/diff/unified-diff-parser';
-import { Notifier } from '../../src/domain/interfaces/notifier';
-import { DocumentService, TextDocument } from '../../src/domain/interfaces/document-service';
-import { UriOpener } from '../../src/domain/interfaces/uri-opener';
+import { GitLabFileOpener } from '../../../../src/domain/service/GitLabFileOpener';
+import { UnifiedDiffParser } from '../../../../src/domain/diff/unified-diff-parser';
+import { Notifier } from '../../../../src/domain/interfaces/notifier';
+import { DocumentService, TextDocument } from '../../../../src/domain/interfaces/document-service';
+import { UriOpener } from '../../../../src/domain/interfaces/uri-opener';
 
 function createMockNotifier(): Notifier {
 	return {

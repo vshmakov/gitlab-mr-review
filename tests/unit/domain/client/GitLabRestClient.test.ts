@@ -1,4 +1,4 @@
-import { GitLabRestClient } from '../../src/domain/client/GitLabRestClient';
+import { GitLabRestClient } from '../../../../src/domain/client/GitLabRestClient';
 
 function createMockHttp() {
 	return {

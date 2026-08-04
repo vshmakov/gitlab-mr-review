@@ -1,6 +1,6 @@
-import { MergeRequestChangesItem } from '../../../src/domain/tree/MergeRequestChangesItem';
-import { MergeRequestFileItem } from '../../../src/domain/tree/MergeRequestFileItem';
-import { MergeRequestReviewedItem } from '../../../src/domain/tree/MergeRequestReviewedItem';
+import { MergeRequestChangesItem } from '../../../../src/domain/tree/MergeRequestChangesItem';
+import { MergeRequestFileItem } from '../../../../src/domain/tree/MergeRequestFileItem';
+import { MergeRequestReviewedItem } from '../../../../src/domain/tree/MergeRequestReviewedItem';
 
 function createMockStore(): any {
 	return {

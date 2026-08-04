@@ -1,4 +1,4 @@
-import { GitLabGraphQLClient } from '../../src/domain/client/GitLabGraphQLClient';
+import { GitLabGraphQLClient } from '../../../../src/domain/client/GitLabGraphQLClient';
 
 function createMockHttp() {
 	return {

@@ -1,5 +1,5 @@
-import { GitLabAuthenticationService } from '../../src/domain/service/GitLabAuthenticationService';
-import { TOKEN_SECRET_KEY } from '../../src/domain/client/constants';
+import { GitLabAuthenticationService } from '../../../../src/domain/service/GitLabAuthenticationService';
+import { TOKEN_SECRET_KEY } from '../../../../src/domain/client/constants';
 
 function createMocks(): any {
 	const secrets = { get: jest.fn(), store: jest.fn(), delete: jest.fn() };

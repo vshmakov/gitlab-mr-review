@@ -1,7 +1,7 @@
-import { MergeRequestItem } from '../../../src/domain/tree/MergeRequestItem';
-import { MergeRequestApprovedItem, MergeRequestRequestedChangesItem } from '../../../src/domain/tree/ReviewerListTreeItem';
-import { MergeRequestChangesItem } from '../../../src/domain/tree/MergeRequestChangesItem';
-import { MergeRequestOverviewItem } from '../../../src/domain/tree/MergeRequestOverviewItem';
+import { MergeRequestItem } from '../../../../src/domain/tree/MergeRequestItem';
+import { MergeRequestApprovedItem, MergeRequestRequestedChangesItem } from '../../../../src/domain/tree/ReviewerListTreeItem';
+import { MergeRequestChangesItem } from '../../../../src/domain/tree/MergeRequestChangesItem';
+import { MergeRequestOverviewItem } from '../../../../src/domain/tree/MergeRequestOverviewItem';
 
 function createMockStore(): any {
 	return {

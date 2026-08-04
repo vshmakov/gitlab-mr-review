@@ -1,4 +1,4 @@
-import { fetchApprovalData, REVIEW_APPROVED, REVIEW_REQUESTED_CHANGES } from '../../src/domain/client/graphql-queries';
+import { fetchApprovalData, REVIEW_APPROVED, REVIEW_REQUESTED_CHANGES } from '../../../../src/domain/client/graphql-queries';
 
 function createMockGraphQLClient() {
 	return {

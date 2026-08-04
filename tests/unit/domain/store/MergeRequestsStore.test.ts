@@ -1,4 +1,4 @@
-import { MergeRequestsStore } from '../../src/domain/store/MergeRequestsStore';
+import { MergeRequestsStore } from '../../../../src/domain/store/MergeRequestsStore';
 
 function createMocks(): any {
 	const client = {

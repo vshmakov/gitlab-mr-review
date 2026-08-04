@@ -1,4 +1,4 @@
-import { GitLabClient } from '../../src/domain/client/GitLabClient';
+import { GitLabClient } from '../../../../src/domain/client/GitLabClient';
 
 function createMocks(): any {
 	const restClient = {

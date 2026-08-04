@@ -1,4 +1,4 @@
-import { MergeRequestFileItem } from '../../../src/domain/tree/MergeRequestFileItem';
+import { MergeRequestFileItem } from '../../../../src/domain/tree/MergeRequestFileItem';
 
 function createMockStore(): any {
 	return {

@@ -35,15 +35,15 @@ function createMockStore(): any {
 }
 
 describe('Tree: MergeRequestCategoryItem', () => {
-	it('returns loading message when category is loading', () => {
+	it('returns empty children when category is loading', () => {
 		const store = createMockStore();
 		store.isCategoryLoading.mockReturnValue(true);
+		store.isCategoryLoaded.mockReturnValue(false);
 
 		const item = new MergeRequestCategoryItem('needsReview', store);
 		const children = item.getChildren();
 
-		expect(children).toHaveLength(1);
-		expect(children[0]).toBeInstanceOf(MergeRequestMessageItem);
+		expect(children).toHaveLength(0);
 	});
 
 	it('returns empty message when no MRs', () => {
@@ -92,7 +92,7 @@ describe('Tree: MergeRequestItem', () => {
 		expect(item.label).not.toContain('**');
 	});
 
-	it('returns loading message when approval data is loading', () => {
+	it('returns empty children when approval data is loading', () => {
 		const store = createMockStore();
 		store.isApprovalLoading.mockReturnValue(true);
 
@@ -105,8 +105,7 @@ describe('Tree: MergeRequestItem', () => {
 		const item = new MergeRequestItem(mr, store);
 		const children = item.getChildren();
 
-		expect(children).toHaveLength(1);
-		expect(children[0]).toBeInstanceOf(MergeRequestMessageItem);
+		expect(children).toHaveLength(0);
 	});
 
 	it('returns approved, requestedChanges, changes when loaded', () => {
@@ -135,7 +134,7 @@ describe('Tree: MergeRequestItem', () => {
 });
 
 describe('Tree: MergeRequestChangesItem', () => {
-	it('returns loading message when files are loading', () => {
+	it('returns empty children when files are loading', () => {
 		const store = createMockStore();
 		store.isFilesLoading.mockReturnValue(true);
 
@@ -143,8 +142,7 @@ describe('Tree: MergeRequestChangesItem', () => {
 		const item = new MergeRequestChangesItem(mr as any, store);
 		const children = item.getChildren();
 
-		expect(children).toHaveLength(1);
-		expect(children[0]).toBeInstanceOf(MergeRequestMessageItem);
+		expect(children).toHaveLength(0);
 	});
 
 	it('returns file items when loaded', () => {

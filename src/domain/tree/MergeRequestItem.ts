@@ -4,7 +4,6 @@ import { MergeRequestsStore } from '../store/MergeRequestsStore';
 import { MergeRequestApprovedItem } from './ReviewerListTreeItem';
 import { MergeRequestChangesItem } from './MergeRequestChangesItem';
 import { MergeRequestFileItem } from './MergeRequestFileItem';
-import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 import { MergeRequestReviewerItem } from './MergeRequestReviewerItem';
 import { MergeRequestRequestedChangesItem } from './ReviewerListTreeItem';
 import { MergeRequestOverviewItem } from './MergeRequestOverviewItem';
@@ -15,8 +14,7 @@ export type MergeRequestChildItem =
 	| MergeRequestRequestedChangesItem
 	| MergeRequestChangesItem
 	| MergeRequestFileItem
-	| MergeRequestReviewerItem
-	| MergeRequestMessageItem;
+	| MergeRequestReviewerItem;
 
 export type MergeRequestCategory =
 	| 'needsReview'
@@ -59,16 +57,21 @@ export class MergeRequestItem implements ITreeItem {
 	}
 
 	public getChildren(): MergeRequestChildItem[] {
-		if (this.store.isApprovalLoading(this.mergeRequest)) {
-			return [new MergeRequestMessageItem('Loading...')];
+		if (!this.store.isApprovalLoading(this.mergeRequest)) {
+			const approvalData = this.store.getApprovalData(this.mergeRequest);
+
+			if (!approvalData) {
+				this.store.loadApprovalData(this.mergeRequest);
+				this.store.loadFiles(this.mergeRequest);
+				return [];
+			}
+		} else {
+			return [];
 		}
 
-		let approvalData = this.store.getApprovalData(this.mergeRequest);
-
+		const approvalData = this.store.getApprovalData(this.mergeRequest);
 		if (!approvalData) {
-			this.store.loadApprovalData(this.mergeRequest);
-			this.store.loadFiles(this.mergeRequest);
-			return [new MergeRequestMessageItem('Loading...')];
+			return [];
 		}
 
 		const files = this.store.files.getFiles(this.mergeRequest);

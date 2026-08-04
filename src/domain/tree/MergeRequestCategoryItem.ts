@@ -52,18 +52,13 @@ export class MergeRequestCategoryItem implements ITreeItem {
 	}
 
 	public getChildren(): (MergeRequestItem | MergeRequestMessageItem)[] {
-		// Loading state — store is fetching this category
-		if (this.store.isCategoryLoading(this.category)) {
-			return [new MergeRequestMessageItem('Loading...')];
-		}
-
-		// Not yet loaded — trigger load and show loading indicator
 		if (!this.store.isCategoryLoaded(this.category)) {
-			this.loadCategory();
-			return [new MergeRequestMessageItem('Loading...')];
+			if (!this.store.isCategoryLoading(this.category)) {
+				this.loadCategory();
+			}
+			return [];
 		}
 
-		// Loaded — render from store data
 		const mrs = this.store.getCategoryMRs(this.category);
 
 		if (mrs.length === 0) {

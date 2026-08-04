@@ -42,11 +42,24 @@ export class MergeRequestsTreeProvider
 	public readonly onDidChangeTreeData =
 		this.changeEmitter.event;
 
+	// Stable category instances — preserves expanded state on fire
+	private readonly categoryItems = new Map<
+		MergeRequestCategory,
+		MergeRequestCategoryItem
+	>();
+
 	public constructor(
 		private readonly store: MergeRequestsStore,
 	) {
+		for (const cat of CATEGORIES) {
+			this.categoryItems.set(
+				cat,
+				new MergeRequestCategoryItem(cat, this.store),
+			);
+		}
+
 		this.store.onDidChange(() => {
-			this.changeEmitter.fire();
+			this.fireChanged();
 		});
 	}
 
@@ -69,10 +82,7 @@ export class MergeRequestsTreeProvider
 	): MergeRequestTreeItem[] {
 		if (!element) {
 			return CATEGORIES.map((key) =>
-				new MergeRequestCategoryItem(
-					key,
-					this.store,
-				),
+				this.categoryItems.get(key)!,
 			);
 		}
 
@@ -101,5 +111,34 @@ export class MergeRequestsTreeProvider
 		}
 
 		return [];
+	}
+
+	private fireChanged(): void {
+		// Fire loading categories (stable instances)
+		for (const cat of CATEGORIES) {
+			if (this.store.isCategoryLoading(cat)) {
+				this.changeEmitter.fire(this.categoryItems.get(cat)!);
+				return;
+			}
+		}
+
+		// Fire loading MRs by searching loaded categories
+		for (const cat of CATEGORIES) {
+			const mrs = this.store.getCategoryMRs(cat);
+			for (const mr of mrs) {
+				if (
+					this.store.isApprovalLoading(mr) ||
+					this.store.isFilesLoading(mr)
+				) {
+					this.changeEmitter.fire(
+						new MergeRequestItem(mr, this.store),
+					);
+					return;
+				}
+			}
+		}
+
+		// Fallback: fire root (refresh, etc.)
+		this.changeEmitter.fire();
 	}
 }

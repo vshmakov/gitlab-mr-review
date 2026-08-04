@@ -2,6 +2,7 @@ import { EventEmitter, createEventEmitter } from './event';
 import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { Notifier } from '../interfaces/notifier';
+import { Progress } from '../interfaces/progress';
 import { GitLabApprovalData } from '../model/GitLabApprovalData';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { MergeRequestCategory } from '../tree/MergeRequestItem';
@@ -26,6 +27,14 @@ const CATEGORY_DATA: Record<MergeRequestCategory, string> = {
 	requestedChanges: 'requestedChangesMergeRequests',
 	missed: 'missedMergeRequests',
 	my: 'myMergeRequests',
+};
+
+const CATEGORY_PROGRESS_TITLE: Record<MergeRequestCategory, string> = {
+	needsReview: 'Loading Needs My Review...',
+	approved: 'Loading Approved...',
+	requestedChanges: 'Loading Requested Changes...',
+	missed: 'Loading Missed Review...',
+	my: 'Loading My MRs...',
 };
 
 export type LoadingState =
@@ -61,6 +70,7 @@ export class MergeRequestsStore {
 	public constructor(
 		private readonly clientFactory: GitLabClientFactory,
 		private readonly notifier: Notifier,
+		private readonly progress?: Progress,
 	) {
 		this.files = new MergeRequestFilesStore(
 			clientFactory,
@@ -187,17 +197,25 @@ export class MergeRequestsStore {
 		this._error = undefined;
 		this.notify();
 
-		try {
-			const mr = await this.fetchByCategory(category);
-			this._cache.set(category, mr);
-			this._loadedCategories.add(category);
-		} catch (e: unknown) {
-			this._error = e instanceof Error
-				? e.message
-				: String(e);
-		} finally {
-			this._loading = 'idle';
-			this.notify();
+		const load = async () => {
+			try {
+				const mr = await this.fetchByCategory(category);
+				this._cache.set(category, mr);
+				this._loadedCategories.add(category);
+			} catch (e: unknown) {
+				this._error = e instanceof Error
+					? e.message
+					: String(e);
+			} finally {
+				this._loading = 'idle';
+				this.notify();
+			}
+		};
+
+		if (this.progress) {
+			await this.progress.withProgress(load);
+		} else {
+			await load();
 		}
 	}
 

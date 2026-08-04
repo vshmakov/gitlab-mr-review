@@ -1,7 +1,6 @@
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { ITreeItem } from './tree-item';
 import { MergeRequestFileItem } from './MergeRequestFileItem';
-import { MergeRequestMessageItem } from './MergeRequestMessageItem';
 import { MergeRequestReviewedItem } from './MergeRequestReviewedItem';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
 
@@ -22,9 +21,9 @@ export class MergeRequestChangesItem implements ITreeItem {
 				: 'Changes';
 	}
 
-	public getChildren(): (MergeRequestFileItem | MergeRequestMessageItem | MergeRequestReviewedItem)[] {
+	public getChildren(): (MergeRequestFileItem | MergeRequestReviewedItem)[] {
 		if (this.store.isFilesLoading(this.mergeRequest)) {
-			return [new MergeRequestMessageItem('Loading files...')];
+			return [];
 		}
 
 		const files = this.store.files.getFiles(this.mergeRequest);
@@ -61,6 +60,6 @@ export class MergeRequestChangesItem implements ITreeItem {
 		}
 
 		this.store.loadFiles(this.mergeRequest);
-		return [new MergeRequestMessageItem('Loading files...')];
+		return [];
 	}
 }

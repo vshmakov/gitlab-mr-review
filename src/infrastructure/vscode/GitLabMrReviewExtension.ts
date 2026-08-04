@@ -28,7 +28,7 @@ export class GitLabMrReviewExtension {
 			env.http,
 		);
 
-		this.store = new MergeRequestsStore(clientFactory, env.notifier);
+		this.store = new MergeRequestsStore(clientFactory, env.notifier, env.progress);
 
 		this.reviewedPersistence = new VsCodeReviewedPersistence(env.globalState);
 		this.reviewedPersistence.restore(this.store.reviewed);

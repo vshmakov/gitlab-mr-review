@@ -1,13 +1,22 @@
 import { GitLabAuthenticationService } from '../../src/domain/service/GitLabAuthenticationService';
 import { TOKEN_SECRET_KEY } from '../../src/domain/client/constants';
 
-function createMocks() {
+function createMocks(): any {
 	const secrets = { get: jest.fn(), store: jest.fn(), delete: jest.fn() };
 	const config = { get: jest.fn(), update: jest.fn() };
 	const notifier = { showError: jest.fn(), showInfo: jest.fn(), showWarning: jest.fn() };
 	const input = { showInputBox: jest.fn(), showWarningMessage: jest.fn() };
 	const progress = { withProgress: jest.fn(async (fn) => fn()) };
-	const treeProvider = { refresh: jest.fn() };
+	const treeProvider = {
+		refresh: jest.fn(),
+		refreshFile: jest.fn(),
+		changeEmitter: { event: jest.fn(() => () => {}) },
+		onDidChangeTreeData: jest.fn(() => () => {}),
+		categoryItems: new Map(),
+		store: { refresh: jest.fn(), onDidChange: jest.fn(() => () => {}) },
+		getTreeItem: jest.fn(),
+		getChildren: jest.fn(),
+	};
 	const clientFactory = {
 		create: jest.fn(),
 		clear: jest.fn(),

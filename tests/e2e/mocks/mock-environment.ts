@@ -10,6 +10,7 @@ import { CommentManager } from '../../../src/domain/interfaces/comment-manager';
 import { Disposable, DisposableCollection } from '../../../src/domain/interfaces/disposable';
 import { Environment } from '../../../src/domain/interfaces/environment';
 import { HttpClient } from '../../../src/domain/interfaces/http';
+import { GlobalState } from '../../../src/domain/interfaces/global-state';
 
 export class MockSecretStorage implements SecretStorage {
 	private _data = new Map<string, string>();
@@ -98,6 +99,18 @@ export class MockDisposableCollection implements DisposableCollection {
 	dispose(): void { this.items.forEach((d) => d.dispose()); this.items = []; }
 }
 
+export class MockGlobalState implements GlobalState {
+	private _data = new Map<string, unknown>();
+	get<T>(key: string, defaultValue?: T): T {
+		const value = this._data.get(key);
+		return (value !== undefined ? value : defaultValue) as T;
+	}
+	update(key: string, value: unknown): Thenable<void> {
+		this._data.set(key, value);
+		return Promise.resolve();
+	}
+}
+
 export function createMockEnvironment(httpClient?: HttpClient): Environment {
 	const notifier = new MockNotifier();
 	return {
@@ -111,6 +124,7 @@ export function createMockEnvironment(httpClient?: HttpClient): Environment {
 		notifier,
 		comments: new MockCommentManager(),
 		http: httpClient ?? createNoopHttpClient(),
+		globalState: new MockGlobalState(),
 		disposables: new MockDisposableCollection(),
 	};
 }

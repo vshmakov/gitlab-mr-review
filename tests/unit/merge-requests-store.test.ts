@@ -1,6 +1,6 @@
 import { MergeRequestsStore } from '../../src/domain/store/MergeRequestsStore';
 
-function createMocks() {
+function createMocks(): any {
 	const client = {
 		getPendingReviews: jest.fn(),
 		getApprovedReviews: jest.fn(),
@@ -14,7 +14,11 @@ function createMocks() {
 		create: jest.fn(() => client),
 		clear: jest.fn(),
 	};
-	const notifier = { showError: jest.fn() };
+	const notifier = {
+		showError: jest.fn(),
+		showInfo: jest.fn(),
+		showWarning: jest.fn(),
+	};
 	const progress = { withProgress: jest.fn(async (fn) => fn()) };
 	return { client, clientFactory, notifier, progress };
 }
@@ -144,7 +148,7 @@ describe('MergeRequestsStore', () => {
 		store.refresh();
 
 		expect(store.files.hasFiles({ project_id: 10, iid: 42 } as any)).toBe(false);
-		expect(store.approvalStore._cache.size).toBe(0);
+		expect((store.approvalStore as any)._cache.size).toBe(0);
 	});
 
 	it('loadFiles sets loading to files', async () => {

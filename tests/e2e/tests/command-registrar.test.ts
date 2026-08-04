@@ -19,9 +19,12 @@ describe('GitLabCommandRegistrar', () => {
 		);
 
 		const treeProvider = { refresh: jest.fn() } as any;
+		const store = { refresh: jest.fn(), reviewed: { markAsReviewed: jest.fn(), unmarkAsReviewed: jest.fn() } } as any;
+		const reviewedPersistence = { save: jest.fn() } as any;
 		const registrar = new GitLabCommandRegistrar(
 			commands, notifier, env.input, env.documents,
 			env.comments, treeProvider, {} as any, {} as any, factory,
+			store, reviewedPersistence,
 		);
 
 		const disposables = registrar.register();
@@ -50,6 +53,7 @@ describe('GitLabCommandRegistrar', () => {
 		const registrar = new GitLabCommandRegistrar(
 			commands, notifier, env.input, env.documents,
 			env.comments, {} as any, {} as any, {} as any, factory,
+			{} as any, {} as any,
 		);
 
 		registrar.register();

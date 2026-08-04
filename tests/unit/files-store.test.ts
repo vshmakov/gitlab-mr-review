@@ -1,6 +1,6 @@
 import { MergeRequestFilesStore } from '../../src/domain/store/MergeRequestFilesStore';
 
-function createMocks() {
+function createMocks(): any {
 	const client = {
 		getMergeRequestFiles: jest.fn(),
 	};
@@ -10,6 +10,8 @@ function createMocks() {
 	};
 	const notifier = {
 		showError: jest.fn(),
+		showInfo: jest.fn(),
+		showWarning: jest.fn(),
 	};
 	return { client, clientFactory, notifier };
 }

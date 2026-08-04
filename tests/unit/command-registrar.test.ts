@@ -1,16 +1,17 @@
 import { GitLabCommandRegistrar } from '../../src/domain/service/GitLabCommandRegistrar';
 
-function createMocks() {
+function createMocks(): any {
 	const handlers: Record<string, Function> = {};
 	const commands = {
 		register: jest.fn((name: string, handler: Function) => {
 			handlers[name] = handler;
 			return { dispose: jest.fn() };
 		}),
+		execute: jest.fn(),
 	};
 	const notifier = { showError: jest.fn(), showInfo: jest.fn(), showWarning: jest.fn() };
-	const input = { showInputBox: jest.fn() };
-	const documents = { activeDocument: undefined };
+	const input = { showInputBox: jest.fn(), showWarningMessage: jest.fn() };
+	const documents = { activeDocument: null as { languageId: string } | null };
 	const comments = { addComment: jest.fn() };
 	const treeProvider = { refresh: jest.fn(), refreshFile: jest.fn(), refreshMR: jest.fn() };
 	const auth = { authenticate: jest.fn(), logout: jest.fn() };

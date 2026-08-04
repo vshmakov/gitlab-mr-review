@@ -9,10 +9,11 @@ function createMocks() {
 	};
 	const config = {
 		get: jest.fn(),
+		update: jest.fn(),
 	};
 	const notifier = { showError: jest.fn(), showInfo: jest.fn(), showWarning: jest.fn() };
 	const input = { showWarningMessage: jest.fn(), showInputBox: jest.fn() };
-	const commands = { execute: jest.fn() };
+	const commands = { execute: jest.fn(), register: jest.fn() };
 	const http = { request: jest.fn() };
 	return { secrets, config, notifier, input, commands, http };
 }

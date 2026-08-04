@@ -1,9 +1,10 @@
 import { GitLabClient } from '../../src/domain/client/GitLabClient';
 
-function createMocks() {
+function createMocks(): any {
 	const restClient = {
 		get: jest.fn(),
 		post: jest.fn(),
+		getBaseUrl: jest.fn(),
 	};
 	const graphQLClient = {
 		request: jest.fn(),
@@ -126,7 +127,7 @@ describe('GitLabClient', () => {
 		await client.getMyMergeRequests();
 
 		const calls = restClient.get.mock.calls;
-		const mrCall = calls.find(c => c[0].includes('merge_requests'));
+		const mrCall = calls.find((c: any) => c[0].includes('merge_requests'));
 		expect(mrCall[0]).toContain('author_id=1');
 	});
 

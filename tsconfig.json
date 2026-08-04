@@ -8,12 +8,11 @@
         ],
         "types": [
             "node",
-            "jest",
+            "jest"
         ],
         "sourceMap": true,
         "rootDir": ".",
         "strict": true,
         "isolatedModules": true
-    },
-    "exclude": ["tests"]
+    }
 }

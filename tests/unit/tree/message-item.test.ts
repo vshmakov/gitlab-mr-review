@@ -10,4 +10,10 @@ describe('Tree: MergeRequestMessageItem', () => {
 		const item = new MergeRequestMessageItem('test');
 		expect(item.getChildren()).toHaveLength(0);
 	});
+
+	it('has correct static properties', () => {
+		const item = new MergeRequestMessageItem('test');
+		expect(item.contextValue).toBe('message');
+		expect(item.collapsibleState).toBe('none');
+	});
 });

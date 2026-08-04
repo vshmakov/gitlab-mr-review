@@ -24,6 +24,32 @@ describe('Tree: MergeRequestApprovedItem', () => {
 		expect(children).toHaveLength(1);
 		expect(children[0]).toBeInstanceOf(MergeRequestReviewerItem);
 	});
+
+	it('has correct static properties', () => {
+		const item = new MergeRequestApprovedItem({
+			approvedBy: [{ name: 'Alice', username: 'alice' }],
+			requestedChanges: [],
+		});
+		expect(item.contextValue).toBe('approved');
+		expect(item.collapsibleState).toBe('collapsed');
+		expect(item.icon).toEqual({ name: 'check', color: 'charts.green' });
+	});
+
+	it('collapsibleState is none when no reviewers', () => {
+		const item = new MergeRequestApprovedItem({
+			approvedBy: [],
+			requestedChanges: [],
+		});
+		expect(item.collapsibleState).toBe('none');
+	});
+
+	it('returns empty children when no reviewers', () => {
+		const item = new MergeRequestApprovedItem({
+			approvedBy: [],
+			requestedChanges: [],
+		});
+		expect(item.getChildren()).toHaveLength(0);
+	});
 });
 
 describe('Tree: MergeRequestRequestedChangesItem', () => {
@@ -49,6 +75,24 @@ describe('Tree: MergeRequestRequestedChangesItem', () => {
 		expect(children).toHaveLength(1);
 		expect(children[0]).toBeInstanceOf(MergeRequestReviewerItem);
 	});
+
+	it('has correct static properties', () => {
+		const item = new MergeRequestRequestedChangesItem({
+			approvedBy: [],
+			requestedChanges: [{ name: 'Alice', username: 'alice' }],
+		});
+		expect(item.contextValue).toBe('requestedChanges');
+		expect(item.collapsibleState).toBe('collapsed');
+		expect(item.icon).toEqual({ name: 'warning', color: 'charts.yellow' });
+	});
+
+	it('collapsibleState is none when no reviewers', () => {
+		const item = new MergeRequestRequestedChangesItem({
+			approvedBy: [],
+			requestedChanges: [],
+		});
+		expect(item.collapsibleState).toBe('none');
+	});
 });
 
 describe('Tree: MergeRequestReviewerItem', () => {
@@ -56,5 +100,27 @@ describe('Tree: MergeRequestReviewerItem', () => {
 		const item = new MergeRequestReviewerItem({ name: 'Alice', username: 'alice' });
 		expect(item.label).toBe('Alice');
 		expect(item.description).toBe('alice');
+	});
+
+	it('tooltip contains username', () => {
+		const item = new MergeRequestReviewerItem({ name: 'Alice', username: 'alice' });
+		expect(item.tooltip).toBe('@alice');
+	});
+
+	it('accessibilityLabel contains name and username', () => {
+		const item = new MergeRequestReviewerItem({ name: 'Alice', username: 'alice' });
+		expect(item.accessibilityLabel).toBe('Alice (@alice)');
+	});
+
+	it('has correct static properties', () => {
+		const item = new MergeRequestReviewerItem({ name: 'Alice', username: 'alice' });
+		expect(item.contextValue).toBe('reviewer');
+		expect(item.collapsibleState).toBe('none');
+		expect(item.icon).toEqual({ name: 'person' });
+	});
+
+	it('has no children', () => {
+		const item = new MergeRequestReviewerItem({ name: 'Alice', username: 'alice' });
+		expect(item.getChildren()).toHaveLength(0);
 	});
 });

@@ -78,6 +78,50 @@ describe('Tree: MergeRequestChangesItem', () => {
 		expect(children).toHaveLength(1);
 		expect(children[0]).toBeInstanceOf(MergeRequestFileItem);
 	});
+
+	it('shows only Reviewed when all files are reviewed', () => {
+		const store = createMockStore();
+		store.isFilesLoading.mockReturnValue(false);
+		const files = [
+			{ path: 'src/a.ts', oldPath: 'src/a.ts', newPath: 'src/a.ts', diff: '+a', added: false, deleted: false, renamed: false },
+		];
+		store.files.getFiles.mockReturnValue(files);
+		store.reviewed.getReviewedFiles.mockReturnValue(files);
+		store.reviewed.isReviewed.mockReturnValue(true);
+
+		const mr = { id: 100, iid: 42, project_id: 10 };
+		const item = new MergeRequestChangesItem(mr as any, store);
+		const children = item.getChildren();
+
+		expect(children).toHaveLength(1);
+		expect(children[0]).toBeInstanceOf(MergeRequestReviewedItem);
+	});
+
+	it('label without fileCount', () => {
+		const store = createMockStore();
+		const item = new MergeRequestChangesItem({ id: 100, iid: 42 } as any, store);
+		expect(item.label).toBe('Changes');
+	});
+
+	it('label with fileCount', () => {
+		const store = createMockStore();
+		const item = new MergeRequestChangesItem({ id: 100, iid: 42 } as any, store, 5);
+		expect(item.label).toBe('Changes (5)');
+	});
+
+	it('label with fileCount 0', () => {
+		const store = createMockStore();
+		const item = new MergeRequestChangesItem({ id: 100, iid: 42 } as any, store, 0);
+		expect(item.label).toBe('Changes (0)');
+	});
+
+	it('has correct static properties', () => {
+		const store = createMockStore();
+		const item = new MergeRequestChangesItem({ id: 100, iid: 42 } as any, store);
+		expect(item.contextValue).toBe('changes');
+		expect(item.collapsibleState).toBe('collapsed');
+		expect(item.icon).toEqual({ name: 'list' });
+	});
 });
 
 describe('Tree: MergeRequestReviewedItem', () => {
@@ -90,6 +134,12 @@ describe('Tree: MergeRequestReviewedItem', () => {
 		expect(item.label).toBe('Reviewed (1)');
 	});
 
+	it('label without count when fileCount is 0', () => {
+		const store = createMockStore();
+		const item = new MergeRequestReviewedItem({} as any, [], 0, store);
+		expect(item.label).toBe('Reviewed');
+	});
+
 	it('returns file items as children', () => {
 		const store = createMockStore();
 		const files = [
@@ -100,6 +150,12 @@ describe('Tree: MergeRequestReviewedItem', () => {
 
 		expect(children).toHaveLength(1);
 		expect(children[0]).toBeInstanceOf(MergeRequestFileItem);
+	});
+
+	it('returns empty children when no files', () => {
+		const store = createMockStore();
+		const item = new MergeRequestReviewedItem({} as any, [], 0, store);
+		expect(item.getChildren()).toHaveLength(0);
 	});
 
 	it('reflects reviewed state from store dynamically', () => {
@@ -119,5 +175,13 @@ describe('Tree: MergeRequestReviewedItem', () => {
 
 		expect(child.contextValue).toBe('mergeRequestFile');
 		expect(child.label).not.toMatch(/^\*/);
+	});
+
+	it('has correct static properties', () => {
+		const store = createMockStore();
+		const item = new MergeRequestReviewedItem({} as any, [], 0, store);
+		expect(item.contextValue).toBe('reviewed');
+		expect(item.collapsibleState).toBe('collapsed');
+		expect(item.icon).toEqual({ name: 'check' });
 	});
 });

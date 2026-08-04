@@ -39,6 +39,81 @@ describe('Tree: MergeRequestFileItem', () => {
 		expect(item.label).toMatch(/^D/);
 	});
 
+	it('shows renamed prefix', () => {
+		const file = {
+			path: 'src/renamed.ts', oldPath: 'src/old.ts', newPath: 'src/renamed.ts',
+			diff: '+line', added: false, deleted: false, renamed: true,
+		};
+		const item = new MergeRequestFileItem({} as any, file);
+		expect(item.label).toMatch(/^R/);
+	});
+
+	it('shows modified prefix', () => {
+		const file = {
+			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
+			diff: '+line', added: false, deleted: false, renamed: false,
+		};
+		const item = new MergeRequestFileItem({} as any, file);
+		expect(item.label).toMatch(/^M/);
+	});
+
+	it('description is directory for nested files', () => {
+		const file = {
+			path: 'src/deep/app.ts', oldPath: 'src/deep/app.ts', newPath: 'src/deep/app.ts',
+			diff: '+line', added: false, deleted: false, renamed: false,
+		};
+		const item = new MergeRequestFileItem({} as any, file);
+		expect(item.description).toBe('src/deep');
+	});
+
+	it('description is undefined for root-level files', () => {
+		const file = {
+			path: 'app.ts', oldPath: 'app.ts', newPath: 'app.ts',
+			diff: '+line', added: false, deleted: false, renamed: false,
+		};
+		const item = new MergeRequestFileItem({} as any, file);
+		expect(item.description).toBeUndefined();
+	});
+
+	it('tooltip is file path', () => {
+		const file = {
+			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
+			diff: '+line', added: false, deleted: false, renamed: false,
+		};
+		const item = new MergeRequestFileItem({} as any, file);
+		expect(item.tooltip).toBe('src/app.ts');
+	});
+
+	it('tooltip shows rename for renamed files', () => {
+		const file = {
+			path: 'src/renamed.ts', oldPath: 'src/old.ts', newPath: 'src/renamed.ts',
+			diff: '+line', added: false, deleted: false, renamed: true,
+		};
+		const item = new MergeRequestFileItem({} as any, file);
+		expect(item.tooltip).toBe('src/old.ts → src/renamed.ts');
+	});
+
+	it('has correct command', () => {
+		const mr = { id: 100, iid: 42 };
+		const file = {
+			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
+			diff: '+line', added: false, deleted: false, renamed: false,
+		};
+		const item = new MergeRequestFileItem(mr as any, file);
+		expect(item.command?.command).toBe('gitlabMrReview.openFilePatch');
+		const args = (item.command?.arguments as any[])[0];
+		expect(args).toEqual({ mergeRequest: mr, file });
+	});
+
+	it('has correct static properties', () => {
+		const file = {
+			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
+			diff: '+line', added: false, deleted: false, renamed: false,
+		};
+		const item = new MergeRequestFileItem({} as any, file);
+		expect(item.collapsibleState).toBe('none');
+	});
+
 	it('returns true from getReviewed when flagged', () => {
 		const file = {
 			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
@@ -55,6 +130,24 @@ describe('Tree: MergeRequestFileItem', () => {
 		};
 		const item = new MergeRequestFileItem(null as any, file, () => false);
 		expect(item.getReviewed()).toBe(false);
+	});
+
+	it('accessibilityLabel includes asterisk when reviewed', () => {
+		const file = {
+			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
+			diff: '+line', added: false, deleted: false, renamed: false,
+		};
+		const item = new MergeRequestFileItem(null as any, file, () => true);
+		expect(item.accessibilityLabel).toMatch(/^\*/);
+	});
+
+	it('accessibilityLabel without asterisk when not reviewed', () => {
+		const file = {
+			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
+			diff: '+line', added: false, deleted: false, renamed: false,
+		};
+		const item = new MergeRequestFileItem(null as any, file, () => false);
+		expect(item.accessibilityLabel).not.toMatch(/^\*/);
 	});
 
 	it('reflects reviewed state from store dynamically', () => {

@@ -51,7 +51,9 @@ export class MergeRequestChangesItem implements ITreeItem {
 
 			result.push(
 				...unreviewedFiles.map((f) =>
-					new MergeRequestFileItem(this.mergeRequest, f),
+					new MergeRequestFileItem(this.mergeRequest, f, () =>
+						this.store.reviewed.isReviewed(this.mergeRequest, f),
+					),
 				),
 			);
 

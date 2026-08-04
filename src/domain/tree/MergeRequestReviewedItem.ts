@@ -18,6 +18,6 @@ export class MergeRequestReviewedItem implements ITreeItem {
     }
 
     public getChildren(): MergeRequestFileItem[] {
-        return this.files.map((f) => new MergeRequestFileItem(this.mergeRequest, f, true));
+        return this.files.map((f) => new MergeRequestFileItem(this.mergeRequest, f, () => true));
     }
 }

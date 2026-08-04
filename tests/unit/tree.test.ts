@@ -302,21 +302,21 @@ describe('Tree: MergeRequestReviewedItem', () => {
 });
 
 describe('Tree: MergeRequestFileItem reviewed flag', () => {
-	it('sets contextValue to reviewed when flagged', () => {
+	it('returns true from getReviewed when flagged', () => {
 		const file = {
 			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
 			diff: '+line', added: false, deleted: false, renamed: false,
 		};
-		const item = new MergeRequestFileItem(null as any, file, true);
-		expect(item.contextValue).toBe('mergeRequestFile.reviewed');
+		const item = new MergeRequestFileItem(null as any, file, () => true);
+		expect(item.getReviewed()).toBe(true);
 	});
 
-	it('sets default contextValue when not reviewed', () => {
+	it('returns false from getReviewed when not flagged', () => {
 		const file = {
 			path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts',
 			diff: '+line', added: false, deleted: false, renamed: false,
 		};
-		const item = new MergeRequestFileItem(null as any, file, false);
-		expect(item.contextValue).toBe('mergeRequestFile');
+		const item = new MergeRequestFileItem(null as any, file, () => false);
+		expect(item.getReviewed()).toBe(false);
 	});
 });

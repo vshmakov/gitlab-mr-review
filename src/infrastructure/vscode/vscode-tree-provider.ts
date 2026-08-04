@@ -61,16 +61,7 @@ export class MergeRequestsTreeProvider
 	public getTreeItem(
 		element: MergeRequestTreeItem,
 	): vscode.TreeItem {
-		const vscodeItem = toVsCodeTreeItem(element);
-		if (element instanceof MergeRequestFileItem && element.mergeRequest) {
-			const isReviewed = this.store.reviewed.isReviewed(
-				element.mergeRequest, element.file,
-			);
-			vscodeItem.contextValue = isReviewed
-				? 'mergeRequestFile.reviewed'
-				: 'mergeRequestFile';
-		}
-		return vscodeItem;
+		return toVsCodeTreeItem(element);
 	}
 
 	public getChildren(

@@ -1,4 +1,5 @@
 import { MergeRequestsStore } from '../../../../src/domain/store/MergeRequestsStore';
+import { GitLabMergeRequest } from '../../../../src/domain/model/GitLabMergeRequest';
 
 function createMocks(): any {
 	const client = {
@@ -172,7 +173,11 @@ describe('MergeRequestsStore', () => {
 
 	it('loadMergeRequestDetails enriches MR with diff_refs', async () => {
 		const { client, clientFactory, notifier } = createMocks();
-		const mr = { id: 1, iid: 42, project_id: 10, project_path: 'g/p' };
+		const mr: GitLabMergeRequest = {
+			id: 1, iid: 42, project_id: 10, project_path: 'g/p',
+			title: 'Test MR', web_url: 'http://test', updated_at: '2024-01-01',
+			draft: false, work_in_progress: false,
+		};
 		client.getPendingReviews.mockResolvedValue([mr]);
 		client.getMergeRequestDetails.mockResolvedValue({
 			...mr,

@@ -51,6 +51,9 @@ export class GitLabFileOpener {
 				mergeRequest: {
 					project_id: mergeRequest.project_id,
 					iid: mergeRequest.iid,
+					baseSha: mergeRequest.baseSha,
+					startSha: mergeRequest.startSha,
+					headSha: mergeRequest.headSha,
 				},
 				file: {
 					path: file.path,

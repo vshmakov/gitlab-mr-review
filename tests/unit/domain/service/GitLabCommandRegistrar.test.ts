@@ -149,12 +149,6 @@ describe('GitLabCommandRegistrar', () => {
 			file: { path: 'a.ts', oldPath: 'a.ts', newPath: 'a.ts' },
 			lines: [{ commentable: true, oldLine: 1, newLine: 2, documentLine: 3 }],
 		});
-		mocks.clientFactory.create.mockResolvedValue({
-			getMergeRequest: jest.fn().mockResolvedValue({
-				project_id: 10, iid: 5,
-				diff_refs: { base_sha: 'abc', start_sha: 'def', head_sha: 'ghi' },
-			}),
-		});
 		mocks.clientFactory.createNoteClient.mockResolvedValue({
 			createDraftNote: jest.fn().mockResolvedValue({ id: 99 }),
 		});
@@ -208,27 +202,7 @@ describe('GitLabCommandRegistrar', () => {
 		expect(mocks.notifier.showError).toHaveBeenCalledWith('Не удалось создать клиент GitLab');
 	});
 
-	it('addComment shows error when client not initialized', async () => {
-		const mocks = createMocks();
-		mocks.documents.activeDocument = { languageId: 'diff' };
-		mocks.input.showInputBox.mockResolvedValue('comment');
-		mocks.comments.findCommentableLine.mockReturnValue(0);
-		mocks.comments.getContext.mockReturnValue({
-			mergeRequest: { project_id: 10, iid: 5 },
-			file: { path: 'a.ts', oldPath: 'a.ts', newPath: 'a.ts' },
-			lines: [{ commentable: true }],
-		});
-		mocks.clientFactory.createNoteClient.mockResolvedValue({ createDraftNote: jest.fn() });
-		mocks.clientFactory.create.mockResolvedValue(undefined);
-		new GitLabCommandRegistrar(
-			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
-			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
-			mocks.clientFactory, mocks.store, mocks.reviewedPersistence,
-		).register();
-		await mocks.handlers['gitlabMrReview.addComment']();
-		expect(mocks.notifier.showError).toHaveBeenCalledWith('GitLab клиент не инициализирован');
-	});
-
+	
 	it('addComment shows warning when no commentable line found', async () => {
 		const mocks = createMocks();
 		mocks.documents.activeDocument = { languageId: 'diff' };

@@ -257,6 +257,29 @@ export class MergeRequestsStore {
 		}
 	}
 
+	public async loadMergeRequestDetails(
+		mergeRequest: GitLabMergeRequest,
+	): Promise<void> {
+		const client = await this.clientFactory.create();
+		if (!client) return;
+
+		try {
+			const details = await client.getMergeRequestDetails(mergeRequest);
+			// Update MR in all category caches
+			for (const mrList of this._cache.values()) {
+				const idx = mrList.findIndex(
+					mr => mr.id === mergeRequest.id,
+				);
+				if (idx !== -1) {
+					mrList[idx] = details;
+				}
+			}
+			this.notifyMergeRequest(details);
+		} catch {
+			// Silently ignore — SHA will be missing
+		}
+	}
+
 	public refresh(): void {
 		this._cache.clear();
 		this._loadedCategories.clear();

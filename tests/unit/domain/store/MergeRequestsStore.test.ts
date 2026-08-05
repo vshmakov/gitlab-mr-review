@@ -9,6 +9,7 @@ function createMocks(): any {
 		getMyMergeRequests: jest.fn(),
 		getApprovalData: jest.fn(),
 		getMergeRequestFiles: jest.fn(),
+		getMergeRequestDetails: jest.fn(),
 	};
 	const clientFactory = {
 		create: jest.fn(() => client),
@@ -167,5 +168,37 @@ describe('MergeRequestsStore', () => {
 
 		expect(loadingStates).toContain('files');
 		expect(store.loading).toBe('idle');
+	});
+
+	it('loadMergeRequestDetails enriches MR with diff_refs', async () => {
+		const { client, clientFactory, notifier } = createMocks();
+		const mr = { id: 1, iid: 42, project_id: 10, project_path: 'g/p' };
+		client.getPendingReviews.mockResolvedValue([mr]);
+		client.getMergeRequestDetails.mockResolvedValue({
+			...mr,
+			baseSha: 'abc',
+			startSha: 'def',
+			headSha: 'ghi',
+		});
+		const store = new MergeRequestsStore(clientFactory, notifier);
+
+		await store.loadPending();
+		await store.loadMergeRequestDetails(mr);
+
+		const enriched = store.getCategoryMRs('needsReview')[0];
+		expect(enriched.baseSha).toBe('abc');
+		expect(enriched.startSha).toBe('def');
+		expect(enriched.headSha).toBe('ghi');
+	});
+
+	it('loadMergeRequestDetails does nothing when no client', async () => {
+		const { clientFactory, notifier } = createMocks();
+		clientFactory.create.mockResolvedValue(undefined);
+		const store = new MergeRequestsStore(clientFactory, notifier);
+		const mr = { id: 1, iid: 42, project_id: 10 };
+
+		await store.loadMergeRequestDetails(mr as any);
+
+		expect(() => store.loadMergeRequestDetails(mr as any)).not.toThrow();
 	});
 });

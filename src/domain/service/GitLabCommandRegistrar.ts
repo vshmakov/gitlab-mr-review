@@ -155,23 +155,12 @@ export class GitLabCommandRegistrar {
 				}
 
 					try {
-						const client = await this.clientFactory.create();
-						if (!client) {
-							this.notifier.showError('GitLab клиент не инициализирован');
-							return;
-						}
-
-						const mrData = await client.getMergeRequest(
-							context.mergeRequest.project_id,
-							context.mergeRequest.iid,
-						);
-
 						const mr = {
-							project_id: mrData.project_id,
-							iid: mrData.iid,
-							baseSha: mrData.diff_refs?.base_sha,
-							startSha: mrData.diff_refs?.start_sha,
-							headSha: mrData.diff_refs?.head_sha,
+							project_id: context.mergeRequest.project_id,
+							iid: context.mergeRequest.iid,
+							baseSha: context.mergeRequest.baseSha,
+							startSha: context.mergeRequest.startSha,
+							headSha: context.mergeRequest.headSha,
 						} as any;
 
 						const file = {

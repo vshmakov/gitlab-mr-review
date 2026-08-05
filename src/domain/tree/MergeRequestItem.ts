@@ -63,6 +63,7 @@ export class MergeRequestItem implements ITreeItem {
 			if (!approvalData) {
 				this.store.loadApprovalData(this.mergeRequest);
 				this.store.loadFiles(this.mergeRequest);
+				this.store.loadMergeRequestDetails(this.mergeRequest);
 				return [];
 			}
 		} else {

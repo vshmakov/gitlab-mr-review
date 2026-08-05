@@ -13,6 +13,7 @@ function createMockStore(): any {
 		files: { getFiles: jest.fn(() => []) },
 		loadApprovalData: jest.fn(),
 		loadFiles: jest.fn(),
+		loadMergeRequestDetails: jest.fn(),
 	};
 }
 

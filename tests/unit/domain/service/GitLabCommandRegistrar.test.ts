@@ -173,6 +173,62 @@ describe('GitLabCommandRegistrar', () => {
 		expect(mocks.notifier.showInfo).toHaveBeenCalledWith('Комментарий добавлен');
 	});
 
+	it('addComment shows warning when no context', async () => {
+		const mocks = createMocks();
+		mocks.documents.activeDocument = { languageId: 'diff' };
+		mocks.input.showInputBox.mockResolvedValue('comment');
+		mocks.comments.findCommentableLine.mockReturnValue(0);
+		mocks.comments.getContext.mockReturnValue(null);
+		new GitLabCommandRegistrar(
+			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
+			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
+			mocks.clientFactory, mocks.store, mocks.reviewedPersistence,
+		).register();
+		await mocks.handlers['gitlabMrReview.addComment']();
+		expect(mocks.notifier.showWarning).toHaveBeenCalledWith('Нет контекста комментария');
+	});
+
+	it('addComment shows error when noteClient unavailable', async () => {
+		const mocks = createMocks();
+		mocks.documents.activeDocument = { languageId: 'diff' };
+		mocks.input.showInputBox.mockResolvedValue('comment');
+		mocks.comments.findCommentableLine.mockReturnValue(0);
+		mocks.comments.getContext.mockReturnValue({
+			mergeRequest: { project_id: 10, iid: 5 },
+			file: { path: 'a.ts', oldPath: 'a.ts', newPath: 'a.ts' },
+			lines: [{ commentable: true }],
+		});
+		mocks.clientFactory.createNoteClient.mockResolvedValue(undefined);
+		new GitLabCommandRegistrar(
+			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
+			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
+			mocks.clientFactory, mocks.store, mocks.reviewedPersistence,
+		).register();
+		await mocks.handlers['gitlabMrReview.addComment']();
+		expect(mocks.notifier.showError).toHaveBeenCalledWith('Не удалось создать клиент GitLab');
+	});
+
+	it('addComment shows error when client not initialized', async () => {
+		const mocks = createMocks();
+		mocks.documents.activeDocument = { languageId: 'diff' };
+		mocks.input.showInputBox.mockResolvedValue('comment');
+		mocks.comments.findCommentableLine.mockReturnValue(0);
+		mocks.comments.getContext.mockReturnValue({
+			mergeRequest: { project_id: 10, iid: 5 },
+			file: { path: 'a.ts', oldPath: 'a.ts', newPath: 'a.ts' },
+			lines: [{ commentable: true }],
+		});
+		mocks.clientFactory.createNoteClient.mockResolvedValue({ createDraftNote: jest.fn() });
+		mocks.clientFactory.create.mockResolvedValue(undefined);
+		new GitLabCommandRegistrar(
+			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
+			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
+			mocks.clientFactory, mocks.store, mocks.reviewedPersistence,
+		).register();
+		await mocks.handlers['gitlabMrReview.addComment']();
+		expect(mocks.notifier.showError).toHaveBeenCalledWith('GitLab клиент не инициализирован');
+	});
+
 	it('addComment shows warning when no commentable line found', async () => {
 		const mocks = createMocks();
 		mocks.documents.activeDocument = { languageId: 'diff' };

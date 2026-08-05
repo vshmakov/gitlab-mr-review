@@ -102,7 +102,7 @@ describe('Tree: MergeRequestFileItem', () => {
 		const item = new MergeRequestFileItem(mr as any, file);
 		expect(item.command?.command).toBe('gitlabMrReview.openFilePatch');
 		const args = (item.command?.arguments as any[])[0];
-		expect(args).toEqual({ mergeRequest: mr, file });
+		expect(args).toBe(item);
 	});
 
 	it('has correct static properties', () => {

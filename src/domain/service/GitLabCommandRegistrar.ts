@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { Disposable } from '../interfaces/disposable';
@@ -10,10 +11,7 @@ import { MergeRequestItem } from '../tree/MergeRequestItem';
 import { MergeRequestFileItem } from '../tree/MergeRequestFileItem';
 import { MergeRequestsTreeProvider } from '../../infrastructure/vscode/vscode-tree-provider';
 import { GitLabAuthenticationService } from './GitLabAuthenticationService';
-import {
-	GitLabFileOpener,
-	OpenFilePatchCommandArguments,
-} from './GitLabFileOpener';
+import { GitLabFileOpener } from './GitLabFileOpener';
 import { MergeRequestsStore } from '../store/MergeRequestsStore';
 import { ReviewedPersistence } from '../interfaces/reviewed-persistence';
 
@@ -80,9 +78,26 @@ export class GitLabCommandRegistrar {
 	private registerOpenFilePatchCommand(): Disposable {
 		return this.commands.register(
 			'gitlabMrReview.openFilePatch',
-			(arguments_: OpenFilePatchCommandArguments) =>
-				this.fileOpener.openFilePatch(arguments_),
+			async (item: MergeRequestFileItem) => {
+				const { mergeRequest, file } = item;
+
+				await this.fileOpener.openFilePatch({ mergeRequest, file });
+
+				if (mergeRequest && !this.store.reviewed.isReviewed(mergeRequest, file)) {
+					this.markFileAsReviewed(mergeRequest, file);
+					this.treeProvider.refreshFile(item);
+				}
+			},
 		);
+	}
+
+	private markFileAsReviewed(
+		mergeRequest: GitLabMergeRequest,
+		file: { path: string },
+	): void {
+		this.store.reviewed.markAsReviewed(mergeRequest, file as any);
+		this.reviewedPersistence.save(this.store.reviewed);
+		this.notifier.showInfo(`Marked as reviewed: ${path.basename(file.path)}`);
 	}
 
 	private registerAddCommentCommand(): Disposable {
@@ -112,8 +127,17 @@ export class GitLabCommandRegistrar {
 					return;
 				}
 
-				// TODO: get line from selection
-				const success = await this.comments.addComment(document, 0, text);
+				const cursorLine = this.documents.activeCursorLine ?? 0;
+				const lineIndex = this.comments.findCommentableLine(document, cursorLine);
+
+				if (lineIndex === null) {
+					this.notifier.showWarning(
+						'Нет комментируемых строк рядом',
+					);
+					return;
+				}
+
+				const success = await this.comments.addComment(document, lineIndex, text);
 				if (!success) {
 					this.notifier.showWarning(
 						'Эта строка не поддерживает комментарии',
@@ -171,10 +195,8 @@ export class GitLabCommandRegistrar {
 					return;
 				}
 
-				this.store.reviewed.markAsReviewed(item.mergeRequest, item.file);
-				this.reviewedPersistence.save(this.store.reviewed);
+				this.markFileAsReviewed(item.mergeRequest, item.file);
 				this.treeProvider.refreshFile(item);
-				this.notifier.showInfo(`Marked as reviewed: ${item.file.path}`);
 			},
 		);
 	}
@@ -191,7 +213,7 @@ export class GitLabCommandRegistrar {
 				this.store.reviewed.unmarkAsReviewed(item.mergeRequest, item.file);
 				this.reviewedPersistence.save(this.store.reviewed);
 				this.treeProvider.refreshFile(item);
-				this.notifier.showInfo(`Marked as unreviewed: ${item.file.path}`);
+				this.notifier.showInfo(`Marked as unreviewed: ${path.basename(item.file.path)}`);
 			},
 		);
 	}

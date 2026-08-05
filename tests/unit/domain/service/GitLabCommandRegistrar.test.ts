@@ -11,15 +11,15 @@ function createMocks(): any {
 	};
 	const notifier = { showError: jest.fn(), showInfo: jest.fn(), showWarning: jest.fn() };
 	const input = { showInputBox: jest.fn(), showWarningMessage: jest.fn() };
-	const documents = { activeDocument: null as { languageId: string } | null };
-	const comments = { addComment: jest.fn() };
+	const documents = { activeDocument: null as { languageId: string } | null, activeCursorLine: null };
+	const comments = { addComment: jest.fn(), findCommentableLine: jest.fn() };
 	const treeProvider = { refresh: jest.fn(), refreshFile: jest.fn(), refreshMR: jest.fn() };
 	const auth = { authenticate: jest.fn(), logout: jest.fn() };
 	const fileOpener = { openMergeRequest: jest.fn(), openFilePatch: jest.fn() };
 	const clientFactory = { create: jest.fn(), clear: jest.fn() };
 	const store = {
 		refresh: jest.fn(),
-		reviewed: { markAsReviewed: jest.fn(), unmarkAsReviewed: jest.fn() },
+		reviewed: { markAsReviewed: jest.fn(), unmarkAsReviewed: jest.fn(), isReviewed: jest.fn() },
 	};
 	const reviewedPersistence = { save: jest.fn() };
 	return { commands, handlers, notifier, input, documents, comments, treeProvider, auth, fileOpener, clientFactory, store, reviewedPersistence };
@@ -82,7 +82,8 @@ describe('GitLabCommandRegistrar', () => {
 
 		expect(mocks.store.reviewed.markAsReviewed).toHaveBeenCalled();
 		expect(mocks.reviewedPersistence.save).toHaveBeenCalled();
-		expect(mocks.notifier.showInfo).toHaveBeenCalledWith('Marked as reviewed: src/a.ts');
+		expect(mocks.notifier.showInfo).toHaveBeenCalledWith('Marked as reviewed: a.ts');
+		expect(mocks.treeProvider.refreshFile).toHaveBeenCalledWith(item);
 	});
 
 	it('unmarkAsReviewed calls store and persistence', async () => {
@@ -97,7 +98,7 @@ describe('GitLabCommandRegistrar', () => {
 
 		expect(mocks.store.reviewed.unmarkAsReviewed).toHaveBeenCalled();
 		expect(mocks.reviewedPersistence.save).toHaveBeenCalled();
-		expect(mocks.notifier.showInfo).toHaveBeenCalledWith('Marked as unreviewed: src/a.ts');
+		expect(mocks.notifier.showInfo).toHaveBeenCalledWith('Marked as unreviewed: a.ts');
 	});
 
 	it('addComment shows warning when no active document', async () => {
@@ -136,6 +137,42 @@ describe('GitLabCommandRegistrar', () => {
 		expect(mocks.comments.addComment).not.toHaveBeenCalled();
 	});
 
+	it('addComment uses findCommentableLine from cursor position', async () => {
+		const mocks = createMocks();
+		mocks.documents.activeDocument = { languageId: 'diff' };
+		mocks.documents.activeCursorLine = 5;
+		mocks.input.showInputBox.mockResolvedValue('comment');
+		mocks.comments.findCommentableLine.mockReturnValue(3);
+		mocks.comments.addComment.mockResolvedValue(true);
+		new GitLabCommandRegistrar(
+			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
+			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
+			mocks.clientFactory, mocks.store, mocks.reviewedPersistence,
+		).register();
+		await mocks.handlers['gitlabMrReview.addComment']();
+		expect(mocks.comments.findCommentableLine).toHaveBeenCalledWith(
+			mocks.documents.activeDocument, 5,
+		);
+		expect(mocks.comments.addComment).toHaveBeenCalledWith(
+			mocks.documents.activeDocument, 3, 'comment',
+		);
+	});
+
+	it('addComment shows warning when no commentable line found', async () => {
+		const mocks = createMocks();
+		mocks.documents.activeDocument = { languageId: 'diff' };
+		mocks.input.showInputBox.mockResolvedValue('comment');
+		mocks.comments.findCommentableLine.mockReturnValue(null);
+		new GitLabCommandRegistrar(
+			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
+			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
+			mocks.clientFactory, mocks.store, mocks.reviewedPersistence,
+		).register();
+		await mocks.handlers['gitlabMrReview.addComment']();
+		expect(mocks.notifier.showWarning).toHaveBeenCalledWith('Нет комментируемых строк рядом');
+		expect(mocks.comments.addComment).not.toHaveBeenCalled();
+	});
+
 	it('refresh calls treeProvider refresh', async () => {
 		const mocks = createMocks();
 		new GitLabCommandRegistrar(
@@ -145,5 +182,73 @@ describe('GitLabCommandRegistrar', () => {
 		).register();
 		await mocks.handlers['gitlabMrReview.refresh']();
 		expect(mocks.treeProvider.refresh).toHaveBeenCalled();
+	});
+
+	it('openFilePatch opens first then marks as reviewed when file is not reviewed', async () => {
+		const mocks = createMocks();
+		mocks.store.reviewed.isReviewed.mockReturnValue(false);
+		mocks.fileOpener.openFilePatch = jest.fn().mockResolvedValue(undefined);
+		new GitLabCommandRegistrar(
+			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
+			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
+			mocks.clientFactory, mocks.store, mocks.reviewedPersistence,
+		).register();
+
+		const item = { mergeRequest: { id: 1, iid: 5, project_id: 10 }, file: { path: 'src/a.ts' } };
+		await mocks.handlers['gitlabMrReview.openFilePatch'](item);
+
+		expect(mocks.fileOpener.openFilePatch).toHaveBeenCalledWith({ mergeRequest: item.mergeRequest, file: item.file });
+		expect(mocks.store.reviewed.isReviewed).toHaveBeenCalledWith(
+			item.mergeRequest, item.file,
+		);
+		expect(mocks.store.reviewed.markAsReviewed).toHaveBeenCalledWith(
+			item.mergeRequest, item.file,
+		);
+		expect(mocks.reviewedPersistence.save).toHaveBeenCalledWith(mocks.store.reviewed);
+		expect(mocks.notifier.showInfo).toHaveBeenCalledWith('Marked as reviewed: a.ts');
+		expect(mocks.treeProvider.refreshFile).toHaveBeenCalledWith(item);
+	});
+
+	it('openFilePatch skips marking when file is already reviewed', async () => {
+		const mocks = createMocks();
+		mocks.store.reviewed.isReviewed.mockReturnValue(true);
+		mocks.fileOpener.openFilePatch = jest.fn().mockResolvedValue(undefined);
+		new GitLabCommandRegistrar(
+			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
+			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
+			mocks.clientFactory, mocks.store, mocks.reviewedPersistence,
+		).register();
+
+		const item = { mergeRequest: { id: 1, iid: 5, project_id: 10 }, file: { path: 'src/a.ts' } };
+		await mocks.handlers['gitlabMrReview.openFilePatch'](item);
+
+		expect(mocks.store.reviewed.isReviewed).toHaveBeenCalledWith(
+			item.mergeRequest, item.file,
+		);
+		expect(mocks.store.reviewed.markAsReviewed).not.toHaveBeenCalled();
+		expect(mocks.reviewedPersistence.save).not.toHaveBeenCalled();
+		expect(mocks.notifier.showInfo).not.toHaveBeenCalled();
+		expect(mocks.treeProvider.refreshFile).not.toHaveBeenCalled();
+		expect(mocks.fileOpener.openFilePatch).toHaveBeenCalledWith({ mergeRequest: item.mergeRequest, file: item.file });
+	});
+
+	it('openFilePatch opens without marking when mergeRequest is null', async () => {
+		const mocks = createMocks();
+		mocks.fileOpener.openFilePatch = jest.fn().mockResolvedValue(undefined);
+		new GitLabCommandRegistrar(
+			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
+			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
+			mocks.clientFactory, mocks.store, mocks.reviewedPersistence,
+		).register();
+
+		const item = { mergeRequest: null, file: { path: 'src/a.ts' } };
+		await mocks.handlers['gitlabMrReview.openFilePatch'](item);
+
+		expect(mocks.store.reviewed.isReviewed).not.toHaveBeenCalled();
+		expect(mocks.store.reviewed.markAsReviewed).not.toHaveBeenCalled();
+		expect(mocks.reviewedPersistence.save).not.toHaveBeenCalled();
+		expect(mocks.notifier.showInfo).not.toHaveBeenCalled();
+		expect(mocks.treeProvider.refreshFile).not.toHaveBeenCalled();
+		expect(mocks.fileOpener.openFilePatch).toHaveBeenCalledWith({ mergeRequest: item.mergeRequest, file: item.file });
 	});
 });

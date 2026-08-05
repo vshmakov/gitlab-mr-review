@@ -52,6 +52,7 @@ export class GitLabMrReviewExtension {
 			env.notifier,
 			env.documents,
 			this.unifiedDiffParser,
+			env.comments,
 		);
 
 		this.commandRegistrar = new GitLabCommandRegistrar(

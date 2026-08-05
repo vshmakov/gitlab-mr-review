@@ -3,6 +3,7 @@ import { UnifiedDiffParser } from '../../../../src/domain/diff/unified-diff-pars
 import { Notifier } from '../../../../src/domain/interfaces/notifier';
 import { DocumentService, TextDocument } from '../../../../src/domain/interfaces/document-service';
 import { UriOpener } from '../../../../src/domain/interfaces/uri-opener';
+import { CommentManager } from '../../../../src/domain/interfaces/comment-manager';
 
 function createMockNotifier(): Notifier {
 	return {
@@ -23,6 +24,7 @@ function createMockDocumentService(): DocumentService {
 
 	return {
 		activeDocument: null,
+		activeCursorLine: null,
 		openVirtualDocument: jest.fn().mockResolvedValue(doc),
 		showDocument: jest.fn(),
 		onDidCloseDocument: jest.fn().mockReturnValue({ dispose: jest.fn() }),
@@ -35,17 +37,29 @@ function createMockUriOpener(): UriOpener {
 	};
 }
 
+function createMockCommentManager(): CommentManager {
+	return {
+		setContext: jest.fn(),
+		onDocumentOpened: jest.fn(),
+		findCommentableLine: jest.fn(),
+		addComment: jest.fn().mockResolvedValue(false),
+		dispose: jest.fn(),
+	};
+}
+
 describe('GitLabFileOpener', () => {
 	let opener: GitLabFileOpener;
 	let notifier: ReturnType<typeof createMockNotifier>;
 	let documents: ReturnType<typeof createMockDocumentService>;
 	let uri: ReturnType<typeof createMockUriOpener>;
+	let comments: ReturnType<typeof createMockCommentManager>;
 
 	beforeEach(() => {
 		notifier = createMockNotifier();
 		documents = createMockDocumentService();
 		uri = createMockUriOpener();
-		opener = new GitLabFileOpener(uri, notifier, documents, new UnifiedDiffParser());
+		comments = createMockCommentManager();
+		opener = new GitLabFileOpener(uri, notifier, documents, new UnifiedDiffParser(), comments);
 	});
 
 	describe('openMergeRequest', () => {
@@ -121,6 +135,48 @@ describe('GitLabFileOpener', () => {
 			expect(content).toContain('diff --git a/src/old.ts b/src/app.ts');
 			expect(content).toContain('--- a/src/old.ts');
 			expect(content).toContain('+++ b/src/app.ts');
+		});
+
+		it('sets comment context when mergeRequest is present', async () => {
+			const args = {
+				mergeRequest: { id: 100, iid: 42, project_id: 10 },
+				file: {
+					path: 'src/app.ts',
+					oldPath: 'src/app.ts',
+					newPath: 'src/app.ts',
+					diff: '@@ -1,2 +1,3 @@\n old\n+new\n kept',
+					added: false,
+					deleted: false,
+					renamed: false,
+				},
+			};
+
+			await opener.openFilePatch(args as any);
+
+			expect(comments.setContext).toHaveBeenCalled();
+			const ctx = (comments.setContext as jest.Mock).mock.calls[0][1];
+			expect(ctx.mergeRequest.project_id).toBe(10);
+			expect(ctx.mergeRequest.iid).toBe(42);
+			expect(ctx.file.path).toBe('src/app.ts');
+		});
+
+		it('skips comment context when mergeRequest is null', async () => {
+			const args = {
+				mergeRequest: null,
+				file: {
+					path: 'src/app.ts',
+					oldPath: 'src/app.ts',
+					newPath: 'src/app.ts',
+					diff: '@@ -1,2 +1,3 @@\n old\n+new\n kept',
+					added: false,
+					deleted: false,
+					renamed: false,
+				},
+			};
+
+			await opener.openFilePatch(args as any);
+
+			expect(comments.setContext).not.toHaveBeenCalled();
 		});
 	});
 });

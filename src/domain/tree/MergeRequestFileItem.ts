@@ -27,7 +27,7 @@ export class MergeRequestFileItem implements ITreeItem {
 		this.command = {
 			command: 'gitlabMrReview.openFilePatch',
 			title: 'Open File Patch',
-			arguments: [{ mergeRequest, file }],
+			arguments: [this],
 		};
 	}
 

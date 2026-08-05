@@ -10,6 +10,7 @@ export interface TextDocument {
 
 export interface DocumentService {
 	readonly activeDocument: TextDocument | null;
+	readonly activeCursorLine: number | null;
 	openVirtualDocument(content: string, language: string): Promise<TextDocument>;
 	showDocument(document: TextDocument, preserveFocus?: boolean): void;
 	onDidCloseDocument(fn: (doc: TextDocument) => void): Disposable;

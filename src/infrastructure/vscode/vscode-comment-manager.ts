@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { CommentManager, CommentContext, CommentLine } from '../../domain/interfaces/comment-manager';
 import { TextDocument } from '../../domain/interfaces/document-service';
 import { Notifier } from '../../domain/interfaces/notifier';
+import { findCommentableLine as findCommentableLineUtil } from '../../domain/diff/comment-utils';
 
 interface VsCodeCommentContext {
 	mergeRequest: CommentContext['mergeRequest'];
@@ -43,6 +44,12 @@ export class VsCodeCommentManager implements CommentManager {
 	onDocumentOpened(document: TextDocument, _context: CommentContext): void {
 		const uri = vscode.Uri.parse(document.uri);
 		this.controller.createCommentThread(uri, new vscode.Range(0, 0, 0, 0), []);
+	}
+
+	findCommentableLine(document: TextDocument, cursorLine: number): number | null {
+		const context = this.contexts.get(document.uri);
+		if (!context) return null;
+		return findCommentableLineUtil(context.lines, cursorLine);
 	}
 
 	async addComment(

@@ -39,6 +39,12 @@ export class VsCodeDocumentService implements DocumentService {
 		return this.docCache.get(key) || null;
 	}
 
+	get activeCursorLine(): number | null {
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) return null;
+		return editor.selection.active.line;
+	}
+
 	async openVirtualDocument(
 		content: string,
 		language: string,

@@ -69,6 +69,7 @@ export class MockProgress implements Progress {
 
 export class MockDocumentService implements DocumentService {
 	activeDocument: TextDocument | null = null;
+	activeCursorLine: number | null = null;
 	openVirtualDocument(_content: string, _lang: string): Promise<TextDocument> { return Promise.resolve({ uri: 'mock://diff', languageId: 'diff', fileName: 'diff', lineCount: 0, lineAt: () => ({ text: '' }) }); }
 	showDocument(_doc: TextDocument, _preserveFocus?: boolean): void {}
 	onDidCloseDocument(_fn: (doc: TextDocument) => void): Disposable { return { dispose: () => {} }; }
@@ -90,6 +91,7 @@ export class MockCommentManager implements CommentManager {
 	dispose(): void {}
 	setContext(_doc: TextDocument, _ctx: unknown): void {}
 	onDocumentOpened(_doc: TextDocument, _ctx: unknown): void {}
+	findCommentableLine(_doc: TextDocument, _cursorLine: number): number | null { return 0; }
 	addComment(_doc: TextDocument, _line: number, _text: string): Promise<boolean> { return Promise.resolve(true); }
 }
 

@@ -9,7 +9,7 @@ describe('GitLabNoteClient', () => {
 
 	it('creates a draft note', async () => {
 		let capturedUrl = '';
-		let capturedBody = '';
+		let capturedBody: FormData | null = null;
 
 		const http = createMockHttpClient([
 			{
@@ -18,7 +18,7 @@ describe('GitLabNoteClient', () => {
 				},
 				handler: (url, opts) => {
 					capturedUrl = url;
-					capturedBody = (opts as { body?: string })?.body ?? '';
+					capturedBody = (opts as { body?: FormData })?.body ?? null;
 					return {
 						status: 201,
 						statusText: 'Created',
@@ -39,9 +39,10 @@ describe('GitLabNoteClient', () => {
 
 		expect(note.id).toBe(999);
 		expect(capturedUrl).toContain('/draft_notes');
-		expect(capturedBody).toContain('note=Fix+this+bug');
-		expect(capturedBody).toContain('position%5Bold_line%5D=5');
-		expect(capturedBody).toContain('position%5Bnew_line%5D=6');
+		expect(capturedBody).not.toBeNull();
+		expect(capturedBody!.get('note')).toBe('Fix this bug');
+		expect(capturedBody!.get('position[old_line]')).toBe('5');
+		expect(capturedBody!.get('position[new_line]')).toBe('6');
 	});
 
 	it('submits a draft note', async () => {

@@ -40,6 +40,7 @@ function createMockUriOpener(): UriOpener {
 function createMockCommentManager(): CommentManager {
 	return {
 		setContext: jest.fn(),
+		getContext: jest.fn(),
 		onDocumentOpened: jest.fn(),
 		findCommentableLine: jest.fn(),
 		addComment: jest.fn().mockResolvedValue(false),

@@ -137,12 +137,66 @@ export class GitLabCommandRegistrar {
 					return;
 				}
 
-				const success = await this.comments.addComment(document, lineIndex, text);
-				if (!success) {
+				const context = this.comments.getContext(document);
+				if (!context) {
 					this.notifier.showWarning(
-						'Эта строка не поддерживает комментарии',
+						'Нет контекста комментария',
 					);
+					return;
 				}
+
+				const parsedLine = context.lines[lineIndex];
+				const noteClient = await this.clientFactory.createNoteClient();
+				if (!noteClient) {
+					this.notifier.showError(
+						'Не удалось создать клиент GitLab',
+					);
+					return;
+				}
+
+					try {
+						const client = await this.clientFactory.create();
+						if (!client) {
+							this.notifier.showError('GitLab клиент не инициализирован');
+							return;
+						}
+
+						const mrData = await client.getMergeRequest(
+							context.mergeRequest.project_id,
+							context.mergeRequest.iid,
+						);
+
+						const mr = {
+							project_id: mrData.project_id,
+							iid: mrData.iid,
+							baseSha: mrData.diff_refs?.base_sha,
+							startSha: mrData.diff_refs?.start_sha,
+							headSha: mrData.diff_refs?.head_sha,
+						} as any;
+
+						const file = {
+							path: context.file.path,
+							oldPath: context.file.oldPath,
+							newPath: context.file.newPath,
+						} as any;
+
+						await noteClient.createDraftNote(
+							mr,
+							file,
+							text,
+							parsedLine.oldLine,
+							parsedLine.newLine,
+						);
+
+						await this.comments.addComment(document, lineIndex, text);
+
+						this.notifier.showInfo('Комментарий добавлен');
+					} catch (error: unknown) {
+						const message = error instanceof Error
+							? error.message
+							: String(error);
+						this.notifier.showError(`Ошибка: ${message}`);
+					}
 			},
 		);
 	}

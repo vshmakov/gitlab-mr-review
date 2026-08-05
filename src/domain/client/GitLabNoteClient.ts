@@ -31,7 +31,7 @@ export class GitLabNoteClient {
 			`/api/v4/projects/${mergeRequest.project_id}/` +
 			`merge_requests/${mergeRequest.iid}/draft_notes`;
 
-		const formData = new URLSearchParams();
+		const formData = new FormData();
 
 		formData.append('note', body);
 		formData.append('position[position_type]', 'text');
@@ -53,9 +53,8 @@ export class GitLabNoteClient {
 			method: 'POST',
 			headers: {
 				'PRIVATE-TOKEN': this.token,
-				'Content-Type': 'application/x-www-form-urlencoded',
 			},
-			body: formData.toString(),
+			body: formData,
 		});
 
 		if (!response.ok) {

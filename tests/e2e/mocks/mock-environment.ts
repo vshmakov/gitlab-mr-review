@@ -6,7 +6,7 @@ import { Progress } from '../../../src/domain/interfaces/progress';
 import { DocumentService, TextDocument } from '../../../src/domain/interfaces/document-service';
 import { UriOpener } from '../../../src/domain/interfaces/uri-opener';
 import { Notifier } from '../../../src/domain/interfaces/notifier';
-import { CommentManager } from '../../../src/domain/interfaces/comment-manager';
+import { CommentManager, CommentContext } from '../../../src/domain/interfaces/comment-manager';
 import { Disposable, DisposableCollection } from '../../../src/domain/interfaces/disposable';
 import { Environment } from '../../../src/domain/interfaces/environment';
 import { HttpClient } from '../../../src/domain/interfaces/http';
@@ -90,6 +90,7 @@ export class MockNotifier implements Notifier {
 export class MockCommentManager implements CommentManager {
 	dispose(): void {}
 	setContext(_doc: TextDocument, _ctx: unknown): void {}
+	getContext(_doc: TextDocument): CommentContext | null { return null; }
 	onDocumentOpened(_doc: TextDocument, _ctx: unknown): void {}
 	findCommentableLine(_doc: TextDocument, _cursorLine: number): number | null { return 0; }
 	addComment(_doc: TextDocument, _line: number, _text: string): Promise<boolean> { return Promise.resolve(true); }

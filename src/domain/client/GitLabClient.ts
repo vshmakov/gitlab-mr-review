@@ -88,6 +88,16 @@ export class GitLabClient {
 		};
 	}
 
+	public async getMergeRequest(
+		project_id: number,
+		iid: number,
+	): Promise<GitLabMergeRequest> {
+		const path =
+			`/api/v4/projects/${project_id}/` +
+			`merge_requests/${iid}`;
+		return this.restClient.get<GitLabMergeRequest>(path);
+	}
+
 	public async getPendingReviews():
 		Promise<GitLabMergeRequest[]> {
 		const user = await this.getCurrentUser();

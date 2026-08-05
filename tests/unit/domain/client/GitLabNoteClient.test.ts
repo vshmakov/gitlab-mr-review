@@ -6,6 +6,14 @@ function createMockHttp() {
 	};
 }
 
+function getFormDataEntries(body: FormData): Map<string, string> {
+	const entries = new Map<string, string>();
+	body.forEach((value, key) => {
+		entries.set(key, value as string);
+	});
+	return entries;
+}
+
 describe('GitLabNoteClient', () => {
 	it('createDraftNote builds correct path', async () => {
 		const http = createMockHttp();
@@ -28,10 +36,10 @@ describe('GitLabNoteClient', () => {
 
 		await client.createDraftNote(mr as any, file as any, 'comment');
 
-		const body = http.request.mock.calls[0][1].body;
-		expect(body).toContain('note=comment');
-		expect(body).toContain('position%5Bbase_sha%5D=abc');
-		expect(body).toContain('position%5Bnew_path%5D=src%2Fa.ts');
+		const body = getFormDataEntries(http.request.mock.calls[0][1].body);
+		expect(body.get('note')).toBe('comment');
+		expect(body.get('position[base_sha]')).toBe('abc');
+		expect(body.get('position[new_path]')).toBe('src/a.ts');
 	});
 
 	it('createDraftNote includes line numbers when provided', async () => {
@@ -43,9 +51,9 @@ describe('GitLabNoteClient', () => {
 
 		await client.createDraftNote(mr as any, file as any, 'comment', 5, 6);
 
-		const body = http.request.mock.calls[0][1].body;
-		expect(body).toContain('position%5Bold_line%5D=5');
-		expect(body).toContain('position%5Bnew_line%5D=6');
+		const body = getFormDataEntries(http.request.mock.calls[0][1].body);
+		expect(body.get('position[old_line]')).toBe('5');
+		expect(body.get('position[new_line]')).toBe('6');
 	});
 
 	it('createDraftNote omits line numbers when not provided', async () => {
@@ -57,9 +65,9 @@ describe('GitLabNoteClient', () => {
 
 		await client.createDraftNote(mr as any, file as any, 'comment');
 
-		const body = http.request.mock.calls[0][1].body;
-		expect(body).not.toContain('old_line');
-		expect(body).not.toContain('new_line');
+		const body = getFormDataEntries(http.request.mock.calls[0][1].body);
+		expect(body.has('position[old_line]')).toBe(false);
+		expect(body.has('position[new_line]')).toBe(false);
 	});
 
 	it('createDraftNote throws on non-ok response', async () => {

@@ -12,11 +12,11 @@ function createMocks(): any {
 	const notifier = { showError: jest.fn(), showInfo: jest.fn(), showWarning: jest.fn() };
 	const input = { showInputBox: jest.fn(), showWarningMessage: jest.fn() };
 	const documents = { activeDocument: null as { languageId: string } | null, activeCursorLine: null };
-	const comments = { addComment: jest.fn(), findCommentableLine: jest.fn() };
+	const comments = { addComment: jest.fn(), findCommentableLine: jest.fn(), getContext: jest.fn() };
 	const treeProvider = { refresh: jest.fn(), refreshFile: jest.fn(), refreshMR: jest.fn() };
 	const auth = { authenticate: jest.fn(), logout: jest.fn() };
 	const fileOpener = { openMergeRequest: jest.fn(), openFilePatch: jest.fn() };
-	const clientFactory = { create: jest.fn(), clear: jest.fn() };
+	const clientFactory = { create: jest.fn(), clear: jest.fn(), createNoteClient: jest.fn() };
 	const store = {
 		refresh: jest.fn(),
 		reviewed: { markAsReviewed: jest.fn(), unmarkAsReviewed: jest.fn(), isReviewed: jest.fn() },
@@ -142,8 +142,22 @@ describe('GitLabCommandRegistrar', () => {
 		mocks.documents.activeDocument = { languageId: 'diff' };
 		mocks.documents.activeCursorLine = 5;
 		mocks.input.showInputBox.mockResolvedValue('comment');
-		mocks.comments.findCommentableLine.mockReturnValue(3);
+		mocks.comments.findCommentableLine.mockReturnValue(0);
 		mocks.comments.addComment.mockResolvedValue(true);
+		mocks.comments.getContext.mockReturnValue({
+			mergeRequest: { project_id: 10, iid: 5, baseSha: 'abc', startSha: 'def', headSha: 'ghi' },
+			file: { path: 'a.ts', oldPath: 'a.ts', newPath: 'a.ts' },
+			lines: [{ commentable: true, oldLine: 1, newLine: 2, documentLine: 3 }],
+		});
+		mocks.clientFactory.create.mockResolvedValue({
+			getMergeRequest: jest.fn().mockResolvedValue({
+				project_id: 10, iid: 5,
+				diff_refs: { base_sha: 'abc', start_sha: 'def', head_sha: 'ghi' },
+			}),
+		});
+		mocks.clientFactory.createNoteClient.mockResolvedValue({
+			createDraftNote: jest.fn().mockResolvedValue({ id: 99 }),
+		});
 		new GitLabCommandRegistrar(
 			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
 			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
@@ -154,8 +168,9 @@ describe('GitLabCommandRegistrar', () => {
 			mocks.documents.activeDocument, 5,
 		);
 		expect(mocks.comments.addComment).toHaveBeenCalledWith(
-			mocks.documents.activeDocument, 3, 'comment',
+			mocks.documents.activeDocument, 0, 'comment',
 		);
+		expect(mocks.notifier.showInfo).toHaveBeenCalledWith('Комментарий добавлен');
 	});
 
 	it('addComment shows warning when no commentable line found', async () => {

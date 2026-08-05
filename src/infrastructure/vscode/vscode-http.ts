@@ -14,7 +14,7 @@ export class VsCodeHttpClient implements HttpClient {
 			fetchInit.headers = options.headers;
 		}
 		if (options?.body !== undefined) {
-			fetchInit.body = options.body as string;
+			fetchInit.body = options.body as any;
 		}
 
 		const response = await fetch(url, fetchInit);

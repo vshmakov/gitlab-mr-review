@@ -28,6 +28,9 @@ export interface CommentManager extends Disposable {
 	/** Set comment context for a document. */
 	setContext(document: TextDocument, context: CommentContext): void;
 
+	/** Get comment context for a document. Returns null if not set. */
+	getContext(document: TextDocument): CommentContext | null;
+
 	/** Called when a diff document is opened to enable commenting. */
 	onDocumentOpened(document: TextDocument, context: CommentContext): void;
 

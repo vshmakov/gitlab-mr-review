@@ -41,6 +41,16 @@ export class VsCodeCommentManager implements CommentManager {
 		this.contexts.set(document.uri, vsCodeContext);
 	}
 
+	getContext(document: TextDocument): CommentContext | null {
+		const ctx = this.contexts.get(document.uri);
+		if (!ctx) return null;
+		return {
+			mergeRequest: ctx.mergeRequest,
+			file: ctx.file,
+			lines: ctx.lines,
+		};
+	}
+
 	onDocumentOpened(document: TextDocument, _context: CommentContext): void {
 		const uri = vscode.Uri.parse(document.uri);
 		this.controller.createCommentThread(uri, new vscode.Range(0, 0, 0, 0), []);

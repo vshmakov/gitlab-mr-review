@@ -3,7 +3,7 @@ import { createMergeRequestDiffsPath, mapMergeRequestFile } from '../../../../sr
 describe('createMergeRequestDiffsPath', () => {
 	it('produces correct path with project_id and iid', () => {
 		const path = createMergeRequestDiffsPath({ project_id: 10, iid: 42 } as any);
-		expect(path).toBe('/api/v4/projects/10/merge_requests/42/diffs?per_page=100');
+		expect(path).toBe('/api/v4/projects/10/merge_requests/42/diffs?per_page=100&page=1');
 	});
 });
 

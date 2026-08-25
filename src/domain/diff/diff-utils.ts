@@ -8,9 +8,11 @@ const DEFAULT_PER_PAGE = 100;
 
 export function createMergeRequestDiffsPath(
 	mergeRequest: GitLabMergeRequest,
+	page: number = 1,
 ): string {
 	const query = new URLSearchParams({
 		per_page: DEFAULT_PER_PAGE.toString(),
+		page: page.toString(),
 	}).toString();
 
 	return (

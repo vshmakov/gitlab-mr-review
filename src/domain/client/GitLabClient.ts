@@ -181,13 +181,29 @@ export class GitLabClient {
 	public async getMergeRequestFiles(
 		mergeRequest: GitLabMergeRequest,
 	): Promise<GitLabMergeRequestFile[]> {
-		const path = createMergeRequestDiffsPath(mergeRequest);
+		const allDiffs: GitLabMergeRequestDiffResponse[] = [];
+		let page = 1;
 
-		const diffs = await this.restClient.get<
-			GitLabMergeRequestDiffResponse[]
-		>(path);
+		while (true) {
+			const path = createMergeRequestDiffsPath(mergeRequest, page);
+			const diffs = await this.restClient.get<
+				GitLabMergeRequestDiffResponse[]
+			>(path);
 
-		return diffs.map(mapMergeRequestFile);
+			if (!diffs || diffs.length === 0) {
+				break;
+			}
+
+			allDiffs.push(...diffs);
+
+			if (diffs.length < DEFAULT_PER_PAGE) {
+				break;
+			}
+
+			page++;
+		}
+
+		return allDiffs.map(mapMergeRequestFile);
 	}
 
 	public async approveMergeRequest(

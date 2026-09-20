@@ -13,18 +13,15 @@ VS Code extension for reviewing GitLab merge requests.
 
 ## Installation
 
-To install from source, install the dependencies and build the package:
+Download the latest `.vsix` file from the [GitHub Releases](https://github.com/vshmakov/gitlab-mr-review/releases) page.
+
+Then install it in one of these ways:
+
+- In VS Code, open **Extensions**, select **...** → **Install from VSIX...**, and choose the downloaded file.
+- From the command line:
 
 ```bash
-npm install
-npx vsce package
 code --install-extension gitlab-mr-review-1.0.0.vsix
-```
-
-Alternatively, run the included installation script:
-
-```bash
-npm run install-ext
 ```
 
 ## Configuration
@@ -49,13 +46,24 @@ The extension does not require manual configuration edits. Run the following com
 
 ## Development
 
+To build and install the extension from source:
+
 ```bash
 npm install
+npm run install-ext
+```
+
+For development checks and debugging:
+
+```bash
 npm run check      # lint, compile, and unit tests
 npm run watch      # watch TypeScript files
 npm run audit      # audit dependencies
+npm run release:github # publish the current version to GitHub
 ```
 
 Start debugging in VS Code (F5) to open a new Extension Development Host window.
 
 Contract tests run separately with `npm run test:contract` and require an accessible test GitLab instance and the environment variables from `.env`.
+
+The `release:github` script requires the GitHub CLI (`gh`) to be installed and authenticated. It pushes the current commit and version tag, then creates a GitHub Release with the generated VSIX attached.

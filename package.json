@@ -14,6 +14,13 @@
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "gitlab",
+    "merge request",
+    "code review",
+    "diff",
+    "review"
+  ],
   "activationEvents": [],
   "main": "./out/src/extension.js",
   "contributes": {

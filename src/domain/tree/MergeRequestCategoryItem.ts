@@ -38,7 +38,7 @@ const CATEGORY_CONFIG: Record<MergeRequestCategory, {
 export class MergeRequestCategoryItem implements ITreeItem {
 	readonly label: string;
 	readonly contextValue: string;
-	readonly collapsibleState: 'collapsed' = 'collapsed';
+	readonly collapsibleState = 'collapsed' as const;
 	readonly icon: { name: string };
 
 	public constructor(

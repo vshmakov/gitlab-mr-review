@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { CommentManager, CommentContext, CommentLine } from '../../domain/interfaces/comment-manager';
 import { TextDocument } from '../../domain/interfaces/document-service';
-import { Notifier } from '../../domain/interfaces/notifier';
 import { findCommentableLine as findCommentableLineUtil } from '../../domain/diff/comment-utils';
 
 interface VsCodeCommentContext {
@@ -15,7 +14,7 @@ export class VsCodeCommentManager implements CommentManager {
 	private readonly controller: vscode.CommentController;
 	private readonly contexts = new Map<string, VsCodeCommentContext>();
 
-	constructor(private readonly notifier: Notifier) {
+	constructor() {
 		this.controller = vscode.comments.createCommentController(
 			'gitlab-mr-review',
 			'GitLab MR Review',
@@ -43,7 +42,9 @@ export class VsCodeCommentManager implements CommentManager {
 
 	getContext(document: TextDocument): CommentContext | null {
 		const ctx = this.contexts.get(document.uri);
-		if (!ctx) {return null;}
+		if (!ctx) {
+			return null;
+		}
 		return {
 			mergeRequest: ctx.mergeRequest,
 			file: ctx.file,
@@ -53,7 +54,9 @@ export class VsCodeCommentManager implements CommentManager {
 
 	findCommentableLine(document: TextDocument, cursorLine: number): number | null {
 		const context = this.contexts.get(document.uri);
-		if (!context) {return null;}
+		if (!context) {
+			return null;
+		}
 		return findCommentableLineUtil(context.lines, cursorLine);
 	}
 
@@ -96,7 +99,9 @@ export class VsCodeCommentManager implements CommentManager {
 		document: vscode.TextDocument,
 	): vscode.Range[] | undefined {
 		const context = this.contexts.get(document.uri.toString());
-		if (!context) {return undefined;}
+		if (!context) {
+			return undefined;
+		}
 
 		const ranges: vscode.Range[] = [];
 		for (const line of context.lines) {

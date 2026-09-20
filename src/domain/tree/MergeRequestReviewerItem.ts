@@ -6,7 +6,7 @@ export class MergeRequestReviewerItem implements ITreeItem {
 	readonly description: string;
 	readonly tooltip: string;
 	readonly contextValue = 'reviewer';
-	readonly collapsibleState: 'none' = 'none';
+	readonly collapsibleState = 'none' as const;
 	readonly icon = { name: 'person' };
 	readonly accessibilityLabel: string;
 

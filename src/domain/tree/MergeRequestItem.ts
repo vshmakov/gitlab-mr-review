@@ -28,7 +28,7 @@ export class MergeRequestItem implements ITreeItem {
 	readonly description: string;
 	readonly tooltip: string;
 	readonly contextValue = 'mergeRequest';
-	readonly collapsibleState: 'collapsed' = 'collapsed';
+	readonly collapsibleState = 'collapsed' as const;
 	readonly icon = { name: 'git-pull-request' };
 	readonly command: { command: string; title: string; arguments: unknown[] };
 

@@ -7,7 +7,7 @@ import { MergeRequestsStore } from '../store/MergeRequestsStore';
 export class MergeRequestChangesItem implements ITreeItem {
 	readonly label: string;
 	readonly contextValue = 'changes';
-	readonly collapsibleState: 'collapsed' = 'collapsed';
+	readonly collapsibleState = 'collapsed' as const;
 	readonly icon = { name: 'list' };
 
 	public constructor(

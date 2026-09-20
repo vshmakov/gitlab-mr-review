@@ -21,22 +21,6 @@ const CATEGORY_LOADER: Record<
 	my: (c) => c.getMyMergeRequests(),
 };
 
-const CATEGORY_DATA: Record<MergeRequestCategory, string> = {
-	needsReview: 'pendingMergeRequests',
-	approved: 'approvedMergeRequests',
-	requestedChanges: 'requestedChangesMergeRequests',
-	missed: 'missedMergeRequests',
-	my: 'myMergeRequests',
-};
-
-const CATEGORY_PROGRESS_TITLE: Record<MergeRequestCategory, string> = {
-	needsReview: 'Loading Needs My Review...',
-	approved: 'Loading Approved...',
-	requestedChanges: 'Loading Requested Changes...',
-	missed: 'Loading Missed Review...',
-	my: 'Loading My MRs...',
-};
-
 export type MergeRequestsChangeType =
 	| 'category'
 	| 'mergeRequest'

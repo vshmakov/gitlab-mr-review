@@ -32,15 +32,15 @@ export class MockConfiguration implements Configuration {
 }
 
 export class MockCommandRegistry implements CommandRegistry {
-	private commands = new Map<string, (...args: unknown[]) => unknown>();
-	register(id: string, handler: (...args: unknown[]) => unknown): Disposable {
+	private commands = new Map<string, (...args: never[]) => unknown>();
+	register(id: string, handler: (...args: never[]) => unknown): Disposable {
 		this.commands.set(id, handler);
 		return { dispose: () => this.commands.delete(id) };
 	}
 	execute(id: string, ...args: unknown[]): Promise<unknown> {
 		const handler = this.commands.get(id);
 		if (!handler) throw new Error(`Command not found: ${id}`);
-		return Promise.resolve(handler(...args));
+		return Promise.resolve(handler(...args as never[]));
 	}
 }
 

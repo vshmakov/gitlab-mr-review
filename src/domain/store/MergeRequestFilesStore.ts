@@ -1,4 +1,3 @@
-import { GitLabClient } from '../client/GitLabClient';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { Notifier } from '../interfaces/notifier';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';

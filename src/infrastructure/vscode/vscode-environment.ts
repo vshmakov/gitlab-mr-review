@@ -32,7 +32,7 @@ export function createVsCodeEnvironment(
 ): Environment {
 	const disposables = new VsCodeDisposableCollection();
 	const notifier = new VsCodeNotifier();
-	const comments = new VsCodeCommentManager(notifier);
+	const comments = new VsCodeCommentManager();
 
 	return {
 		secrets: new VsCodeSecretStorage(context),

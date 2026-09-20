@@ -5,7 +5,7 @@ import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 
 export class MergeRequestFileItem implements ITreeItem {
 	readonly description: string | undefined;
-	readonly collapsibleState: 'none' = 'none';
+	readonly collapsibleState = 'none' as const;
 	readonly command: Command;
 
 	private readonly _baseLabel: string;

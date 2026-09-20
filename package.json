@@ -112,10 +112,12 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
+    "check": "npm run lint && npm run compile && npm test -- --runInBand",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --max-warnings=0",
     "test": "jest --passWithNoTests --testPathIgnorePatterns=tests/contract",
     "test:contract": "jest tests/contract --passWithNoTests",
+    "audit": "npm audit --audit-level=high",
     "rebuild": "npm run compile && npm run test",
     "install-ext": "npm run compile && npm run test && npx vsce package && code --install-extension ./gitlab-mr-review-*.vsix && rm -f *.vsix"
   },

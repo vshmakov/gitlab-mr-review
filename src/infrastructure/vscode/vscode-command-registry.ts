@@ -3,7 +3,7 @@ import { Disposable } from '../../domain/interfaces/disposable';
 import { CommandRegistry } from '../../domain/interfaces/command-registry';
 
 export class VsCodeCommandRegistry implements CommandRegistry {
-	register(id: string, handler: (...args: unknown[]) => unknown): Disposable {
+	register(id: string, handler: (...args: never[]) => unknown): Disposable {
 		const disposable = vscode.commands.registerCommand(id, handler);
 		return { dispose: () => disposable.dispose() };
 	}

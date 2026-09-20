@@ -36,16 +36,16 @@
       },
       {
         "command": "gitlabMrReview.approve",
-        "title": "Approve",
+        "title": "GitLab MR Review: Approve",
         "icon": "$(check)"
       },
       {
         "command": "gitlabMrReview.markAsReviewed",
-        "title": "Mark as Reviewed"
+        "title": "GitLab MR Review: Mark as Reviewed"
       },
       {
         "command": "gitlabMrReview.unmarkAsReviewed",
-        "title": "Mark as Unreviewed"
+        "title": "GitLab MR Review: Mark as Unreviewed"
       }
     ],
     "viewsContainers": {

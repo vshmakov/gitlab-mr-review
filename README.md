@@ -18,7 +18,7 @@ To install from source, install the dependencies and build the package:
 ```bash
 npm install
 npx vsce package
-code --install-extension gitlab-mr-review-0.0.1.vsix
+code --install-extension gitlab-mr-review-1.0.0.vsix
 ```
 
 Alternatively, run the included installation script:

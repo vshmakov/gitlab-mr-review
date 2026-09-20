@@ -59,11 +59,12 @@ For development checks and debugging:
 npm run check      # lint, compile, and unit tests
 npm run watch      # watch TypeScript files
 npm run audit      # audit dependencies
-npm run release:github # publish the current version to GitHub
+npm run release:create  # validate and package the current version
+npm run release:publish # publish the prepared version to GitHub
 ```
 
 Start debugging in VS Code (F5) to open a new Extension Development Host window.
 
 Contract tests run separately with `npm run test:contract` and require an accessible test GitLab instance and the environment variables from `.env`.
 
-The `release:github` script requires the GitHub CLI (`gh`) to be installed and authenticated. It pushes the current commit and version tag, then creates a GitHub Release with the generated VSIX attached.
+The `release:publish` script requires the GitHub CLI (`gh`) to be installed and authenticated. It first runs `release:create`, then pushes the current commit and version tag, and creates a GitHub Release with the generated VSIX attached.

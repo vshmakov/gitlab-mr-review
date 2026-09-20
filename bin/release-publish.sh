@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-VERSION="${npm_package_version:-$(node -p "require('./package.json').version")}" 
+VERSION="${npm_package_version:-$(node -p "require('./package.json').version")}"
 VSIX_FILE="$ROOT_DIR/gitlab-mr-review-${VERSION}.vsix"
 
 command -v git >/dev/null

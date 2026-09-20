@@ -67,4 +67,4 @@ Start debugging in VS Code (F5) to open a new Extension Development Host window.
 
 Contract tests run separately with `npm run test:contract` and require an accessible test GitLab instance and the environment variables from `.env`.
 
-The `release:publish` script requires the GitHub CLI (`gh`) to be installed and authenticated. It first runs `release:create`, then pushes the current commit and version tag, and creates a GitHub Release with the generated VSIX attached.
+See [docs/release.md](docs/release.md) for the complete release procedure.

@@ -131,7 +131,7 @@
     "test:contract": "jest tests/contract --passWithNoTests",
     "audit": "npm audit --audit-level=high",
     "release:create": "bash ./bin/release-create.sh",
-    "release:publish": "npm run release:create && bash ./bin/release-publish.sh",
+    "release:publish": "bash ./bin/release-publish.sh",
     "rebuild": "npm run compile && npm run test",
     "install-ext": "npm run compile && npm run test && npx vsce package && code --install-extension ./gitlab-mr-review-*.vsix && rm -f *.vsix"
   },

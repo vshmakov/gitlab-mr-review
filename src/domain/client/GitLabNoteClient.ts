@@ -3,6 +3,13 @@ import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
 import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 import { HttpClient } from '../interfaces/http';
 
+type NoteMergeRequest = Pick<
+	GitLabMergeRequest,
+	'project_id' | 'iid' | 'baseSha' | 'startSha' | 'headSha'
+>;
+
+type NoteFile = Pick<GitLabMergeRequestFile, 'path' | 'oldPath' | 'newPath'>;
+
 export interface GitLabNote {
 	id: number;
 }
@@ -21,8 +28,8 @@ export class GitLabNoteClient {
 	}
 
 	public async createDraftNote(
-		mergeRequest: GitLabMergeRequest,
-		file: GitLabMergeRequestFile,
+		mergeRequest: NoteMergeRequest,
+		file: NoteFile,
 		body: string,
 		oldLine?: number,
 		newLine?: number,
@@ -41,11 +48,11 @@ export class GitLabNoteClient {
 		formData.append('position[old_path]', file.oldPath);
 		formData.append('position[new_path]', file.newPath);
 
-		if (oldLine != null) {
+		if (oldLine !== null && oldLine !== undefined) {
 			formData.append('position[old_line]', String(oldLine));
 		}
 
-		if (newLine != null) {
+		if (newLine !== null && newLine !== undefined) {
 			formData.append('position[new_line]', String(newLine));
 		}
 

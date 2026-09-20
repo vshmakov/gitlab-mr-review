@@ -55,7 +55,7 @@ export class UnifiedDiffParser {
 			content,
 			state,
 		);
-		if (hunkResult !== null) return hunkResult;
+		if (hunkResult !== null) {return hunkResult;}
 
 		// 2. Before any hunk — treat as metadata
 		if (!state.insideHunk) {

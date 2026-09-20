@@ -28,14 +28,14 @@ export class GitLabFileOpener {
 
 	public async openFilePatch(
 		arguments_: OpenFilePatchCommandArguments,
-	): Promise<void> {
+	): Promise<boolean> {
 		const { mergeRequest, file } = arguments_;
 
 		if (!file.diff.trim()) {
 			this.notifier.showInfo(
 				`Для файла ${file.path} патч отсутствует.`,
 			);
-			return;
+			return false;
 		}
 
 		const patchContent = this.createPatchContent(file);
@@ -65,6 +65,7 @@ export class GitLabFileOpener {
 		}
 
 		this.documents.showDocument(document);
+		return true;
 	}
 
 	private createPatchContent(

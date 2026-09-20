@@ -232,7 +232,7 @@ describe('GitLabCommandRegistrar', () => {
 	it('openFilePatch opens first then marks as reviewed when file is not reviewed', async () => {
 		const mocks = createMocks();
 		mocks.store.reviewed.isReviewed.mockReturnValue(false);
-		mocks.fileOpener.openFilePatch = jest.fn().mockResolvedValue(undefined);
+		mocks.fileOpener.openFilePatch = jest.fn().mockResolvedValue(true);
 		new GitLabCommandRegistrar(
 			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
 			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
@@ -257,7 +257,7 @@ describe('GitLabCommandRegistrar', () => {
 	it('openFilePatch skips marking when file is already reviewed', async () => {
 		const mocks = createMocks();
 		mocks.store.reviewed.isReviewed.mockReturnValue(true);
-		mocks.fileOpener.openFilePatch = jest.fn().mockResolvedValue(undefined);
+		mocks.fileOpener.openFilePatch = jest.fn().mockResolvedValue(true);
 		new GitLabCommandRegistrar(
 			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
 			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
@@ -275,6 +275,23 @@ describe('GitLabCommandRegistrar', () => {
 		expect(mocks.notifier.showInfo).not.toHaveBeenCalled();
 		expect(mocks.treeProvider.refreshFile).not.toHaveBeenCalled();
 		expect(mocks.fileOpener.openFilePatch).toHaveBeenCalledWith({ mergeRequest: item.mergeRequest, file: item.file });
+	});
+
+	it('openFilePatch skips marking when no patch was opened', async () => {
+		const mocks = createMocks();
+		mocks.fileOpener.openFilePatch = jest.fn().mockResolvedValue(false);
+		new GitLabCommandRegistrar(
+			mocks.commands, mocks.notifier, mocks.input, mocks.documents,
+			mocks.comments, mocks.treeProvider, mocks.auth, mocks.fileOpener,
+			mocks.clientFactory, mocks.store, mocks.reviewedPersistence,
+		).register();
+
+		const item = { mergeRequest: { id: 1, iid: 5, project_id: 10 }, file: { path: 'src/a.ts' } };
+		await mocks.handlers['gitlabMrReview.openFilePatch'](item);
+
+		expect(mocks.store.reviewed.isReviewed).not.toHaveBeenCalled();
+		expect(mocks.store.reviewed.markAsReviewed).not.toHaveBeenCalled();
+		expect(mocks.reviewedPersistence.save).not.toHaveBeenCalled();
 	});
 
 	it('openFilePatch opens without marking when mergeRequest is null', async () => {

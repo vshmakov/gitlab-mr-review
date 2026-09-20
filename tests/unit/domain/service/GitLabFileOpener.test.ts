@@ -41,7 +41,6 @@ function createMockCommentManager(): CommentManager {
 	return {
 		setContext: jest.fn(),
 		getContext: jest.fn(),
-		onDocumentOpened: jest.fn(),
 		findCommentableLine: jest.fn(),
 		addComment: jest.fn().mockResolvedValue(false),
 		dispose: jest.fn(),
@@ -88,7 +87,6 @@ describe('GitLabFileOpener', () => {
 			};
 
 			await opener.openFilePatch(args as any);
-
 			expect(documents.openVirtualDocument).toHaveBeenCalled();
 			expect(documents.showDocument).toHaveBeenCalled();
 		});
@@ -107,8 +105,9 @@ describe('GitLabFileOpener', () => {
 				},
 			};
 
-			await opener.openFilePatch(args as any);
+			const opened = await opener.openFilePatch(args as any);
 
+			expect(opened).toBe(false);
 			expect(notifier.showInfo).toHaveBeenCalledWith(
 				expect.stringContaining('патч отсутствует'),
 			);

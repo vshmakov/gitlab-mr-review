@@ -261,7 +261,7 @@ export class MergeRequestsStore {
 		mergeRequest: GitLabMergeRequest,
 	): Promise<void> {
 		const client = await this.clientFactory.create();
-		if (!client) return;
+		if (!client) {return;}
 
 		try {
 			const details = await client.getMergeRequestDetails(mergeRequest);

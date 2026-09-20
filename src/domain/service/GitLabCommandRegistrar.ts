@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { GitLabClientFactory } from '../client/GitLabClientFactory';
 import { GitLabMergeRequest } from '../model/GitLabMergeRequest';
+import { GitLabMergeRequestFile } from '../model/GitLabMergeRequestFile';
 import { Disposable } from '../interfaces/disposable';
 import { CommandRegistry } from '../interfaces/command-registry';
 import { Notifier } from '../interfaces/notifier';
@@ -81,9 +82,9 @@ export class GitLabCommandRegistrar {
 			async (item: MergeRequestFileItem) => {
 				const { mergeRequest, file } = item;
 
-				await this.fileOpener.openFilePatch({ mergeRequest, file });
+				const opened = await this.fileOpener.openFilePatch({ mergeRequest, file });
 
-				if (mergeRequest && !this.store.reviewed.isReviewed(mergeRequest, file)) {
+				if (opened && mergeRequest && !this.store.reviewed.isReviewed(mergeRequest, file)) {
 					this.markFileAsReviewed(mergeRequest, file);
 					this.treeProvider.refreshFile(item);
 				}
@@ -93,9 +94,9 @@ export class GitLabCommandRegistrar {
 
 	private markFileAsReviewed(
 		mergeRequest: GitLabMergeRequest,
-		file: { path: string },
+		file: GitLabMergeRequestFile,
 	): void {
-		this.store.reviewed.markAsReviewed(mergeRequest, file as any);
+		this.store.reviewed.markAsReviewed(mergeRequest, file);
 		this.reviewedPersistence.save(this.store.reviewed);
 		this.notifier.showInfo(`Marked as reviewed: ${path.basename(file.path)}`);
 	}
@@ -154,20 +155,20 @@ export class GitLabCommandRegistrar {
 					return;
 				}
 
-					try {
-						const mr = {
+				try {
+					const mr = {
 							project_id: context.mergeRequest.project_id,
 							iid: context.mergeRequest.iid,
 							baseSha: context.mergeRequest.baseSha,
 							startSha: context.mergeRequest.startSha,
 							headSha: context.mergeRequest.headSha,
-						} as any;
+					};
 
-						const file = {
+					const file = {
 							path: context.file.path,
 							oldPath: context.file.oldPath,
 							newPath: context.file.newPath,
-						} as any;
+					};
 
 						await noteClient.createDraftNote(
 							mr,
@@ -180,7 +181,7 @@ export class GitLabCommandRegistrar {
 						await this.comments.addComment(document, lineIndex, text);
 
 						this.notifier.showInfo('Комментарий добавлен');
-					} catch (error: unknown) {
+				} catch (error: unknown) {
 						const message = error instanceof Error
 							? error.message
 							: String(error);

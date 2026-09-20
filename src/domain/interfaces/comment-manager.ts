@@ -31,9 +31,6 @@ export interface CommentManager extends Disposable {
 	/** Get comment context for a document. Returns null if not set. */
 	getContext(document: TextDocument): CommentContext | null;
 
-	/** Called when a diff document is opened to enable commenting. */
-	onDocumentOpened(document: TextDocument, context: CommentContext): void;
-
 	/** Find the nearest commentable line index for the given cursor line. Returns null if no commentable line found. */
 	findCommentableLine(document: TextDocument, cursorLine: number): number | null;
 

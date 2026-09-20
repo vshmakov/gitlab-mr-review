@@ -19,10 +19,10 @@ export class ReviewedFilesStore {
     ): boolean {
         const mrKey = this.key(mergeRequest);
         const files = this._cache.get(mrKey);
-        if (!files) return false;
+        if (!files) {return false;}
 
         const savedHash = files.get(file.path);
-        if (!savedHash) return false;
+        if (!savedHash) {return false;}
 
         return savedHash === ReviewedFilesStore.diffHash(file);
     }

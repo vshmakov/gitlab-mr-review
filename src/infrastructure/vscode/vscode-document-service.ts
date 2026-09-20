@@ -31,7 +31,7 @@ export class VsCodeDocumentService implements DocumentService {
 
 	get activeDocument(): TextDocument | null {
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) return null;
+		if (!editor) {return null;}
 		const key = editor.document.uri.toString();
 		if (!this.docCache.has(key)) {
 			this.docCache.set(key, new VsCodeTextDocument(editor.document));
@@ -41,7 +41,7 @@ export class VsCodeDocumentService implements DocumentService {
 
 	get activeCursorLine(): number | null {
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) return null;
+		if (!editor) {return null;}
 		return editor.selection.active.line;
 	}
 

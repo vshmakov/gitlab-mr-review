@@ -43,7 +43,7 @@ export class VsCodeCommentManager implements CommentManager {
 
 	getContext(document: TextDocument): CommentContext | null {
 		const ctx = this.contexts.get(document.uri);
-		if (!ctx) return null;
+		if (!ctx) {return null;}
 		return {
 			mergeRequest: ctx.mergeRequest,
 			file: ctx.file,
@@ -51,14 +51,9 @@ export class VsCodeCommentManager implements CommentManager {
 		};
 	}
 
-	onDocumentOpened(document: TextDocument, _context: CommentContext): void {
-		const uri = vscode.Uri.parse(document.uri);
-		this.controller.createCommentThread(uri, new vscode.Range(0, 0, 0, 0), []);
-	}
-
 	findCommentableLine(document: TextDocument, cursorLine: number): number | null {
 		const context = this.contexts.get(document.uri);
-		if (!context) return null;
+		if (!context) {return null;}
 		return findCommentableLineUtil(context.lines, cursorLine);
 	}
 
@@ -101,7 +96,7 @@ export class VsCodeCommentManager implements CommentManager {
 		document: vscode.TextDocument,
 	): vscode.Range[] | undefined {
 		const context = this.contexts.get(document.uri.toString());
-		if (!context) return undefined;
+		if (!context) {return undefined;}
 
 		const ranges: vscode.Range[] = [];
 		for (const line of context.lines) {

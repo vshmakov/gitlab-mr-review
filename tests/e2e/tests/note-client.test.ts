@@ -31,7 +31,7 @@ describe('GitLabNoteClient', () => {
 		const client = new GitLabNoteClient('https://gitlab.example.com', 'token', http as any);
 		const note = await client.createDraftNote(
 			mr as any,
-			{ path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts', diff: '', added: false, deleted: false, renamed: false },
+			{ path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts' },
 			'Fix this bug',
 			5,
 			6,
@@ -85,7 +85,7 @@ describe('GitLabNoteClient', () => {
 		await expect(
 			client.createDraftNote(
 				mr as any,
-				{ path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts', diff: '', added: false, deleted: false, renamed: false },
+				{ path: 'src/app.ts', oldPath: 'src/app.ts', newPath: 'src/app.ts' },
 				'comment',
 			),
 		).rejects.toThrow('403');

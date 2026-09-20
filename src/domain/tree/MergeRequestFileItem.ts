@@ -69,9 +69,9 @@ export class MergeRequestFileItem implements ITreeItem {
 }
 
 function getFilePrefix(file: GitLabMergeRequestFile): string {
-	if (file.added) return 'A';
-	if (file.deleted) return 'D';
-	if (file.renamed) return 'R';
+	if (file.added) {return 'A';}
+	if (file.deleted) {return 'D';}
+	if (file.renamed) {return 'R';}
 	return 'M';
 }
 

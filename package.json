@@ -113,7 +113,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "eslint src",
+    "lint": "eslint src --max-warnings=0",
     "test": "jest --passWithNoTests --testPathIgnorePatterns=tests/contract",
     "test:contract": "jest tests/contract --passWithNoTests",
     "rebuild": "npm run compile && npm run test",

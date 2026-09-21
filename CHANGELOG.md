@@ -4,6 +4,13 @@ All notable changes to the "gitlab-mr-review" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.1] - 2026-09-21
+
+- Refined command titles for the VS Code Command Palette and context menus.
+- Added release creation and publishing scripts for packaging and GitHub release flow.
+- Updated release documentation and release checklist.
+- Improved README instructions to match the current extension state.
+
 ## [1.0.0] - 2026-09-20
 
 - Added GitLab authentication with token storage in VS Code SecretStorage.

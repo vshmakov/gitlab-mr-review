@@ -6,7 +6,7 @@
 2. Update `README.md` to reflect the current release state.
 3. Take a diff against the current release and sync the release notes/changelog accordingly.
 4. Add the release notes to `CHANGELOG.md`.
-5. Commit all changes. The publish step pushes the current commit.
+5. Commit all changes. The publish step pushes the current commit and creates the git tag.
 6. Make sure `gh` is installed and authenticated:
 
 ```bash
@@ -42,7 +42,7 @@ npm run release:publish
 The command publishes the already prepared artifact by:
 
 - pushes the current commit to `origin/master`;
-- pushes the version tag `v<version>`;
+- creates and pushes the version tag `v<version>`;
 - creates a GitHub Release with the VSIX attached and generated release notes.
 
 Publishing changes the remote repository and creates a public release. Review the version, changelog, current branch, and generated VSIX before running it.

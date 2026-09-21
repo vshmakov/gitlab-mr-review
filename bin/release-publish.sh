@@ -16,6 +16,10 @@ if [[ ! -f "$VSIX_FILE" ]]; then
 	exit 1
 fi
 
+if ! git rev-parse --verify "v${VERSION}" >/dev/null 2>&1; then
+	git tag -a "v${VERSION}" -m "Release v${VERSION}"
+fi
+
 git push origin HEAD:master
 git push origin "v${VERSION}"
 gh release create "v${VERSION}" "$VSIX_FILE" \

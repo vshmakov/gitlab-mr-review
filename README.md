@@ -33,6 +33,8 @@ The extension does not require manual configuration edits. Run the following com
 
 ## Commands
 
+The extension contributes the following commands to the Command Palette:
+
 | Command | Description |
 |---------|----------|
 | `GitLab MR Review: Refresh` | Refresh the merge request list |

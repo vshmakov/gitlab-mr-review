@@ -27,37 +27,37 @@
     "commands": [
       {
         "command": "gitlabMrReview.refresh",
-        "title": "GitLab MR Review: Refresh",
+        "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
         "command": "gitlabMrReview.authenticate",
-        "title": "GitLab MR Review: Authenticate"
+        "title": "Authenticate"
       },
       {
         "command": "gitlabMrReview.logout",
-        "title": "GitLab MR Review: Log Out"
+        "title": "Log Out"
       },
       {
         "command": "gitlabMrReview.openFilePatch",
-        "title": "GitLab MR Review: Open File Patch"
+        "title": "Open File Patch"
       },
       {
         "command": "gitlabMrReview.addComment",
-        "title": "GitLab MR Review: Add Comment"
+        "title": "Add Comment"
       },
       {
         "command": "gitlabMrReview.approve",
-        "title": "GitLab MR Review: Approve",
+        "title": "Approve",
         "icon": "$(check)"
       },
       {
         "command": "gitlabMrReview.markAsReviewed",
-        "title": "GitLab MR Review: Mark as Reviewed"
+        "title": "Mark as Reviewed"
       },
       {
         "command": "gitlabMrReview.unmarkAsReviewed",
-        "title": "GitLab MR Review: Mark as Unreviewed"
+        "title": "Mark as Unreviewed"
       }
     ],
     "viewsContainers": {

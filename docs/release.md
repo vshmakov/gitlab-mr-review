@@ -3,15 +3,17 @@
 ## Before Release
 
 1. Update the version in `package.json`.
-2. Add the release notes to `CHANGELOG.md`.
-3. Commit all changes. The publish step pushes the current commit.
-4. Make sure `gh` is installed and authenticated:
+2. Update `README.md` to reflect the current release state.
+3. Take a diff against the current release and sync the release notes/changelog accordingly.
+4. Add the release notes to `CHANGELOG.md`.
+5. Commit all changes. The publish step pushes the current commit.
+6. Make sure `gh` is installed and authenticated:
 
 ```bash
 gh auth status
 ```
 
-5. Make sure `vsce` is available in the local environment.
+7. Make sure `vsce` is available in the local environment.
 
 ## Prepare the Release
 

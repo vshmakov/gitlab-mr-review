@@ -21,7 +21,7 @@ Then install it in one of these ways:
 - From the command line:
 
 ```bash
-code --install-extension gitlab-mr-review-1.0.1.vsix
+code --install-extension gitlab-mr-review-1.0.2.vsix
 ```
 
 ## Configuration

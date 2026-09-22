@@ -4,6 +4,13 @@ All notable changes to the "gitlab-mr-review" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.2] - 2026-09-21
+
+- Finalized release process documentation and changelog sync flow.
+- Added explicit changelog link in GitHub release notes.
+- Fixed tag creation step in the release publish script.
+- Kept README and package version aligned with the current release artifact.
+
 ## [1.0.1] - 2026-09-21
 
 - Refined command titles for the VS Code Command Palette and context menus.
